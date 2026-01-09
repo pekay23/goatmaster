@@ -210,19 +210,66 @@ html, body {
 }
 
 /* --- PAGE CENTERING WRAPPER --- */
-/* Forces Forms, Reports, and Settings to stay centered and mobile-sized */
 .page-container {
   width: 100%;
-  max-width: 800px; /* UPDATED: Increased to 800px for wider panels */
-  margin: 0 auto;   /* AUTO margins on left/right = Perfect Center */
+  max-width: 800px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;        /* Consistent spacing between elements */
+  gap: 20px;
 }
 
-/* Ensure Add Goat View is also centered but slightly narrower */
 .add-goat-view {
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
+}
+
+/* --- EDIT BUTTON (HIGH VISIBILITY) --- */
+.edit-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+
+  /* FORCE White Background & Green Icon */
+  background-color: #ffffff !important; /* was invalid hex */
+  color: var(--primary) !important;
+  border: 2px solid var(--border-color);
+
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  z-index: 50;
+  padding: 0;
+  transition: transform 0.12s ease, background-color 0.12s ease, color 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
+}
+
+/* blur when overlapping the page title */
+.edit-btn.overlaps-title {
+  filter: blur(4px);
+  opacity: 0.9;
+  /* keep it clickable; remove pointer-events only if you want it non-interactive */
+}
+
+/* Dark mode tweak */
+[data-theme="dark"] .edit-btn {
+  background-color: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.08);
+  color: var(--primary);
+}
+
+.edit-btn:hover {
+  background-color: #28a745 !important;
+  color: #ffffff !important;
+  border-color: #28a745;
+  transform: scale(1.1);
+}
+
+.edit-btn:active {
+  transform: scale(0.9);
 }

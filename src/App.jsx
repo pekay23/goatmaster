@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, Sun, Moon, Monitor, X } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, Sun, Moon, Monitor, X, Edit2 } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
@@ -22,11 +22,43 @@ const Toast = ({ message, type, onClose }) => (
   </div>
 );
 
+// --- ADD/EDIT FORM COMPONENT ---
+const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleSubmit, handleImageChange, onCancel, isEditing }) => {
+  return (
+    <div className="add-goat-view">
+      <div style={{textAlign:'center', padding:30, border:'2px dashed var(--border-color)', borderRadius:12, cursor:'pointer', marginBottom:20}}>
+        <label style={{cursor:'pointer'}}>
+          <input type="file" hidden onChange={handleImageChange} />
+          {formData.image_url ? <img src={formData.image_url} style={{height:150, borderRadius:8}} alt=""/> : <div><Camera size={30} style={{color:'var(--text-sub)'}}/><p>{isEditing ? 'Change Photo' : 'Add Photo'}</p></div>}
+        </label>
+      </div>
+      <form onSubmit={handleSubmit}>
+        <label className="form-label">Name</label>
+        <input className="form-input" name="name" value={formData.name} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} required />
+        <label className="form-label">Breed</label>
+        <input className="form-input" name="breed" value={formData.breed} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
+        <label className="form-label">Sex</label>
+        <select className="form-select" name="sex" value={formData.sex} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})}>
+          <option value="F">Doe</option><option value="M">Buck</option><option value="W">Wether</option>
+        </select>
+        <label className="form-label">Date of Birth</label>
+        <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
+        
+        <div style={{display:'flex', gap:10, marginTop:20}}>
+          <button type="button" onClick={onCancel} style={{flex:1, padding:12, border:'1px solid var(--border-color)', background:'transparent', borderRadius:8, cursor:'pointer', color:'var(--text-main)'}}>Cancel</button>
+          <button type="submit" className="btn-primary" style={{flex:1, justifyContent:'center'}} disabled={isSubmitting || isUploading}>
+            {isUploading ? 'Uploading...' : (isEditing ? 'Update Profile' : 'Create Profile')}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 function App() {
   const [user, setUser] = useState(null);
-  
-  // TOAST STATE
   const [toast, setToast] = useState(null);
+
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000); 
@@ -63,13 +95,15 @@ function App() {
   // APP LOGIC
   const [activeTab, setActiveTab] = useState('profiles');
   const [showAddGoat, setShowAddGoat] = useState(false);
+  const [editingGoat, setEditingGoat] = useState(null);
+  const [formData, setFormData] = useState({ name: '', breed: '', sex: 'F', dob: '', image_url: '' });
+
   const [goats, setGoats] = useState([]);
   const [isFetching, setIsFetching] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSex, setFilterSex] = useState('All');
-  const [formData, setFormData] = useState({ name: '', breed: '', sex: 'F', dob: '', image_url: '' });
 
   const fetchGoats = async () => {
     setIsFetching(true);
@@ -81,6 +115,25 @@ function App() {
   };
 
   useEffect(() => { if (user) fetchGoats(); }, [user]);
+
+  const handleAddNew = () => {
+    setEditingGoat(null);
+    setFormData({ name: '', breed: '', sex: 'F', dob: '', image_url: '' });
+    setShowAddGoat(true);
+  };
+
+  const handleEdit = (goat) => {
+    setEditingGoat(goat);
+    const cleanDob = goat.dob ? goat.dob.split('T')[0] : '';
+    setFormData({ 
+      name: goat.name, 
+      breed: goat.breed || '', 
+      sex: goat.sex, 
+      dob: cleanDob, 
+      image_url: goat.image_url || '' 
+    });
+    setShowAddGoat(true);
+  };
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -100,15 +153,18 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    const endpoint = editingGoat ? '/.netlify/functions/update-goat' : '/.netlify/functions/add-goat';
+    const method = editingGoat ? 'PUT' : 'POST';
+    const payload = editingGoat ? { ...formData, id: editingGoat.id } : formData;
+
     try {
-      const res = await fetch('/.netlify/functions/add-goat', { method: 'POST', body: JSON.stringify(formData) });
+      const res = await fetch(endpoint, { method, body: JSON.stringify(payload) });
       if (res.ok) {
-        showToast("Goat added successfully!");
-        setFormData({ name: '', breed: '', sex: 'F', dob: '', image_url: '' });
+        showToast(editingGoat ? "Goat updated!" : "Goat added!");
         fetchGoats();
         setShowAddGoat(false);
       } else {
-        showToast("Failed to add goat", "error");
+        showToast("Failed to save", "error");
       }
     } catch { showToast("Network Error", "error"); }
     finally { setIsSubmitting(false); }
@@ -121,7 +177,6 @@ function App() {
 
   if (!user) return <Login onLogin={handleLogin} />;
 
-  // --- VIEWS ---
   const ProfilesView = () => (
     <div>
       <div className="search-bar">
@@ -140,10 +195,31 @@ function App() {
         ))}
       </div>
       
-      {/* GRID LAYOUT (Already handles its own width) */}
       <div className="goat-grid">
         {filtered.map(g => (
-          <div key={g.id} className="goat-card">
+          <div key={g.id} className="goat-card" style={{position: 'relative'}}>
+            
+            {/* UPDATED EDIT BUTTON (Manual SVG) */}
+            <button 
+              className="edit-btn"
+              onClick={(e) => { e.stopPropagation(); handleEdit(g); }}
+              aria-label="Edit Goat"
+            >
+              <svg 
+                width="18" 
+                height="18" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </button>
+
             {g.image_url ? <img src={g.image_url} className="goat-avatar" alt=""/> : <div className="goat-avatar" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>🐐</div>}
             <div className="goat-info">
               <h3>{g.name}</h3>
@@ -153,37 +229,6 @@ function App() {
           </div>
         ))}
       </div>
-    </div>
-  );
-
-  const AddGoatView = () => (
-    // Applied .add-goat-view for centering
-    <div className="add-goat-view">
-      <div style={{textAlign:'center', padding:30, border:'2px dashed var(--border-color)', borderRadius:12, cursor:'pointer', marginBottom:20}}>
-        <label style={{cursor:'pointer'}}>
-          <input type="file" hidden onChange={handleImageChange} />
-          {formData.image_url ? <img src={formData.image_url} style={{height:150, borderRadius:8}} alt=""/> : <div><Camera size={30} style={{color:'var(--text-sub)'}}/><p>Add Photo</p></div>}
-        </label>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <label className="form-label">Name</label>
-        <input className="form-input" name="name" value={formData.name} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} required />
-        <label className="form-label">Breed</label>
-        <input className="form-input" name="breed" value={formData.breed} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
-        <label className="form-label">Sex</label>
-        <select className="form-select" name="sex" value={formData.sex} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})}>
-          <option value="F">Doe</option><option value="M">Buck</option><option value="W">Wether</option>
-        </select>
-        <label className="form-label">Date of Birth</label>
-        <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
-        
-        <div style={{display:'flex', gap:10, marginTop:20}}>
-          <button type="button" onClick={()=>setShowAddGoat(false)} style={{flex:1, padding:12, border:'1px solid var(--border-color)', background:'transparent', borderRadius:8, cursor:'pointer', color:'var(--text-main)'}}>Cancel</button>
-          <button type="submit" className="btn-primary" style={{flex:1, justifyContent:'center'}} disabled={isSubmitting || isUploading}>
-            {isUploading ? 'Uploading...' : 'Save Goat'}
-          </button>
-        </div>
-      </form>
     </div>
   );
 
@@ -205,18 +250,30 @@ function App() {
         <div className="app-header glass-panel">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
-            <h1 className="app-title">{showAddGoat ? 'New Goat' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h1>
+            <h1 className="app-title">
+              {showAddGoat ? (editingGoat ? 'Edit Goat' : 'New Goat') : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            </h1>
           </div>
           {activeTab === 'profiles' && !showAddGoat && (
-            <button className="btn-primary" onClick={()=>setShowAddGoat(true)}><Plus size={18}/> <span className="nav-label">Add</span></button>
+            <button className="btn-primary" onClick={handleAddNew}><Plus size={18}/> <span className="nav-label">Add</span></button>
           )}
         </div>
 
-        {showAddGoat ? <AddGoatView /> : (
+        {showAddGoat ? (
+          <AddGoatView 
+            formData={formData} 
+            setFormData={setFormData} 
+            isSubmitting={isSubmitting} 
+            isUploading={isUploading} 
+            handleSubmit={handleSubmit} 
+            handleImageChange={handleImageChange} 
+            onCancel={() => setShowAddGoat(false)}
+            isEditing={!!editingGoat}
+          />
+        ) : (
           <>
             {activeTab === 'profiles' && <ProfilesView />}
             
-            {/* WRAPPED THESE SECTIONS TO CENTER THEM */}
             <div className="page-container">
               {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
               {activeTab === 'health' && <><AlertsPanel /><HealthPanel goats={goats} isLoading={isFetching}/></>}

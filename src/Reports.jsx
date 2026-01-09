@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 
 const Reports = () => {
   const [reportType, setReportType] = useState('herd');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Helper: Remove "T00:00:00.000Z" from dates
+  // --- INTERACTIVE STATE ---
+  const [tableSearch, setTableSearch] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  // Helper: Clean Dates
   const cleanData = (rawData) => {
     return rawData.map(row => {
       const newRow = { ...row };
@@ -27,6 +31,10 @@ const Reports = () => {
 
   useEffect(() => {
     setLoading(true);
+    // Reset search/sort when report type changes
+    setTableSearch('');
+    setSortConfig({ key: null, direction: 'asc' });
+    
     fetch(`/.netlify/functions/get-reports?type=${reportType}`)
       .then(res => res.json())
       .then(resData => {
@@ -37,23 +45,59 @@ const Reports = () => {
       .catch(err => console.error(err));
   }, [reportType]);
 
+  // --- SORTING & FILTERING LOGIC ---
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const processedData = useMemo(() => {
+    let items = [...data];
+
+    // 1. Filter
+    if (tableSearch) {
+      const lowerTerm = tableSearch.toLowerCase();
+      items = items.filter(item => 
+        Object.values(item).some(val => 
+          String(val).toLowerCase().includes(lowerTerm)
+        )
+      );
+    }
+
+    // 2. Sort
+    if (sortConfig.key) {
+      items.sort((a, b) => {
+        const valA = a[sortConfig.key] ? String(a[sortConfig.key]).toLowerCase() : '';
+        const valB = b[sortConfig.key] ? String(b[sortConfig.key]).toLowerCase() : '';
+        
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return items;
+  }, [data, tableSearch, sortConfig]);
+
+  // Exports use the FILTERED data (User gets what they see)
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.text(`${reportType.toUpperCase()} REPORT`, 14, 20);
-    
-    if(data.length > 0) {
-        const headers = [Object.keys(data[0]).map(k => k.replace(/_/g, ' ').toUpperCase())];
-        const rows = data.map(obj => Object.values(obj));
+    if(processedData.length > 0) {
+        const headers = [Object.keys(processedData[0]).map(k => k.replace(/_/g, ' ').toUpperCase())];
+        const rows = processedData.map(obj => Object.values(obj));
         doc.autoTable({ startY: 30, head: headers, body: rows });
     }
-    
     doc.save(`${reportType}_report.pdf`);
   };
 
   const exportToCSV = () => {
-    if (data.length === 0) return;
-    const headers = Object.keys(data[0]).join(",");
-    const rows = data.map(row => Object.values(row).join(",")).join("\n");
+    if (processedData.length === 0) return;
+    const headers = Object.keys(processedData[0]).join(",");
+    const rows = processedData.map(row => Object.values(row).join(",")).join("\n");
     const csvContent = headers + "\n" + rows;
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     saveAs(blob, `${reportType}.csv`);
@@ -69,33 +113,37 @@ const Reports = () => {
       maxWidth: '100%',
       boxSizing: 'border-box'
     }}>
-      <h2 style={{ 
-        color: 'var(--text-main)', 
-        marginTop: 0, 
-        marginBottom: '15px',
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '10px',
-        fontSize: '20px'
-      }}>
+      <h2 style={{ color: 'var(--text-main)', marginTop: 0, marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px' }}>
         <FileText size={24} /> Farm Reports
       </h2>
       
-      {/* Scrollable Filters */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', overflowX: 'auto', paddingBottom: '5px', whiteSpace: 'nowrap' }}>
+      {/* 1. Report Type Toggles */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', overflowX: 'auto', paddingBottom: '5px' }}>
         {['herd', 'health', 'breeding'].map(type => (
           <button 
             key={type}
             onClick={() => setReportType(type)} 
             className={`btn-filter ${reportType === type ? 'active' : ''}`}
-            style={{ fontSize: '13px', padding: '6px 12px' }}
+            style={{ fontSize: '13px', padding: '6px 12px', whiteSpace: 'nowrap' }}
           >
             {type === 'herd' ? 'Herd Census' : type === 'health' ? 'Health Issues' : 'Kidding Schedule'}
           </button>
         ))}
       </div>
 
-      {/* Buttons */}
+      {/* 2. Interactive Search Bar */}
+      <div className="search-bar" style={{ marginBottom: '15px', background: 'var(--bg-app)' }}>
+        <Search size={16} color="var(--text-sub)" />
+        <input 
+          className="search-input" 
+          placeholder={`Search ${reportType} records...`} 
+          value={tableSearch}
+          onChange={e => setTableSearch(e.target.value)}
+          style={{ fontSize: '14px' }}
+        />
+      </div>
+
+      {/* 3. Export Buttons */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
         <button onClick={exportToCSV} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: '13px' }}>
           <Download size={14} /> CSV
@@ -105,42 +153,60 @@ const Reports = () => {
         </button>
       </div>
 
-      {/* Table Container */}
+      {/* 4. Interactive Table */}
       {loading ? (
         <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '20px' }}>Loading data...</p>
-      ) : data.length === 0 ? (
-        <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>No records found.</p>
+      ) : processedData.length === 0 ? (
+        <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>
+          {tableSearch ? "No matches found." : "No records found."}
+        </p>
       ) : (
-        <div style={{ 
-          overflowX: 'auto', 
-          borderRadius: '12px', 
-          border: '1px solid var(--border-color)',
-          maxWidth: '100%' 
-        }}>
+        <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--border-color)', maxWidth: '100%' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-card)' }}>
             <thead>
               <tr style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
                 {Object.keys(data[0]).map(key => (
-                  <th key={key} style={{ 
-                    padding: '10px', 
-                    textAlign: 'left', 
-                    fontSize: '12px', 
-                    fontWeight: '600', 
-                    color: 'var(--text-sub)',
-                    textTransform: 'capitalize',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {key.replace(/_/g, ' ')}
+                  <th 
+                    key={key} 
+                    onClick={() => handleSort(key)}
+                    style={{ 
+                      padding: '12px 10px', 
+                      textAlign: 'left', 
+                      fontSize: '12px', 
+                      fontWeight: '700', 
+                      color: 'var(--text-sub)',
+                      textTransform: 'capitalize',
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {key.replace(/_/g, ' ')}
+                      {sortConfig.key === key ? (
+                        sortConfig.direction === 'asc' ? <ArrowUp size={12}/> : <ArrowDown size={12}/>
+                      ) : (
+                        <ArrowUpDown size={12} style={{ opacity: 0.3 }}/>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {data.map((row, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+              {processedData.map((row, i) => (
+                <tr 
+                  key={i} 
+                  style={{ 
+                    borderBottom: '1px solid var(--border-color)',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-app)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
                   {Object.values(row).map((val, j) => (
                     <td key={j} style={{ 
-                      padding: '10px', 
+                      padding: '12px 10px', 
                       fontSize: '13px', 
                       color: 'var(--text-main)',
                       whiteSpace: 'nowrap'
