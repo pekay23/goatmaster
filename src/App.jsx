@@ -244,9 +244,34 @@ function App() {
                     </button>
                   ))}
                 </div>
-                <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--danger)', fontWeight:600}}>
+                
+                {/* LOG OUT BUTTON */}
+                <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--text-main)', fontWeight:600, marginBottom: 10}}>
                    <LogOut size={20}/> Log Out
                 </div>
+
+                {/* DELETE ACCOUNT BUTTON */}
+                <div onClick={async () => {
+                  if (window.confirm("⚠️ Are you sure? This will delete your account and all data immediately.")) {
+                    try {
+                      const res = await fetch('/.netlify/functions/delete-account', {
+                        method: 'DELETE',
+                        body: JSON.stringify({ username: user.username })
+                      });
+                      if (res.ok) {
+                        alert("Account Deleted.");
+                        handleLogout();
+                      } else {
+                        alert("Failed to delete account");
+                      }
+                    } catch (e) {
+                      alert("Error deleting account");
+                    }
+                  }
+                }} style={{padding:15, background:'#fee2e2', borderRadius:12, border:'1px solid #fecaca', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'#dc2626', fontWeight:600}}>
+                   <LogOut size={20}/> Delete Account
+                </div>
+
                 <SettingsFooter />
               </div>
             )}
