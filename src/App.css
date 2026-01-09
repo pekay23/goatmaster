@@ -213,14 +213,14 @@ html, body {
 /* Forces Forms, Reports, and Settings to stay centered and mobile-sized */
 .page-container {
   width: 100%;
-  max-width: 600px; /* Limits width to look like a phone app */
+  max-width: 800px; /* UPDATED: Increased to 800px for wider panels */
   margin: 0 auto;   /* AUTO margins on left/right = Perfect Center */
   display: flex;
   flex-direction: column;
   gap: 20px;        /* Consistent spacing between elements */
 }
 
-/* Ensure Add Goat View is also centered */
+/* Ensure Add Goat View is also centered but slightly narrower */
 .add-goat-view {
   width: 100%;
   max-width: 600px;
