@@ -235,22 +235,57 @@ function App() {
             {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
             {activeTab === 'health' && <><AlertsPanel /><br/><HealthPanel goats={goats} isLoading={isFetching}/></>}
             {activeTab === 'reports' && <Reports />}
+            
+            {/* --- UPDATED SETTINGS TAB --- */}
             {activeTab === 'settings' && (
-              <div>
-                <div style={{background:'var(--bg-card)', padding:5, borderRadius:12, display:'flex', gap:5, marginBottom:20, border:'1px solid var(--border-color)'}}>
+              <div className="screen-content">
+                
+                {/* 👤 PROFILE CARD */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '15px', 
+                  padding: '20px', backgroundColor: 'var(--bg-card)', 
+                  borderRadius: '16px', marginBottom: '25px',
+                  border: '1px solid var(--border-color)', boxShadow: 'var(--shadow)'
+                }}>
+                  <div style={{
+                    width: '60px', height: '60px', borderRadius: '50%', 
+                    backgroundColor: 'var(--primary)', color: 'white', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    fontSize: '28px', fontWeight: 'bold'
+                  }}>
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{fontSize: '11px', color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', marginBottom: '4px'}}>
+                      Logged in as
+                    </div>
+                    <div style={{fontSize: '22px', fontWeight: '800', color: 'var(--text-main)'}}>
+                      {user.username}
+                    </div>
+                  </div>
+                </div>
+
+                <h3 style={{color: 'var(--text-main)', marginTop: 0, fontSize: '18px'}}>Appearance</h3>
+                
+                <div className="theme-selector">
                   {['light','dark','system'].map(t => (
-                    <button key={t} onClick={()=>setTheme(t)} style={{flex:1, padding:8, border:'none', background:theme===t?'var(--bg-app)':'transparent', borderRadius:8, cursor:'pointer', color:'var(--text-main)', fontWeight:600}}>
-                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                    <button key={t} onClick={()=>setTheme(t)} className={`theme-btn ${theme === t ? 'active' : ''}`}>
+                      {t === 'light' && <Sun size={18} />}
+                      {t === 'dark' && <Moon size={18} />}
+                      {t === 'system' && <Monitor size={18} />}
+                      <span style={{marginLeft: 8}}>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
                     </button>
                   ))}
                 </div>
+
+                <h3 style={{color: 'var(--text-main)', marginTop: '30px', fontSize: '18px'}}>Account</h3>
                 
-                {/* LOG OUT BUTTON */}
+                {/* LOG OUT */}
                 <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--text-main)', fontWeight:600, marginBottom: 10}}>
                    <LogOut size={20}/> Log Out
                 </div>
 
-                {/* DELETE ACCOUNT BUTTON */}
+                {/* DELETE ACCOUNT */}
                 <div onClick={async () => {
                   if (window.confirm("⚠️ Are you sure? This will delete your account and all data immediately.")) {
                     try {
