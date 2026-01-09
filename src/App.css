@@ -26,11 +26,32 @@
   --shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
+/* --- BACKGROUND GRADIENTS (The "Image" for Glass Effect) --- */
 html, body {
   margin: 0; padding: 0;
-  background-color: var(--bg-app);
-  color: var(--text-main);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-main);
+  
+  /* Fallback color */
+  background-color: var(--bg-app);
+
+  /* LIGHT MODE MESH GRADIENT */
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(140,60%,92%,1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(190,60%,94%,1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(140,60%,96%,1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(190,60%,94%,1) 0px, transparent 50%);
+    
+  background-attachment: fixed; /* Keeps bg still while scrolling */
+  min-height: 100vh;
+}
+
+/* DARK MODE MESH GRADIENT */
+[data-theme="dark"] body {
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(140,20%,15%,1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(200,20%,18%,1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(140,20%,12%,1) 0px, transparent 50%);
 }
 
 /* --- LAYOUT STRUCTURE --- */
@@ -44,20 +65,44 @@ html, body {
 .main-content {
   flex: 1;
   width: 100%;
-  max-width: 1200px; /* Allow wider width on desktop */
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  padding-bottom: 100px; /* Space for bottom nav on mobile */
+  padding-bottom: 100px;
+  box-sizing: border-box;
+  background-color: transparent; /* TRANSPARENT so gradient shows */
 }
 
-/* --- HEADER --- */
+/* --- HEADER (Updated for Full Width Glass) --- */
 .app-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+  
+  /* Stretch to edges */
+  margin: -20px -20px 20px -20px; 
+  width: calc(100% + 40px);
+  
+  padding: 16px 24px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-radius: 0 0 24px 24px;
 }
-.app-title { font-size: 24px; font-weight: 800; margin: 0; }
 
-/* --- NAVIGATION (Mobile Default) --- */
+.app-title { font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -0.5px; color: var(--text-main); }
+
+.app-header .btn-primary {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+
+/* --- NAVIGATION --- */
 .nav-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
   background: var(--bg-nav);
@@ -72,16 +117,15 @@ html, body {
   gap: 5px; background: none; border: none; cursor: pointer; flex: 1;
 }
 .nav-item.active { color: var(--primary); font-weight: 600; }
-.nav-label { display: block; } /* Visible on mobile */
+.nav-label { display: block; }
 
 /* --- GOAT GRID SYSTEM --- */
 .goat-grid {
   display: grid;
-  grid-template-columns: 1fr; /* 1 column on mobile */
+  grid-template-columns: 1fr;
   gap: 15px;
 }
 
-/* Cards */
 .goat-card {
   display: flex; align-items: center; gap: 15px;
   padding: 16px; background: var(--bg-card);
@@ -91,7 +135,7 @@ html, body {
 }
 .goat-card:active { transform: scale(0.98); }
 .goat-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #eee; flex-shrink: 0; }
-.goat-info { min-width: 0; /* Prevents text overflow */ }
+.goat-info { min-width: 0; }
 .goat-info h3 { margin: 0 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* --- TOAST NOTIFICATION --- */
@@ -110,12 +154,9 @@ html, body {
 .toast.error { background-color: var(--danger); }
 @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-/* --- DESKTOP UPGRADES (Media Queries) --- */
+/* --- DESKTOP UPGRADES --- */
 @media (min-width: 800px) {
-  .app-layout {
-    flex-direction: row; /* Side-by-side layout */
-  }
-  /* Move Nav to Side */
+  .app-layout { flex-direction: row; }
   .nav-bar {
     position: sticky; top: 0; left: 0;
     width: var(--sidebar-width); height: 100vh;
@@ -128,22 +169,13 @@ html, body {
     font-size: 16px; gap: 15px;
     border-radius: 0 25px 25px 0; margin-right: 15px;
   }
-  .nav-item:hover { background-color: var(--bg-app); }
+  .nav-item:hover { background-color: rgba(255,255,255,0.1); }
   .nav-item.active { background-color: var(--primary-bg); color: var(--primary); }
   
-  /* Main Content Adjustment */
-  .main-content {
-    padding-bottom: 40px; /* No bottom bar needed */
-    max-width: 1000px;
-  }
-  /* Grid Layout for Goats */
-  .goat-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Auto-fit cards */
-  }
-  
+  .main-content { padding-bottom: 40px; max-width: 1000px; }
+  .goat-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
   .goat-card { flex-direction: column; text-align: center; padding: 25px; }
   .goat-avatar { width: 80px; height: 80px; margin-bottom: 10px; }
-  .badges { justify-content: center; }
 }
 
 /* Utility Classes */
@@ -154,7 +186,6 @@ html, body {
 .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
 
 /* --- VISUAL EFFECTS (Glassmorphism) --- */
-/* Apply this class to any element (like cards or nav) to get the Apple Glass effect */
 .glass-panel {
   background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(20px) saturate(180%);
@@ -169,11 +200,29 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Accessibility: Disable blur if user requests reduced transparency */
+/* Accessibility */
 @media (prefers-reduced-transparency: reduce) {
   .glass-panel {
     background: var(--bg-card);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+}
+
+/* --- PAGE CENTERING WRAPPER --- */
+/* Forces Forms, Reports, and Settings to stay centered and mobile-sized */
+.page-container {
+  width: 100%;
+  max-width: 600px; /* Limits width to look like a phone app */
+  margin: 0 auto;   /* AUTO margins on left/right = Perfect Center */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;        /* Consistent spacing between elements */
+}
+
+/* Ensure Add Goat View is also centered */
+.add-goat-view {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
 }

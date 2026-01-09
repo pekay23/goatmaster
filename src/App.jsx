@@ -12,7 +12,7 @@ import Login from './Login';
 const CLOUD_NAME = "dvjxdxhdr"; 
 const UPLOAD_PRESET = "goat_uploads";
 
-// --- TOAST COMPONENT (Now with Glass Effect) ---
+// --- TOAST COMPONENT ---
 const Toast = ({ message, type, onClose }) => (
   <div className={`toast ${type} glass-panel`}>
     <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
@@ -29,7 +29,7 @@ function App() {
   const [toast, setToast] = useState(null);
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000); // Auto hide after 3s
+    setTimeout(() => setToast(null), 3000); 
   };
 
   useEffect(() => {
@@ -140,7 +140,7 @@ function App() {
         ))}
       </div>
       
-      {/* GRID LAYOUT FOR DESKTOP / LIST FOR MOBILE */}
+      {/* GRID LAYOUT (Already handles its own width) */}
       <div className="goat-grid">
         {filtered.map(g => (
           <div key={g.id} className="goat-card">
@@ -157,7 +157,8 @@ function App() {
   );
 
   const AddGoatView = () => (
-    <div>
+    // Applied .add-goat-view for centering
+    <div className="add-goat-view">
       <div style={{textAlign:'center', padding:30, border:'2px dashed var(--border-color)', borderRadius:12, cursor:'pointer', marginBottom:20}}>
         <label style={{cursor:'pointer'}}>
           <input type="file" hidden onChange={handleImageChange} />
@@ -188,127 +189,79 @@ function App() {
 
   return (
     <div className="app-layout">
-      {/* SIDE/BOTTOM NAV (Now with Glass Effect) */}
       {!showAddGoat && (
         <nav className="nav-bar glass-panel">
-          <button className={`nav-item ${activeTab==='profiles'?'active':''}`} onClick={()=>setActiveTab('profiles')}>
-            <LayoutGrid size={24} /> <span className="nav-label">Profiles</span>
-          </button>
-          <button className={`nav-item ${activeTab==='lineage'?'active':''}`} onClick={()=>setActiveTab('lineage')}>
-            <Dna size={24} /> <span className="nav-label">Lineage</span>
-          </button>
-          <button className={`nav-item ${activeTab==='health'?'active':''}`} onClick={()=>setActiveTab('health')}>
-            <Activity size={24} /> <span className="nav-label">Health</span>
-          </button>
-          <button className={`nav-item ${activeTab==='reports'?'active':''}`} onClick={()=>setActiveTab('reports')}>
-            <FileText size={24} /> <span className="nav-label">Reports</span>
-          </button>
-          <button className={`nav-item ${activeTab==='settings'?'active':''}`} onClick={()=>setActiveTab('settings')}>
-            <Settings size={24} /> <span className="nav-label">Settings</span>
-          </button>
+          <button className={`nav-item ${activeTab==='profiles'?'active':''}`} onClick={()=>setActiveTab('profiles')}><LayoutGrid size={24} /><span className="nav-label">Profiles</span></button>
+          <button className={`nav-item ${activeTab==='lineage'?'active':''}`} onClick={()=>setActiveTab('lineage')}><Dna size={24} /><span className="nav-label">Lineage</span></button>
+          <button className={`nav-item ${activeTab==='health'?'active':''}`} onClick={()=>setActiveTab('health')}><Activity size={24} /><span className="nav-label">Health</span></button>
+          <button className={`nav-item ${activeTab==='reports'?'active':''}`} onClick={()=>setActiveTab('reports')}><FileText size={24} /><span className="nav-label">Reports</span></button>
+          <button className={`nav-item ${activeTab==='settings'?'active':''}`} onClick={()=>setActiveTab('settings')}><Settings size={24} /><span className="nav-label">Settings</span></button>
         </nav>
       )}
 
-      {/* MAIN CONTENT */}
       <div className="main-content">
         {toast && <Toast message={toast.msg} type={toast.type} onClose={()=>setToast(null)} />}
         
-        {/* --- HEADER WITH GLASS EFFECT --- */}
         <div className="app-header glass-panel">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
-            <h1 className="app-title">
-              {showAddGoat ? 'New Goat' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-            </h1>
+            <h1 className="app-title">{showAddGoat ? 'New Goat' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h1>
           </div>
-
           {activeTab === 'profiles' && !showAddGoat && (
-            <button className="btn-primary" onClick={()=>setShowAddGoat(true)}>
-              <Plus size={18}/> <span className="nav-label">Add</span>
-            </button>
+            <button className="btn-primary" onClick={()=>setShowAddGoat(true)}><Plus size={18}/> <span className="nav-label">Add</span></button>
           )}
         </div>
 
         {showAddGoat ? <AddGoatView /> : (
           <>
             {activeTab === 'profiles' && <ProfilesView />}
-            {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
-            {activeTab === 'health' && <><AlertsPanel /><br/><HealthPanel goats={goats} isLoading={isFetching}/></>}
-            {activeTab === 'reports' && <Reports />}
             
-            {/* --- SETTINGS TAB --- */}
-            {activeTab === 'settings' && (
-              <div className="screen-content">
-                
-                {/* 👤 PROFILE CARD (Now with Glass Effect) */}
-                <div className="glass-panel" style={{
-                  display: 'flex', alignItems: 'center', gap: '15px', 
-                  padding: '20px', borderRadius: '16px', marginBottom: '25px',
-                  border: '1px solid var(--border-color)'
-                }}>
-                  <div style={{
-                    width: '60px', height: '60px', borderRadius: '50%', 
-                    backgroundColor: 'var(--primary)', color: 'white', 
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                    fontSize: '28px', fontWeight: 'bold'
-                  }}>
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div style={{fontSize: '11px', color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', marginBottom: '4px'}}>
-                      Logged in as
+            {/* WRAPPED THESE SECTIONS TO CENTER THEM */}
+            <div className="page-container">
+              {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
+              {activeTab === 'health' && <><AlertsPanel /><HealthPanel goats={goats} isLoading={isFetching}/></>}
+              {activeTab === 'reports' && <Reports />}
+              
+              {activeTab === 'settings' && (
+                <div className="screen-content">
+                  <div className="glass-panel" style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '20px', borderRadius: '16px', marginBottom: '25px', border: '1px solid var(--border-color)'}}>
+                    <div style={{width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 'bold'}}>
+                      {user.username.charAt(0).toUpperCase()}
                     </div>
-                    <div style={{fontSize: '22px', fontWeight: '800', color: 'var(--text-main)'}}>
-                      {user.username}
+                    <div>
+                      <div style={{fontSize: '11px', color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', marginBottom: '4px'}}>Logged in as</div>
+                      <div style={{fontSize: '22px', fontWeight: '800', color: 'var(--text-main)'}}>{user.username}</div>
                     </div>
                   </div>
-                </div>
 
-                <h3 style={{color: 'var(--text-main)', marginTop: 0, fontSize: '18px'}}>Appearance</h3>
-                
-                <div className="theme-selector">
-                  {['light','dark','system'].map(t => (
-                    <button key={t} onClick={()=>setTheme(t)} className={`theme-btn ${theme === t ? 'active' : ''}`}>
-                      {t === 'light' && <Sun size={18} />}
-                      {t === 'dark' && <Moon size={18} />}
-                      {t === 'system' && <Monitor size={18} />}
-                      <span style={{marginLeft: 8}}>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
-                    </button>
-                  ))}
-                </div>
+                  <h3 style={{color: 'var(--text-main)', marginTop: 0, fontSize: '18px'}}>Appearance</h3>
+                  <div className="theme-selector">
+                    {['light','dark','system'].map(t => (
+                      <button key={t} onClick={()=>setTheme(t)} className={`theme-btn ${theme === t ? 'active' : ''}`}>
+                        {t === 'light' && <Sun size={18} />} {t === 'dark' && <Moon size={18} />} {t === 'system' && <Monitor size={18} />}
+                        <span style={{marginLeft: 8}}>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
+                      </button>
+                    ))}
+                  </div>
 
-                <h3 style={{color: 'var(--text-main)', marginTop: '30px', fontSize: '18px'}}>Account</h3>
-                
-                {/* LOG OUT */}
-                <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--text-main)', fontWeight:600, marginBottom: 10}}>
-                   <LogOut size={20}/> Log Out
-                </div>
-
-                {/* DELETE ACCOUNT */}
-                <div onClick={async () => {
-                  if (window.confirm("⚠️ Are you sure? This will delete your account and all data immediately.")) {
-                    try {
-                      const res = await fetch('/.netlify/functions/delete-account', {
-                        method: 'DELETE',
-                        body: JSON.stringify({ username: user.username })
-                      });
-                      if (res.ok) {
-                        alert("Account Deleted.");
-                        handleLogout();
-                      } else {
-                        alert("Failed to delete account");
-                      }
-                    } catch (e) {
-                      alert("Error deleting account");
+                  <h3 style={{color: 'var(--text-main)', marginTop: '30px', fontSize: '18px'}}>Account</h3>
+                  <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--text-main)', fontWeight:600, marginBottom: 10}}>
+                     <LogOut size={20}/> Log Out
+                  </div>
+                  <div onClick={async () => {
+                    if (window.confirm("⚠️ Are you sure? This will delete your account and all data immediately.")) {
+                      try {
+                        const res = await fetch('/.netlify/functions/delete-account', { method: 'DELETE', body: JSON.stringify({ username: user.username }) });
+                        if (res.ok) { alert("Account Deleted."); handleLogout(); } else { alert("Failed to delete account"); }
+                      } catch (e) { alert("Error deleting account"); }
                     }
-                  }
-                }} style={{padding:15, background:'#fee2e2', borderRadius:12, border:'1px solid #fecaca', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'#dc2626', fontWeight:600}}>
-                   <LogOut size={20}/> Delete Account
+                  }} style={{padding:15, background:'#fee2e2', borderRadius:12, border:'1px solid #fecaca', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'#dc2626', fontWeight:600}}>
+                     <LogOut size={20}/> Delete Account
+                  </div>
+                  <SettingsFooter />
                 </div>
-
-                <SettingsFooter />
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
       </div>
