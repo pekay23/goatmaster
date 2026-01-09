@@ -276,7 +276,8 @@ function App() {
             
             <div className="page-container">
               {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
-              {activeTab === 'health' && <><AlertsPanel /><HealthPanel goats={goats} isLoading={isFetching}/></>}
+              {activeTab === 'health' && <><AlertsPanel /><HealthPanel goats={goats} isLoading={isFetching} showToast={showToast} />
+            </>}
               {activeTab === 'reports' && <Reports />}
               
               {activeTab === 'settings' && (
