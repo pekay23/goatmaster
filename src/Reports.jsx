@@ -15,11 +15,9 @@ const Reports = () => {
       const newRow = { ...row };
       Object.keys(newRow).forEach(key => {
         const val = newRow[key];
-        // Check if value is a string and looks like an ISO date (YYYY-MM-DDTHH...)
         if (typeof val === 'string' && val.includes('T') && val.length > 10) {
-          // Check if it's actually a date
           if (!isNaN(Date.parse(val))) {
-            newRow[key] = val.split('T')[0]; // Keep only the date part
+            newRow[key] = val.split('T')[0]; 
           }
         }
       });
@@ -32,7 +30,7 @@ const Reports = () => {
     fetch(`/.netlify/functions/get-reports?type=${reportType}`)
       .then(res => res.json())
       .then(resData => {
-        const cleaned = cleanData(resData); // Clean dates before setting state
+        const cleaned = cleanData(resData);
         setData(cleaned);
         setLoading(false);
       })
@@ -63,51 +61,70 @@ const Reports = () => {
 
   return (
     <div className="glass-panel" style={{ 
-      padding: '20px', 
+      padding: '15px', 
       borderRadius: '16px', 
       border: '1px solid var(--border-color)',
-      marginBottom: '80px' 
+      marginBottom: '80px',
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box'
     }}>
-      <h2 style={{ color: 'var(--text-main)', marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <h2 style={{ 
+        color: 'var(--text-main)', 
+        marginTop: 0, 
+        marginBottom: '15px',
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '10px',
+        fontSize: '20px'
+      }}>
         <FileText size={24} /> Farm Reports
       </h2>
       
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '5px' }}>
+      {/* Scrollable Filters */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', overflowX: 'auto', paddingBottom: '5px', whiteSpace: 'nowrap' }}>
         {['herd', 'health', 'breeding'].map(type => (
           <button 
             key={type}
             onClick={() => setReportType(type)} 
             className={`btn-filter ${reportType === type ? 'active' : ''}`}
-            style={{ whiteSpace: 'nowrap' }}
+            style={{ fontSize: '13px', padding: '6px 12px' }}
           >
             {type === 'herd' ? 'Herd Census' : type === 'health' ? 'Health Issues' : 'Kidding Schedule'}
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button onClick={exportToCSV} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
-          <Download size={16} /> CSV
+      {/* Buttons */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+        <button onClick={exportToCSV} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: '13px' }}>
+          <Download size={14} /> CSV
         </button>
-        <button onClick={exportToPDF} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
-          <Download size={16} /> PDF
+        <button onClick={exportToPDF} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: '13px' }}>
+          <Download size={14} /> PDF
         </button>
       </div>
 
+      {/* Table Container */}
       {loading ? (
         <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '20px' }}>Loading data...</p>
       ) : data.length === 0 ? (
         <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>No records found.</p>
       ) : (
-        <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+        <div style={{ 
+          overflowX: 'auto', 
+          borderRadius: '12px', 
+          border: '1px solid var(--border-color)',
+          maxWidth: '100%' 
+        }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-card)' }}>
             <thead>
               <tr style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
                 {Object.keys(data[0]).map(key => (
                   <th key={key} style={{ 
-                    padding: '12px', 
+                    padding: '10px', 
                     textAlign: 'left', 
-                    fontSize: '13px', 
+                    fontSize: '12px', 
                     fontWeight: '600', 
                     color: 'var(--text-sub)',
                     textTransform: 'capitalize',
@@ -123,8 +140,8 @@ const Reports = () => {
                 <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   {Object.values(row).map((val, j) => (
                     <td key={j} style={{ 
-                      padding: '12px', 
-                      fontSize: '14px', 
+                      padding: '10px', 
+                      fontSize: '13px', 
                       color: 'var(--text-main)',
                       whiteSpace: 'nowrap'
                     }}>
