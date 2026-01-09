@@ -1,0 +1,7 @@
+[33mdb4603f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: commit: Refactor AddGoatView and App components for improved layout and functionality; enhance form handling and UI elements for better user experience
+[33m825c6e6[m HEAD@{1}: commit: Enhance AddGoatView component with improved layout and functionality; update toast notifications and form handling for better user experience
+[33mbe34591[m HEAD@{2}: commit: Refactor App and HealthPanel components for improved layout and functionality
+[33m1557c37[m HEAD@{3}: commit: Add showToast functionality to HealthPanel for user feedback; update form layout and styles for improved usability
+[33ma56d710[m HEAD@{4}: commit: Enhance UI components with new edit button, improved layout, and interactive search; implement sorting and filtering in Reports
+[33m7ded5c9[m HEAD@{5}: commit: Update BreedingPanel layout and styles; increase max-width for better usability
+[33m68420d0[m HEAD@{6}: commit: Refactor code structure for improved readability and maintainability
