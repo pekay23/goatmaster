@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { 
-  LayoutGrid, Dna, Activity, FileText, Settings, 
-  Search, Plus, Camera, LogOut, Moon, Sun, Monitor 
-} from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, Sun, Moon, Monitor, X } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
@@ -11,23 +8,38 @@ import AlertsPanel from './AlertsPanel';
 import SettingsFooter from './SettingsFooter';
 import Login from './Login';
 
-// --- ☁️ CLOUDINARY CONFIGURATION ---
-// ⚠️ PASTE YOUR KEYS HERE!
+// ☁️ CLOUDINARY CONFIGURATION
 const CLOUD_NAME = "dvjxdxhdr"; 
 const UPLOAD_PRESET = "goat_uploads";
 
+// --- TOAST COMPONENT (Better than Alerts) ---
+const Toast = ({ message, type, onClose }) => (
+  <div className={`toast ${type}`}>
+    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+      <span>{message}</span>
+      <X size={14} style={{cursor:'pointer', marginLeft: 10}} onClick={onClose}/>
+    </div>
+  </div>
+);
+
 function App() {
-  // --- AUTH STATE ---
   const [user, setUser] = useState(null);
+  
+  // TOAST STATE
+  const [toast, setToast] = useState(null);
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000); // Auto hide after 3s
+  };
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('goat_user');
-    if (savedUser) setUser(JSON.parse(savedUser));
+    const saved = localStorage.getItem('goat_user');
+    if (saved) setUser(JSON.parse(saved));
   }, []);
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-    localStorage.setItem('goat_user', JSON.stringify(userData));
+  const handleLogin = (u) => {
+    setUser(u);
+    localStorage.setItem('goat_user', JSON.stringify(u));
   };
 
   const handleLogout = () => {
@@ -35,58 +47,41 @@ function App() {
     localStorage.removeItem('goat_user');
   };
 
-  // --- 🎨 THEME STATE ---
-  // Defaults to 'system'
+  // THEME
   const [theme, setTheme] = useState(localStorage.getItem('goat_theme') || 'system');
-
   useEffect(() => {
     const root = document.documentElement;
-    const applyTheme = (t) => {
-      if (t === 'system') {
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.setAttribute('data-theme', systemDark ? 'dark' : 'light');
-      } else {
-        root.setAttribute('data-theme', t);
-      }
-    };
-    
-    applyTheme(theme);
+    if (theme === 'system') {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    } else {
+      root.setAttribute('data-theme', theme);
+    }
     localStorage.setItem('goat_theme', theme);
   }, [theme]);
 
-  // --- APP STATE ---
-  const [activeTab, setActiveTab] = useState('profiles'); 
+  // APP LOGIC
+  const [activeTab, setActiveTab] = useState('profiles');
   const [showAddGoat, setShowAddGoat] = useState(false);
-  
   const [goats, setGoats] = useState([]);
-  const [isFetching, setIsFetching] = useState(true); 
+  const [isFetching, setIsFetching] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSex, setFilterSex] = useState('All');
-  
   const [formData, setFormData] = useState({ name: '', breed: '', sex: 'F', dob: '', image_url: '' });
 
-  // Fetch Data
   const fetchGoats = async () => {
     setIsFetching(true);
     try {
-      const response = await fetch('/.netlify/functions/get-goats');
-      const data = await response.json();
-      setGoats(data);
-    } catch (error) {
-      console.error("Error fetching goats:", error);
-    } finally {
-      setIsFetching(false);
-    }
+      const res = await fetch('/.netlify/functions/get-goats');
+      setGoats(await res.json());
+    } catch(e) { console.error(e); } 
+    finally { setIsFetching(false); }
   };
 
-  useEffect(() => {
-    if (user) fetchGoats();
-  }, [user]);
+  useEffect(() => { if (user) fetchGoats(); }, [user]);
 
-  // Image Upload Logic
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -97,257 +92,167 @@ function App() {
     try {
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: data });
       const fileData = await res.json();
-      if (fileData.secure_url) {
-        setFormData(prev => ({ ...prev, image_url: fileData.secure_url }));
-      }
-    } catch (error) {
-      alert("Error uploading image");
-    } finally {
-      setIsUploading(false);
-    }
+      if (fileData.secure_url) setFormData(prev => ({ ...prev, image_url: fileData.secure_url }));
+    } catch { showToast("Image upload failed", "error"); } 
+    finally { setIsUploading(false); }
   };
-
-  const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await fetch('/.netlify/functions/add-goat', { method: 'POST', body: JSON.stringify(formData) });
-      if (response.ok) {
-        alert('✅ Goat added successfully!');
-        setFormData({ name: '', breed: '', sex: 'F', dob: '', image_url: '' }); 
-        fetchGoats(); 
-        setShowAddGoat(false); 
+      const res = await fetch('/.netlify/functions/add-goat', { method: 'POST', body: JSON.stringify(formData) });
+      if (res.ok) {
+        showToast("Goat added successfully!");
+        setFormData({ name: '', breed: '', sex: 'F', dob: '', image_url: '' });
+        fetchGoats();
+        setShowAddGoat(false);
       } else {
-        const errorText = await response.text();
-        alert(`❌ Failed: ${errorText}`);
+        showToast("Failed to add goat", "error");
       }
-    } catch (networkError) {
-      alert(`❌ Network Error: ${networkError.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch { showToast("Network Error", "error"); }
+    finally { setIsSubmitting(false); }
   };
 
-  const filteredGoats = goats.filter(goat => {
-    const matchesSearch = goat.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSex = filterSex === 'All' || goat.sex === filterSex;
-    return matchesSearch && matchesSex;
-  });
+  const filtered = goats.filter(g => 
+    g.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
+    (filterSex === 'All' || g.sex === filterSex)
+  );
 
-  // --- GATEKEEPER ---
   if (!user) return <Login onLogin={handleLogin} />;
 
-  // --- UI SCREENS ---
-  
+  // --- VIEWS ---
   const ProfilesView = () => (
-    <div className="screen-content">
+    <div>
       <div className="search-bar">
-        <Search size={20} color="var(--text-sub)" />
-        <input 
-          type="text" 
-          className="search-input" 
-          placeholder="Search by ID or name..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <Search size={18} color="var(--text-sub)" />
+        <input className="search-input" placeholder="Search..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} />
       </div>
-
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto' }}>
-        {['All', 'F', 'M', 'W'].map(sex => (
-          <button 
-            key={sex}
-            className={`btn-filter ${filterSex === sex ? 'active' : ''}`}
-            onClick={() => setFilterSex(sex)}
-          >
-            {sex === 'All' ? 'All' : sex === 'F' ? 'Female' : sex === 'M' ? 'Male' : 'Wether'}
+      <div style={{display:'flex', gap:8, marginBottom:20, overflowX:'auto'}}>
+        {['All','F','M','W'].map(s => (
+          <button key={s} onClick={()=>setFilterSex(s)} style={{
+            padding:'6px 16px', borderRadius:20, border:'1px solid var(--border-color)',
+            background: filterSex === s ? 'var(--primary-bg)' : 'var(--bg-card)',
+            color: filterSex === s ? 'var(--primary)' : 'var(--text-sub)', cursor:'pointer'
+          }}>
+            {s==='All'?'All':s==='F'?'Does':s==='M'?'Bucks':'Wethers'}
           </button>
         ))}
       </div>
-
-      {isFetching ? <p style={{color: 'var(--text-sub)'}}>Loading herd...</p> : (
-        <div>
-          {filteredGoats.map((goat) => (
-            <div key={goat.id} className="goat-card">
-              {goat.image_url ? (
-                <img src={goat.image_url} alt={goat.name} className="goat-avatar" />
-              ) : (
-                <div className="goat-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🐐</div>
-              )}
-              <div className="goat-info">
-                <h3>{goat.name}</h3>
-                <div className="goat-id">ID: G00{goat.id}</div>
-                <div className="badges">
-                  <span className={`badge ${goat.sex}`}>
-                    {goat.sex === 'F' ? 'Female' : goat.sex === 'M' ? 'Male' : 'Wether'}
-                  </span>
-                  {goat.breed && <span className="badge breed">{goat.breed}</span>}
-                </div>
-              </div>
+      
+      {/* GRID LAYOUT FOR DESKTOP / LIST FOR MOBILE */}
+      <div className="goat-grid">
+        {filtered.map(g => (
+          <div key={g.id} className="goat-card">
+            {g.image_url ? <img src={g.image_url} className="goat-avatar" alt=""/> : <div className="goat-avatar" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>🐐</div>}
+            <div className="goat-info">
+              <h3>{g.name}</h3>
+              <div style={{fontSize:12, color:'var(--text-sub)'}}>ID: G00{g.id}</div>
+              <span style={{fontSize:11, background:'var(--bg-app)', padding:'2px 8px', borderRadius:4}}>{g.breed || 'Unknown'} • {g.sex}</span>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 
   const AddGoatView = () => (
-    <div className="screen-content">
-      <div className="photo-upload-box">
-        <label style={{ cursor: 'pointer', display: 'block' }}>
-           <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }}/>
-           {formData.image_url ? (
-              <img src={formData.image_url} alt="Preview" style={{ width: '100%', borderRadius: '8px', maxHeight: '200px', objectFit: 'cover' }} />
-           ) : (
-             <>
-               <Camera size={40} />
-               <p>{isUploading ? "Uploading..." : "Add Photo"}</p>
-             </>
-           )}
+    <div>
+      <div style={{textAlign:'center', padding:30, border:'2px dashed var(--border-color)', borderRadius:12, cursor:'pointer', marginBottom:20}}>
+        <label style={{cursor:'pointer'}}>
+          <input type="file" hidden onChange={handleImageChange} />
+          {formData.image_url ? <img src={formData.image_url} style={{height:150, borderRadius:8}} alt=""/> : <div><Camera size={30} style={{color:'var(--text-sub)'}}/><p>Add Photo</p></div>}
         </label>
       </div>
-
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="form-label">Name *</label>
-          <input type="text" name="name" className="form-input" placeholder="Goat name" value={formData.name} onChange={handleInputChange} required />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Breed</label>
-          <input type="text" name="breed" className="form-input" placeholder="e.g. Nubian" value={formData.breed} onChange={handleInputChange} />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Sex *</label>
-          <select name="sex" className="form-select" value={formData.sex} onChange={handleInputChange}>
-            <option value="F">Female</option>
-            <option value="M">Male</option>
-            <option value="W">Wether</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Date of Birth</label>
-          <input type="date" name="dob" className="form-input" value={formData.dob} onChange={handleInputChange} />
-        </div>
+        <label className="form-label">Name</label>
+        <input className="form-input" name="name" value={formData.name} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} required />
+        <label className="form-label">Breed</label>
+        <input className="form-input" name="breed" value={formData.breed} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
+        <label className="form-label">Sex</label>
+        <select className="form-select" name="sex" value={formData.sex} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})}>
+          <option value="F">Doe</option><option value="M">Buck</option><option value="W">Wether</option>
+        </select>
+        <label className="form-label">Date of Birth</label>
+        <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
         
-        <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '20px' }} disabled={isSubmitting || isUploading}>
-           {isSubmitting ? 'Creating Profile...' : 'Create Goat Profile'}
-        </button>
-        <button type="button" onClick={() => setShowAddGoat(false)} style={{ width: '100%', padding: '15px', background: 'none', border: 'none', color: 'var(--text-sub)', marginTop: '10px', cursor: 'pointer' }}>
-          Cancel
-        </button>
+        <div style={{display:'flex', gap:10, marginTop:20}}>
+          <button type="button" onClick={()=>setShowAddGoat(false)} style={{flex:1, padding:12, border:'1px solid var(--border-color)', background:'transparent', borderRadius:8, cursor:'pointer', color:'var(--text-main)'}}>Cancel</button>
+          <button type="submit" className="btn-primary" style={{flex:1, justifyContent:'center'}} disabled={isSubmitting || isUploading}>
+            {isUploading ? 'Uploading...' : 'Save Goat'}
+          </button>
+        </div>
       </form>
     </div>
   );
 
   return (
-    <div className="app-container">
-      {/* HEADER */}
-      <header className="app-header">
-        {showAddGoat ? (
-           <h1 className="app-title">Add New Goat</h1>
-        ) : (
-           <>
-            <h1 className="app-title">
-               {activeTab === 'profiles' ? 'Herd Profiles' : 
-                activeTab === 'lineage' ? 'Lineage' :
-                activeTab === 'health' ? 'Health Alerts' : 
-                activeTab === 'reports' ? 'Reports' : 'Settings'}
-            </h1>
-            {activeTab === 'profiles' && (
-              <button className="btn-primary" onClick={() => setShowAddGoat(true)}>
-                <Plus size={18} /> Add
-              </button>
-            )}
-           </>
-        )}
-      </header>
-
-      {/* MAIN CONTENT */}
-      <main>
-        {showAddGoat ? (
-          <AddGoatView />
-        ) : (
-          <>
-            {activeTab === 'profiles' && <ProfilesView />}
-            
-            {activeTab === 'lineage' && (
-              <div className="screen-content">
-                <BreedingPanel goats={goats} isLoading={isFetching} />
-              </div>
-            )}
-            
-            {activeTab === 'health' && (
-              <div className="screen-content">
-                <AlertsPanel />
-                <br/>
-                <HealthPanel goats={goats} isLoading={isFetching} />
-              </div>
-            )}
-
-            {activeTab === 'reports' && (
-              <div className="screen-content">
-                <Reports />
-              </div>
-            )}
-
-            {activeTab === 'settings' && (
-               <div className="screen-content">
-                 <h3 style={{color: 'var(--text-main)', marginTop: 0}}>Appearance</h3>
-                 
-                 {/* THEME SWITCHER */}
-                 <div className="theme-selector">
-                   <button className={`theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
-                     <Sun size={18} style={{marginBottom: -4}}/> Light
-                   </button>
-                   <button className={`theme-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>
-                     <Moon size={18} style={{marginBottom: -4}}/> Dark
-                   </button>
-                   <button className={`theme-btn ${theme === 'system' ? 'active' : ''}`} onClick={() => setTheme('system')}>
-                     <Monitor size={18} style={{marginBottom: -4}}/> System
-                   </button>
-                 </div>
-
-                 <h3 style={{color: 'var(--text-main)'}}>Account</h3>
-                 <div className="goat-card" onClick={handleLogout} style={{ cursor: 'pointer', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <LogOut size={20} color="#dc3545" />
-                      <strong style={{color: 'var(--text-main)'}}>Log Out</strong>
-                    </div>
-                 </div>
-                 
-                 <SettingsFooter />
-               </div>
-            )}
-          </>
-        )}
-      </main>
-
-      {/* BOTTOM NAV */}
+    <div className="app-layout">
+      {/* SIDE/BOTTOM NAV */}
       {!showAddGoat && (
-        <nav className="bottom-nav">
-          <button className={`nav-item ${activeTab === 'profiles' ? 'active' : ''}`} onClick={() => setActiveTab('profiles')}>
-            <LayoutGrid size={24} />
-            <span>Profiles</span>
+        <nav className="nav-bar">
+          <button className={`nav-item ${activeTab==='profiles'?'active':''}`} onClick={()=>setActiveTab('profiles')}>
+            <LayoutGrid size={24} /> <span className="nav-label">Profiles</span>
           </button>
-          <button className={`nav-item ${activeTab === 'lineage' ? 'active' : ''}`} onClick={() => setActiveTab('lineage')}>
-            <Dna size={24} />
-            <span>Lineage</span>
+          <button className={`nav-item ${activeTab==='lineage'?'active':''}`} onClick={()=>setActiveTab('lineage')}>
+            <Dna size={24} /> <span className="nav-label">Lineage</span>
           </button>
-          <button className={`nav-item ${activeTab === 'health' ? 'active' : ''}`} onClick={() => setActiveTab('health')}>
-            <Activity size={24} />
-            <span>Health</span>
+          <button className={`nav-item ${activeTab==='health'?'active':''}`} onClick={()=>setActiveTab('health')}>
+            <Activity size={24} /> <span className="nav-label">Health</span>
           </button>
-          <button className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
-            <FileText size={24} />
-            <span>Reports</span>
+          <button className={`nav-item ${activeTab==='reports'?'active':''}`} onClick={()=>setActiveTab('reports')}>
+            <FileText size={24} /> <span className="nav-label">Reports</span>
           </button>
-          <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-            <Settings size={24} />
-            <span>Settings</span>
+          <button className={`nav-item ${activeTab==='settings'?'active':''}`} onClick={()=>setActiveTab('settings')}>
+            <Settings size={24} /> <span className="nav-label">Settings</span>
           </button>
         </nav>
       )}
+
+      {/* MAIN CONTENT */}
+      <div className="main-content">
+        {toast && <Toast message={toast.msg} type={toast.type} onClose={()=>setToast(null)} />}
+        
+        {/* --- HEADER WITH LOGO --- */}
+        <div className="app-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+            <h1 className="app-title">
+              {showAddGoat ? 'New Goat' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            </h1>
+          </div>
+
+          {activeTab === 'profiles' && !showAddGoat && (
+            <button className="btn-primary" onClick={()=>setShowAddGoat(true)}>
+              <Plus size={18}/> <span className="nav-label">Add</span>
+            </button>
+          )}
+        </div>
+
+        {showAddGoat ? <AddGoatView /> : (
+          <>
+            {activeTab === 'profiles' && <ProfilesView />}
+            {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
+            {activeTab === 'health' && <><AlertsPanel /><br/><HealthPanel goats={goats} isLoading={isFetching}/></>}
+            {activeTab === 'reports' && <Reports />}
+            {activeTab === 'settings' && (
+              <div>
+                <div style={{background:'var(--bg-card)', padding:5, borderRadius:12, display:'flex', gap:5, marginBottom:20, border:'1px solid var(--border-color)'}}>
+                  {['light','dark','system'].map(t => (
+                    <button key={t} onClick={()=>setTheme(t)} style={{flex:1, padding:8, border:'none', background:theme===t?'var(--bg-app)':'transparent', borderRadius:8, cursor:'pointer', color:'var(--text-main)', fontWeight:600}}>
+                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--danger)', fontWeight:600}}>
+                   <LogOut size={20}/> Log Out
+                </div>
+                <SettingsFooter />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
