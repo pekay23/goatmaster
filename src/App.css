@@ -10,8 +10,6 @@
   --primary-bg: #e6f4ea;
   --danger: #dc3545;
   --shadow: 0 1px 3px rgba(0,0,0,0.1);
-  --nav-height: 70px;
-  --sidebar-width: 260px;
 }
 
 [data-theme="dark"] {
@@ -22,254 +20,91 @@
   --text-sub: #a0a0a0;
   --border-color: #2f353d;
   --primary: #2eb84e;
-  --primary-bg: #183320;
   --shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-/* --- BACKGROUND GRADIENTS (The "Image" for Glass Effect) --- */
+/* --- GLOBAL RESET --- */
 html, body {
   margin: 0; padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: var(--text-main);
-  
-  /* Fallback color */
+  width: 100%;
+  overflow-x: hidden;
   background-color: var(--bg-app);
-
-  /* LIGHT MODE MESH GRADIENT */
-  background-image: 
-    radial-gradient(at 0% 0%, hsla(140,60%,92%,1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(190,60%,94%,1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(140,60%,96%,1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(190,60%,94%,1) 0px, transparent 50%);
-    
-  background-attachment: fixed; /* Keeps bg still while scrolling */
-  min-height: 100vh;
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* DARK MODE MESH GRADIENT */
-[data-theme="dark"] body {
-  background-image: 
-    radial-gradient(at 0% 0%, hsla(140,20%,15%,1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(200,20%,18%,1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(140,20%,12%,1) 0px, transparent 50%);
-}
-
-/* --- LAYOUT STRUCTURE --- */
+/* --- THE MAIN WRAPPER (The Fix) --- */
 .app-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
 }
 
-/* Main Content Area */
+/* All content goes here. It is centered and limited to 800px max */
 .main-content {
   flex: 1;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 800px; /* Perfectly fits phone and looks great on desktop */
+  margin: 0 auto;   /* AUTO CENTERS THE PAGE */
   padding: 20px;
-  padding-bottom: 100px;
+  padding-bottom: 100px; /* Space for bottom nav */
   box-sizing: border-box;
-  background-color: transparent; /* TRANSPARENT so gradient shows */
 }
 
-/* --- HEADER (Updated for Full Width Glass) --- */
+/* Header stretches across the centered main-content */
 .app-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;
-  
-  /* Stretch to edges */
-  margin: -20px -20px 20px -20px; 
-  width: calc(100% + 40px);
-  
-  padding: 16px 24px;
+  position: sticky; top: 0; z-index: 50;
+  display: flex; justify-content: space-between; align-items: center;
+  margin: -20px -20px 20px -20px; /* Pulls to the edge of main-content */
+  padding: 16px 20px;
   padding-top: max(16px, env(safe-area-inset-top));
-  
   border-bottom: 1px solid rgba(0,0,0,0.05);
-  border-radius: 0 0 24px 24px;
+  border-radius: 0 0 20px 20px;
 }
 
-.app-title { font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -0.5px; color: var(--text-main); }
-
-.app-header .btn-primary {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+/* Grid & List uniformity */
+.goat-grid, .page-section-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
 }
 
-/* --- NAVIGATION --- */
+@media (min-width: 600px) {
+  .goat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+/* Forms & Cards */
+.goat-card, .glass-panel {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Navigation remains fixed at bottom but centered */
 .nav-bar {
-  position: fixed; bottom: 0; left: 0; right: 0;
+  position: fixed; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 800px;
   background: var(--bg-nav);
   border-top: 1px solid var(--border-color);
   display: flex; justify-content: space-around;
   padding: 12px 0; z-index: 100;
   padding-bottom: env(safe-area-inset-bottom);
 }
-.nav-item {
-  display: flex; flex-direction: column; align-items: center;
-  font-size: 10px; color: var(--text-sub);
-  gap: 5px; background: none; border: none; cursor: pointer; flex: 1;
-}
+
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; background: none; border: none; cursor: pointer; color: var(--text-sub); font-size: 10px; gap: 4px; }
 .nav-item.active { color: var(--primary); font-weight: 600; }
-.nav-label { display: block; }
 
-/* --- GOAT GRID SYSTEM --- */
-.goat-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-}
-
-.goat-card {
-  display: flex; align-items: center; gap: 15px;
-  padding: 16px; background: var(--bg-card);
-  border-radius: 12px; box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-  cursor: pointer; transition: transform 0.1s;
-}
-.goat-card:active { transform: scale(0.98); }
-.goat-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #eee; flex-shrink: 0; }
-.goat-info { min-width: 0; }
-.goat-info h3 { margin: 0 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* --- TOAST NOTIFICATION --- */
-.toast-container {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  z-index: 2000; display: flex; flex-direction: column; gap: 10px;
-  width: 90%; max-width: 400px;
-}
-.toast {
-  padding: 12px 16px; border-radius: 8px; color: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  font-weight: 500; font-size: 14px;
-  animation: slideIn 0.3s ease-out;
-}
-.toast.success { background-color: var(--primary); }
-.toast.error { background-color: var(--danger); }
-@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-/* --- DESKTOP UPGRADES --- */
-@media (min-width: 800px) {
-  .app-layout { flex-direction: row; }
-  .nav-bar {
-    position: sticky; top: 0; left: 0;
-    width: var(--sidebar-width); height: 100vh;
-    flex-direction: column; justify-content: flex-start;
-    padding-top: 40px; border-top: none; border-right: 1px solid var(--border-color);
-    gap: 10px;
-  }
-  .nav-item { 
-    flex-direction: row; padding: 15px 30px; 
-    font-size: 16px; gap: 15px;
-    border-radius: 0 25px 25px 0; margin-right: 15px;
-  }
-  .nav-item:hover { background-color: rgba(255,255,255,0.1); }
-  .nav-item.active { background-color: var(--primary-bg); color: var(--primary); }
-  
-  .main-content { padding-bottom: 40px; max-width: 1000px; }
-  .goat-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-  .goat-card { flex-direction: column; text-align: center; padding: 25px; }
-  .goat-avatar { width: 80px; height: 80px; margin-bottom: 10px; }
-}
-
-/* Utility Classes */
+/* Existing Utility classes remain... */
 .btn-primary { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-.search-bar { background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.search-input { border: none; outline: none; background: transparent; width: 100%; color: var(--text-main); font-size: 16px; }
-.form-input, .form-select { width: 100%; padding: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); border-radius: 8px; font-size: 16px; margin-bottom: 15px; display: block;}
+.form-input, .form-select { width: 100%; padding: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); border-radius: 8px; font-size: 16px; display: block; box-sizing: border-box;}
 .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+.glass-panel { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: var(--shadow); }
+[data-theme="dark"] .glass-panel { background: rgba(30, 35, 41, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); }
 
-/* --- VISUAL EFFECTS (Glassmorphism) --- */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-}
-
-/* Dark Mode Version */
-[data-theme="dark"] .glass-panel {
-  background: rgba(30, 35, 41, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Accessibility */
-@media (prefers-reduced-transparency: reduce) {
-  .glass-panel {
-    background: var(--bg-card);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-}
-
-/* --- PAGE CENTERING WRAPPER --- */
-.page-container {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.add-goat-view {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* --- EDIT BUTTON (HIGH VISIBILITY) --- */
-.edit-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 36px;
-  height: 36px;
-
-  /* FORCE White Background & Green Icon */
-  background-color: #ffffff !important; /* was invalid hex */
-  color: var(--primary) !important;
-  border: 2px solid var(--border-color);
-
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-  z-index: 50;
-  padding: 0;
-  transition: transform 0.12s ease, background-color 0.12s ease, color 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
-}
-
-/* blur when overlapping the page title */
-.edit-btn.overlaps-title {
-  filter: blur(4px);
-  opacity: 0.9;
-  /* keep it clickable; remove pointer-events only if you want it non-interactive */
-}
-
-/* Dark mode tweak */
-[data-theme="dark"] .edit-btn {
-  background-color: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.08);
-  color: var(--primary);
-}
-
-.edit-btn:hover {
-  background-color: #28a745 !important;
-  color: #ffffff !important;
-  border-color: #28a745;
-  transform: scale(1.1);
-}
-
-.edit-btn:active {
-  transform: scale(0.9);
-}
+/* Edit Button Fix */
+.edit-btn { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; color: var(--primary); }
