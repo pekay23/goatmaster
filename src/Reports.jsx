@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
+import { Download, FileText } from 'lucide-react'; // Import icons
 
 const Reports = () => {
   const [reportType, setReportType] = useState('herd'); // default
@@ -45,34 +46,81 @@ const Reports = () => {
   };
 
   return (
-    <div style={{ padding: '20px', border: '1px solid #ccc', marginTop: '20px' }}>
-      <h2>📊 Farm Reports</h2>
+    <div className="glass-panel" style={{ 
+      padding: '20px', 
+      borderRadius: '16px', 
+      border: '1px solid var(--border-color)',
+      marginBottom: '80px' // Space for bottom nav
+    }}>
+      <h2 style={{ color: 'var(--text-main)', marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <FileText size={24} /> Farm Reports
+      </h2>
       
-      <div style={{ marginBottom: '15px' }}>
-        <button onClick={() => setReportType('herd')} style={{ marginRight: '10px' }}>Herd Summary</button>
-        <button onClick={() => setReportType('health')}>Health Check</button>
+      {/* Report Switcher Buttons */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '5px' }}>
+        {['herd', 'health', 'breeding'].map(type => (
+          <button 
+            key={type}
+            onClick={() => setReportType(type)} 
+            className={`btn-filter ${reportType === type ? 'active' : ''}`}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {type === 'herd' ? 'Herd Census' : type === 'health' ? 'Health Issues' : 'Kidding Schedule'}
+          </button>
+        ))}
       </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <button onClick={exportToCSV} style={{ marginRight: '10px', background: '#28a745', color: 'white' }}>Download CSV</button>
-        <button onClick={exportToPDF} style={{ background: '#dc3545', color: 'white' }}>Download PDF</button>
+      {/* Export Actions */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <button onClick={exportToCSV} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
+          <Download size={16} /> CSV
+        </button>
+        <button onClick={exportToPDF} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
+          <Download size={16} /> PDF
+        </button>
       </div>
 
-      {loading ? <p>Loading...</p> : (
-        <table border="1" cellPadding="5" style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: '#f0f0f0' }}>
-              {data.length > 0 && Object.keys(data[0]).map(key => <th key={key}>{key}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, i) => (
-              <tr key={i}>
-                {Object.values(row).map((val, j) => <td key={j}>{val}</td>)}
+      {/* Data Table */}
+      {loading ? (
+        <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '20px' }}>Loading data...</p>
+      ) : data.length === 0 ? (
+        <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>No records found.</p>
+      ) : (
+        <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-card)' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                {Object.keys(data[0]).map(key => (
+                  <th key={key} style={{ 
+                    padding: '12px', 
+                    textAlign: 'left', 
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    color: 'var(--text-sub)',
+                    textTransform: 'capitalize'
+                  }}>
+                    {key.replace('_', ' ')}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((row, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  {Object.values(row).map((val, j) => (
+                    <td key={j} style={{ 
+                      padding: '12px', 
+                      fontSize: '14px', 
+                      color: 'var(--text-main)' 
+                    }}>
+                      {val}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
