@@ -2,32 +2,49 @@ import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
-import { Download, FileText } from 'lucide-react'; // Import icons
+import { Download, FileText } from 'lucide-react';
 
 const Reports = () => {
-  const [reportType, setReportType] = useState('herd'); // default
+  const [reportType, setReportType] = useState('herd');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch Data
+  // Helper: Remove "T00:00:00.000Z" from dates
+  const cleanData = (rawData) => {
+    return rawData.map(row => {
+      const newRow = { ...row };
+      Object.keys(newRow).forEach(key => {
+        const val = newRow[key];
+        // Check if value is a string and looks like an ISO date (YYYY-MM-DDTHH...)
+        if (typeof val === 'string' && val.includes('T') && val.length > 10) {
+          // Check if it's actually a date
+          if (!isNaN(Date.parse(val))) {
+            newRow[key] = val.split('T')[0]; // Keep only the date part
+          }
+        }
+      });
+      return newRow;
+    });
+  };
+
   useEffect(() => {
     setLoading(true);
     fetch(`/.netlify/functions/get-reports?type=${reportType}`)
       .then(res => res.json())
       .then(resData => {
-        setData(resData);
+        const cleaned = cleanData(resData); // Clean dates before setting state
+        setData(cleaned);
         setLoading(false);
       })
       .catch(err => console.error(err));
   }, [reportType]);
 
-  // Export PDF
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.text(`${reportType.toUpperCase()} REPORT`, 14, 20);
     
     if(data.length > 0) {
-        const headers = [Object.keys(data[0])];
+        const headers = [Object.keys(data[0]).map(k => k.replace(/_/g, ' ').toUpperCase())];
         const rows = data.map(obj => Object.values(obj));
         doc.autoTable({ startY: 30, head: headers, body: rows });
     }
@@ -35,7 +52,6 @@ const Reports = () => {
     doc.save(`${reportType}_report.pdf`);
   };
 
-  // Export CSV
   const exportToCSV = () => {
     if (data.length === 0) return;
     const headers = Object.keys(data[0]).join(",");
@@ -50,13 +66,12 @@ const Reports = () => {
       padding: '20px', 
       borderRadius: '16px', 
       border: '1px solid var(--border-color)',
-      marginBottom: '80px' // Space for bottom nav
+      marginBottom: '80px' 
     }}>
       <h2 style={{ color: 'var(--text-main)', marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
         <FileText size={24} /> Farm Reports
       </h2>
       
-      {/* Report Switcher Buttons */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '5px' }}>
         {['herd', 'health', 'breeding'].map(type => (
           <button 
@@ -70,7 +85,6 @@ const Reports = () => {
         ))}
       </div>
 
-      {/* Export Actions */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <button onClick={exportToCSV} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
           <Download size={16} /> CSV
@@ -80,7 +94,6 @@ const Reports = () => {
         </button>
       </div>
 
-      {/* Data Table */}
       {loading ? (
         <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '20px' }}>Loading data...</p>
       ) : data.length === 0 ? (
@@ -97,9 +110,10 @@ const Reports = () => {
                     fontSize: '13px', 
                     fontWeight: '600', 
                     color: 'var(--text-sub)',
-                    textTransform: 'capitalize'
+                    textTransform: 'capitalize',
+                    whiteSpace: 'nowrap'
                   }}>
-                    {key.replace('_', ' ')}
+                    {key.replace(/_/g, ' ')}
                   </th>
                 ))}
               </tr>
@@ -111,7 +125,8 @@ const Reports = () => {
                     <td key={j} style={{ 
                       padding: '12px', 
                       fontSize: '14px', 
-                      color: 'var(--text-main)' 
+                      color: 'var(--text-main)',
+                      whiteSpace: 'nowrap'
                     }}>
                       {val}
                     </td>
