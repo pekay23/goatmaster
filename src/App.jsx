@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { 
-  LayoutGrid, 
-  Dna, 
-  Activity, 
-  FileText, 
-  Settings, 
-  Search, 
-  Plus, 
-  Camera, 
-  LogOut 
+  LayoutGrid, Dna, Activity, FileText, Settings, 
+  Search, Plus, Camera, LogOut, Moon, Sun, Monitor 
 } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
@@ -19,7 +12,7 @@ import SettingsFooter from './SettingsFooter';
 import Login from './Login';
 
 // --- ☁️ CLOUDINARY CONFIGURATION ---
-// ⚠️ PASTE YOUR KEYS HERE AGAIN!
+// ⚠️ PASTE YOUR KEYS HERE!
 const CLOUD_NAME = "dvjxdxhdr"; 
 const UPLOAD_PRESET = "goat_uploads";
 
@@ -42,9 +35,28 @@ function App() {
     localStorage.removeItem('goat_user');
   };
 
+  // --- 🎨 THEME STATE ---
+  // Defaults to 'system'
+  const [theme, setTheme] = useState(localStorage.getItem('goat_theme') || 'system');
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const applyTheme = (t) => {
+      if (t === 'system') {
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        root.setAttribute('data-theme', systemDark ? 'dark' : 'light');
+      } else {
+        root.setAttribute('data-theme', t);
+      }
+    };
+    
+    applyTheme(theme);
+    localStorage.setItem('goat_theme', theme);
+  }, [theme]);
+
   // --- APP STATE ---
-  const [activeTab, setActiveTab] = useState('profiles'); // Navigation State
-  const [showAddGoat, setShowAddGoat] = useState(false); // Toggle Add Form
+  const [activeTab, setActiveTab] = useState('profiles'); 
+  const [showAddGoat, setShowAddGoat] = useState(false);
   
   const [goats, setGoats] = useState([]);
   const [isFetching, setIsFetching] = useState(true); 
@@ -106,7 +118,7 @@ function App() {
         alert('✅ Goat added successfully!');
         setFormData({ name: '', breed: '', sex: 'F', dob: '', image_url: '' }); 
         fetchGoats(); 
-        setShowAddGoat(false); // Close the form after success
+        setShowAddGoat(false); 
       } else {
         const errorText = await response.text();
         alert(`❌ Failed: ${errorText}`);
@@ -127,13 +139,12 @@ function App() {
   // --- GATEKEEPER ---
   if (!user) return <Login onLogin={handleLogin} />;
 
-  // --- UI COMPONENTS ---
+  // --- UI SCREENS ---
   
-  // 1. PROFILES SCREEN (List + Search)
   const ProfilesView = () => (
     <div className="screen-content">
       <div className="search-bar">
-        <Search size={20} color="#888" />
+        <Search size={20} color="var(--text-sub)" />
         <input 
           type="text" 
           className="search-input" 
@@ -143,7 +154,6 @@ function App() {
         />
       </div>
 
-      {/* Filter Chips */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto' }}>
         {['All', 'F', 'M', 'W'].map(sex => (
           <button 
@@ -156,15 +166,14 @@ function App() {
         ))}
       </div>
 
-      {/* Goat List */}
-      {isFetching ? <p>Loading herd...</p> : (
+      {isFetching ? <p style={{color: 'var(--text-sub)'}}>Loading herd...</p> : (
         <div>
           {filteredGoats.map((goat) => (
             <div key={goat.id} className="goat-card">
               {goat.image_url ? (
                 <img src={goat.image_url} alt={goat.name} className="goat-avatar" />
               ) : (
-                <div className="goat-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🐐</div>
+                <div className="goat-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🐐</div>
               )}
               <div className="goat-info">
                 <h3>{goat.name}</h3>
@@ -183,7 +192,6 @@ function App() {
     </div>
   );
 
-  // 2. ADD GOAT SCREEN (Matches Image 2)
   const AddGoatView = () => (
     <div className="screen-content">
       <div className="photo-upload-box">
@@ -225,7 +233,7 @@ function App() {
         <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '20px' }} disabled={isSubmitting || isUploading}>
            {isSubmitting ? 'Creating Profile...' : 'Create Goat Profile'}
         </button>
-        <button type="button" onClick={() => setShowAddGoat(false)} style={{ width: '100%', padding: '15px', background: 'none', border: 'none', color: '#666', marginTop: '10px' }}>
+        <button type="button" onClick={() => setShowAddGoat(false)} style={{ width: '100%', padding: '15px', background: 'none', border: 'none', color: 'var(--text-sub)', marginTop: '10px', cursor: 'pointer' }}>
           Cancel
         </button>
       </form>
@@ -242,20 +250,20 @@ function App() {
            <>
             <h1 className="app-title">
                {activeTab === 'profiles' ? 'Herd Profiles' : 
-                activeTab === 'lineage' ? 'Lineage Tracking' :
+                activeTab === 'lineage' ? 'Lineage' :
                 activeTab === 'health' ? 'Health Alerts' : 
                 activeTab === 'reports' ? 'Reports' : 'Settings'}
             </h1>
             {activeTab === 'profiles' && (
               <button className="btn-primary" onClick={() => setShowAddGoat(true)}>
-                <Plus size={18} /> Add Goat
+                <Plus size={18} /> Add
               </button>
             )}
            </>
         )}
       </header>
 
-      {/* MAIN CONTENT AREA */}
+      {/* MAIN CONTENT */}
       <main>
         {showAddGoat ? (
           <AddGoatView />
@@ -285,12 +293,29 @@ function App() {
 
             {activeTab === 'settings' && (
                <div className="screen-content">
+                 <h3 style={{color: 'var(--text-main)', marginTop: 0}}>Appearance</h3>
+                 
+                 {/* THEME SWITCHER */}
+                 <div className="theme-selector">
+                   <button className={`theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
+                     <Sun size={18} style={{marginBottom: -4}}/> Light
+                   </button>
+                   <button className={`theme-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>
+                     <Moon size={18} style={{marginBottom: -4}}/> Dark
+                   </button>
+                   <button className={`theme-btn ${theme === 'system' ? 'active' : ''}`} onClick={() => setTheme('system')}>
+                     <Monitor size={18} style={{marginBottom: -4}}/> System
+                   </button>
+                 </div>
+
+                 <h3 style={{color: 'var(--text-main)'}}>Account</h3>
                  <div className="goat-card" onClick={handleLogout} style={{ cursor: 'pointer', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                       <LogOut size={20} color="#dc3545" />
-                      <strong>Log Out</strong>
+                      <strong style={{color: 'var(--text-main)'}}>Log Out</strong>
                     </div>
                  </div>
+                 
                  <SettingsFooter />
                </div>
             )}
@@ -298,7 +323,7 @@ function App() {
         )}
       </main>
 
-      {/* BOTTOM NAVIGATION BAR */}
+      {/* BOTTOM NAV */}
       {!showAddGoat && (
         <nav className="bottom-nav">
           <button className={`nav-item ${activeTab === 'profiles' ? 'active' : ''}`} onClick={() => setActiveTab('profiles')}>
