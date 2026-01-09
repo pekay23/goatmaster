@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import { 
+  LayoutGrid, 
+  Dna, 
+  Activity, 
+  FileText, 
+  Settings, 
+  Search, 
+  Plus, 
+  Camera, 
+  LogOut 
+} from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
 import AlertsPanel from './AlertsPanel';
 import SettingsFooter from './SettingsFooter';
-import Login from './Login'; // Import the Login Screen
+import Login from './Login';
 
 // --- ☁️ CLOUDINARY CONFIGURATION ---
 // ⚠️ PASTE YOUR KEYS HERE AGAIN!
@@ -16,17 +27,14 @@ function App() {
   // --- AUTH STATE ---
   const [user, setUser] = useState(null);
 
-  // Check if user was already logged in (Persistent Login)
   useEffect(() => {
     const savedUser = localStorage.getItem('goat_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
 
   const handleLogin = (userData) => {
     setUser(userData);
-    localStorage.setItem('goat_user', JSON.stringify(userData)); // Save to browser
+    localStorage.setItem('goat_user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
@@ -35,12 +43,17 @@ function App() {
   };
 
   // --- APP STATE ---
+  const [activeTab, setActiveTab] = useState('profiles'); // Navigation State
+  const [showAddGoat, setShowAddGoat] = useState(false); // Toggle Add Form
+  
   const [goats, setGoats] = useState([]);
   const [isFetching, setIsFetching] = useState(true); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSex, setFilterSex] = useState('All');
+  
   const [formData, setFormData] = useState({ name: '', breed: '', sex: 'F', dob: '', image_url: '' });
 
   // Fetch Data
@@ -58,7 +71,7 @@ function App() {
   };
 
   useEffect(() => {
-    if (user) fetchGoats(); // Only fetch if logged in
+    if (user) fetchGoats();
   }, [user]);
 
   // Image Upload Logic
@@ -74,8 +87,6 @@ function App() {
       const fileData = await res.json();
       if (fileData.secure_url) {
         setFormData(prev => ({ ...prev, image_url: fileData.secure_url }));
-      } else {
-        alert("Image upload failed.");
       }
     } catch (error) {
       alert("Error uploading image");
@@ -84,7 +95,6 @@ function App() {
     }
   };
 
-  // Form Submit Logic
   const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
@@ -96,6 +106,7 @@ function App() {
         alert('✅ Goat added successfully!');
         setFormData({ name: '', breed: '', sex: 'F', dob: '', image_url: '' }); 
         fetchGoats(); 
+        setShowAddGoat(false); // Close the form after success
       } else {
         const errorText = await response.text();
         alert(`❌ Failed: ${errorText}`);
@@ -113,81 +124,205 @@ function App() {
     return matchesSearch && matchesSex;
   });
 
-  // --- 🔒 THE GATEKEEPER ---
-  // If no user, show Login Screen instead of App
-  if (!user) {
-    return <Login onLogin={handleLogin} />;
-  }
+  // --- GATEKEEPER ---
+  if (!user) return <Login onLogin={handleLogin} />;
 
-  // --- MAIN DASHBOARD ---
-  return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      
-      {/* HEADER with Logout */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div>
-          <h1 style={{ margin: 0 }}>🐐 Goat Master</h1>
-          <span style={{ fontSize: '0.8em', color: '#666' }}>Welcome, {user.username}</span>
-        </div>
-        <button onClick={handleLogout} style={{ padding: '8px 12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          Logout
-        </button>
+  // --- UI COMPONENTS ---
+  
+  // 1. PROFILES SCREEN (List + Search)
+  const ProfilesView = () => (
+    <div className="screen-content">
+      <div className="search-bar">
+        <Search size={20} color="#888" />
+        <input 
+          type="text" 
+          className="search-input" 
+          placeholder="Search by ID or name..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
-      <AlertsPanel />
-
-      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
-        <h2>Add New Goat</h2>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <label style={{ fontWeight: 'bold' }}>Goat Photo:</label>
-          <input type="file" accept="image/*" onChange={handleImageChange} style={{ padding: '10px' }}/>
-          {isUploading && <p style={{ color: 'blue', fontStyle: 'italic' }}>☁️ Uploading photo...</p>}
-          {formData.image_url && <img src={formData.image_url} alt="Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />}
-          
-          <input type="text" name="name" placeholder="Goat Name" value={formData.name} onChange={handleInputChange} required style={{ padding: '10px' }}/>
-          <input type="text" name="breed" placeholder="Breed (e.g. Boer)" value={formData.breed} onChange={handleInputChange} style={{ padding: '10px' }}/>
-          <select name="sex" value={formData.sex} onChange={handleInputChange} style={{ padding: '10px' }}>
-            <option value="F">Doe (Female)</option>
-            <option value="M">Buck (Male)</option>
-            <option value="W">Wether</option>
-          </select>
-          <label>Date of Birth:</label>
-          <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} style={{ padding: '10px' }}/>
-          <button type="submit" disabled={isSubmitting || isUploading} style={{ padding: '12px', backgroundColor: (isSubmitting || isUploading) ? '#ccc' : '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            {isUploading ? 'Uploading Image...' : isSubmitting ? 'Saving...' : 'Save Goat'}
+      {/* Filter Chips */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto' }}>
+        {['All', 'F', 'M', 'W'].map(sex => (
+          <button 
+            key={sex}
+            className={`btn-filter ${filterSex === sex ? 'active' : ''}`}
+            onClick={() => setFilterSex(sex)}
+          >
+            {sex === 'All' ? 'All' : sex === 'F' ? 'Female' : sex === 'M' ? 'Male' : 'Wether'}
           </button>
-        </form>
+        ))}
       </div>
 
-      <hr />
-      
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-        <input type="text" placeholder="🔍 Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ flex: 1, padding: '10px', border: '1px solid #999', borderRadius: '4px' }} />
-        <select value={filterSex} onChange={(e) => setFilterSex(e.target.value)} style={{ padding: '10px', border: '1px solid #999', borderRadius: '4px' }}>
-          <option value="All">All Sexes</option>
-          <option value="F">Does</option>
-          <option value="M">Bucks</option>
-          <option value="W">Wethers</option>
-        </select>
-      </div>
-
-      <h2>Current Herd ({filteredGoats.length})</h2>
-      {isFetching ? <p>Loading...</p> : (
-        <div style={{ display: 'grid', gap: '10px', maxHeight: '400px', overflowY: 'auto' }}>
+      {/* Goat List */}
+      {isFetching ? <p>Loading herd...</p> : (
+        <div>
           {filteredGoats.map((goat) => (
-            <div key={goat.id} style={{ display: 'flex', gap: '15px', alignItems: 'center', padding: '15px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#fff' }}>
-              {goat.image_url ? <img src={goat.image_url} alt={goat.name} style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} /> : <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🐐</div>}
-              <div><strong style={{ fontSize: '1.2em' }}>{goat.name}</strong><br/><span style={{ color: '#555' }}>{goat.breed} • {goat.sex}</span></div>
+            <div key={goat.id} className="goat-card">
+              {goat.image_url ? (
+                <img src={goat.image_url} alt={goat.name} className="goat-avatar" />
+              ) : (
+                <div className="goat-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🐐</div>
+              )}
+              <div className="goat-info">
+                <h3>{goat.name}</h3>
+                <div className="goat-id">ID: G00{goat.id}</div>
+                <div className="badges">
+                  <span className={`badge ${goat.sex}`}>
+                    {goat.sex === 'F' ? 'Female' : goat.sex === 'M' ? 'Male' : 'Wether'}
+                  </span>
+                  {goat.breed && <span className="badge breed">{goat.breed}</span>}
+                </div>
+              </div>
             </div>
           ))}
         </div>
       )}
+    </div>
+  );
 
-      <HealthPanel goats={goats} isLoading={isFetching} />
-      <BreedingPanel goats={goats} isLoading={isFetching} />
-      <Reports />
-      <SettingsFooter />
+  // 2. ADD GOAT SCREEN (Matches Image 2)
+  const AddGoatView = () => (
+    <div className="screen-content">
+      <div className="photo-upload-box">
+        <label style={{ cursor: 'pointer', display: 'block' }}>
+           <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }}/>
+           {formData.image_url ? (
+              <img src={formData.image_url} alt="Preview" style={{ width: '100%', borderRadius: '8px', maxHeight: '200px', objectFit: 'cover' }} />
+           ) : (
+             <>
+               <Camera size={40} />
+               <p>{isUploading ? "Uploading..." : "Add Photo"}</p>
+             </>
+           )}
+        </label>
+      </div>
 
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="form-label">Name *</label>
+          <input type="text" name="name" className="form-input" placeholder="Goat name" value={formData.name} onChange={handleInputChange} required />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Breed</label>
+          <input type="text" name="breed" className="form-input" placeholder="e.g. Nubian" value={formData.breed} onChange={handleInputChange} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Sex *</label>
+          <select name="sex" className="form-select" value={formData.sex} onChange={handleInputChange}>
+            <option value="F">Female</option>
+            <option value="M">Male</option>
+            <option value="W">Wether</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Date of Birth</label>
+          <input type="date" name="dob" className="form-input" value={formData.dob} onChange={handleInputChange} />
+        </div>
+        
+        <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '20px' }} disabled={isSubmitting || isUploading}>
+           {isSubmitting ? 'Creating Profile...' : 'Create Goat Profile'}
+        </button>
+        <button type="button" onClick={() => setShowAddGoat(false)} style={{ width: '100%', padding: '15px', background: 'none', border: 'none', color: '#666', marginTop: '10px' }}>
+          Cancel
+        </button>
+      </form>
+    </div>
+  );
+
+  return (
+    <div className="app-container">
+      {/* HEADER */}
+      <header className="app-header">
+        {showAddGoat ? (
+           <h1 className="app-title">Add New Goat</h1>
+        ) : (
+           <>
+            <h1 className="app-title">
+               {activeTab === 'profiles' ? 'Herd Profiles' : 
+                activeTab === 'lineage' ? 'Lineage Tracking' :
+                activeTab === 'health' ? 'Health Alerts' : 
+                activeTab === 'reports' ? 'Reports' : 'Settings'}
+            </h1>
+            {activeTab === 'profiles' && (
+              <button className="btn-primary" onClick={() => setShowAddGoat(true)}>
+                <Plus size={18} /> Add Goat
+              </button>
+            )}
+           </>
+        )}
+      </header>
+
+      {/* MAIN CONTENT AREA */}
+      <main>
+        {showAddGoat ? (
+          <AddGoatView />
+        ) : (
+          <>
+            {activeTab === 'profiles' && <ProfilesView />}
+            
+            {activeTab === 'lineage' && (
+              <div className="screen-content">
+                <BreedingPanel goats={goats} isLoading={isFetching} />
+              </div>
+            )}
+            
+            {activeTab === 'health' && (
+              <div className="screen-content">
+                <AlertsPanel />
+                <br/>
+                <HealthPanel goats={goats} isLoading={isFetching} />
+              </div>
+            )}
+
+            {activeTab === 'reports' && (
+              <div className="screen-content">
+                <Reports />
+              </div>
+            )}
+
+            {activeTab === 'settings' && (
+               <div className="screen-content">
+                 <div className="goat-card" onClick={handleLogout} style={{ cursor: 'pointer', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <LogOut size={20} color="#dc3545" />
+                      <strong>Log Out</strong>
+                    </div>
+                 </div>
+                 <SettingsFooter />
+               </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* BOTTOM NAVIGATION BAR */}
+      {!showAddGoat && (
+        <nav className="bottom-nav">
+          <button className={`nav-item ${activeTab === 'profiles' ? 'active' : ''}`} onClick={() => setActiveTab('profiles')}>
+            <LayoutGrid size={24} />
+            <span>Profiles</span>
+          </button>
+          <button className={`nav-item ${activeTab === 'lineage' ? 'active' : ''}`} onClick={() => setActiveTab('lineage')}>
+            <Dna size={24} />
+            <span>Lineage</span>
+          </button>
+          <button className={`nav-item ${activeTab === 'health' ? 'active' : ''}`} onClick={() => setActiveTab('health')}>
+            <Activity size={24} />
+            <span>Health</span>
+          </button>
+          <button className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
+            <FileText size={24} />
+            <span>Reports</span>
+          </button>
+          <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+            <Settings size={24} />
+            <span>Settings</span>
+          </button>
+        </nav>
+      )}
     </div>
   );
 }
