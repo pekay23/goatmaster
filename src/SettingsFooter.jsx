@@ -26,7 +26,6 @@ const SettingsFooter = () => {
 
       {/* Compliance Links */}
       <div>
-        {/* Link directly to the file in the public folder */}
         <a 
           href="/privacy.md" 
           target="_blank" 
@@ -39,9 +38,10 @@ const SettingsFooter = () => {
         <span style={{ margin: '0 5px' }}>&bull;</span>
         
         <a 
-          href="#" 
+          href="/terms.md" 
+          target="_blank" 
+          rel="noopener noreferrer"
           style={{ color: 'var(--text-sub)', textDecoration: 'underline', margin: '0 5px' }}
-          onClick={(e) => { e.preventDefault(); alert("Terms of Service coming soon!"); }}
         >
           Terms of Service
         </a>
