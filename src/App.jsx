@@ -12,9 +12,9 @@ import Login from './Login';
 const CLOUD_NAME = "dvjxdxhdr"; 
 const UPLOAD_PRESET = "goat_uploads";
 
-// --- TOAST COMPONENT (Better than Alerts) ---
+// --- TOAST COMPONENT (Now with Glass Effect) ---
 const Toast = ({ message, type, onClose }) => (
-  <div className={`toast ${type}`}>
+  <div className={`toast ${type} glass-panel`}>
     <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
       <span>{message}</span>
       <X size={14} style={{cursor:'pointer', marginLeft: 10}} onClick={onClose}/>
@@ -188,9 +188,9 @@ function App() {
 
   return (
     <div className="app-layout">
-      {/* SIDE/BOTTOM NAV */}
+      {/* SIDE/BOTTOM NAV (Now with Glass Effect) */}
       {!showAddGoat && (
-        <nav className="nav-bar">
+        <nav className="nav-bar glass-panel">
           <button className={`nav-item ${activeTab==='profiles'?'active':''}`} onClick={()=>setActiveTab('profiles')}>
             <LayoutGrid size={24} /> <span className="nav-label">Profiles</span>
           </button>
@@ -213,8 +213,8 @@ function App() {
       <div className="main-content">
         {toast && <Toast message={toast.msg} type={toast.type} onClose={()=>setToast(null)} />}
         
-        {/* --- HEADER WITH LOGO --- */}
-        <div className="app-header">
+        {/* --- HEADER WITH GLASS EFFECT --- */}
+        <div className="app-header glass-panel">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
             <h1 className="app-title">
@@ -236,16 +236,15 @@ function App() {
             {activeTab === 'health' && <><AlertsPanel /><br/><HealthPanel goats={goats} isLoading={isFetching}/></>}
             {activeTab === 'reports' && <Reports />}
             
-            {/* --- UPDATED SETTINGS TAB --- */}
+            {/* --- SETTINGS TAB --- */}
             {activeTab === 'settings' && (
               <div className="screen-content">
                 
-                {/* 👤 PROFILE CARD */}
-                <div style={{
+                {/* 👤 PROFILE CARD (Now with Glass Effect) */}
+                <div className="glass-panel" style={{
                   display: 'flex', alignItems: 'center', gap: '15px', 
-                  padding: '20px', backgroundColor: 'var(--bg-card)', 
-                  borderRadius: '16px', marginBottom: '25px',
-                  border: '1px solid var(--border-color)', boxShadow: 'var(--shadow)'
+                  padding: '20px', borderRadius: '16px', marginBottom: '25px',
+                  border: '1px solid var(--border-color)'
                 }}>
                   <div style={{
                     width: '60px', height: '60px', borderRadius: '50%', 
