@@ -1,65 +1,51 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const SettingsFooter = () => {
-  const [showPrivacy, setShowPrivacy] = useState(false);
-
   return (
     <footer style={{ 
       marginTop: '40px', 
       padding: '20px', 
-      borderTop: '1px solid #eee', 
+      borderTop: '1px solid var(--border-color)', 
       textAlign: 'center', 
-      color: '#666',
+      color: 'var(--text-sub)',
       fontSize: '0.9em',
-      backgroundColor: '#f9f9f9'
+      backgroundColor: 'var(--bg-card)'
     }}>
       
       {/* App Version Info */}
       <div style={{ marginBottom: '10px' }}>
-        <strong>Goat Master App</strong> v1.0.0
+        <strong>Goat Master</strong> v1.0.0
       </div>
 
       {/* Support Links */}
       <div style={{ marginBottom: '15px' }}>
-        <a href="mailto:support@goatmaster.com" style={{ color: '#007bff', textDecoration: 'none', margin: '0 10px' }}>
+        <a href="mailto:samuel.hughes.23@outlook.com" style={{ color: 'var(--primary)', textDecoration: 'none', margin: '0 10px' }}>
           📧 Contact Support
-        </a>
-        <span>|</span>
-        <a href="#" style={{ color: '#007bff', textDecoration: 'none', margin: '0 10px' }}>
-          ❓ Help Center
         </a>
       </div>
 
       {/* Compliance Links */}
       <div>
-        <button 
-          onClick={() => setShowPrivacy(!showPrivacy)} 
-          style={{ background: 'none', border: 'none', color: '#555', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' }}
+        {/* Link directly to the file in the public folder */}
+        <a 
+          href="/privacy.md" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ color: 'var(--text-sub)', textDecoration: 'underline', margin: '0 5px' }}
         >
           Privacy Policy
-        </button>
+        </a>
+        
         <span style={{ margin: '0 5px' }}>&bull;</span>
-        <button 
-          style={{ background: 'none', border: 'none', color: '#555', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' }}
+        
+        <a 
+          href="#" 
+          style={{ color: 'var(--text-sub)', textDecoration: 'underline', margin: '0 5px' }}
+          onClick={(e) => { e.preventDefault(); alert("Terms of Service coming soon!"); }}
         >
           Terms of Service
-        </button>
+        </a>
       </div>
-
-      {/* Toggleable Privacy Policy Text (Simple Modal-like view) */}
-      {showPrivacy && (
-        <div style={{ 
-          marginTop: '15px', 
-          padding: '15px', 
-          backgroundColor: 'white', 
-          border: '1px solid #ddd', 
-          textAlign: 'left' 
-        }}>
-          <strong>Privacy Policy:</strong>
-          <p>We respect your farm data. Your herd information is stored securely in our Neon database and is not shared with third parties.</p>
-          <button onClick={() => setShowPrivacy(false)} style={{ color: 'red', cursor: 'pointer' }}>Close</button>
-        </div>
-      )}
 
       <div style={{ marginTop: '20px', fontSize: '0.8em', color: '#999' }}>
         &copy; {new Date().getFullYear()} Goat Master Inc.
