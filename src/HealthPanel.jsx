@@ -13,22 +13,15 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
-  // --- AUTO-SIZE REMEDY ---
   const textareaRef = useRef(null);
-
-  // This function runs every time you type to adjust the box height
   const adjustHeight = () => {
     const element = textareaRef.current;
     if (element) {
-      element.style.height = 'auto'; // Reset height to recalculate
-      element.style.height = `${element.scrollHeight}px`; // Set to content height
+      element.style.height = 'auto';
+      element.style.height = `${element.scrollHeight}px`;
     }
   };
-
-  // Adjust height on initial load or if notes are cleared
-  useEffect(() => {
-    adjustHeight();
-  }, [formData.notes]);
+  useEffect(() => adjustHeight(), [formData.notes]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -41,16 +34,10 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
         if (showToast) showToast("Please select a goat first", "error");
         return;
     }
-
     setIsSubmitting(true);
     setSuccessMsg('');
-
     try {
-      const res = await fetch('/.netlify/functions/add-health-log', {
-        method: 'POST',
-        body: JSON.stringify(formData)
-      });
-
+      const res = await fetch('/.netlify/functions/add-health-log', { method: 'POST', body: JSON.stringify(formData) });
       if (res.ok) {
         if (showToast) showToast("Medical record saved!");
         setSuccessMsg("Record added successfully!");
@@ -66,32 +53,40 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
 
   return (
     <div className="glass-panel" style={{ 
-      padding: '20px', 
+      padding: '25px', 
       borderRadius: '24px', 
       border: '1px solid rgba(255, 152, 0, 0.2)',
       width: '100%',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <h2 style={{ color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '12px', fontSize: '20px' }}>
-            <div style={{ background: '#fff3e0', padding: '8px', borderRadius: '10px', display: 'flex' }}>
-                <Activity size={22} color="#f57c00" />
-            </div>
-            Medical Log
-        </h2>
+      
+      {/* --- HEADER --- */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ background: '#fff3e0', padding: '12px', borderRadius: '14px', display: 'flex', boxShadow: '0 4px 10px rgba(255, 152, 0, 0.2)' }}>
+              <Activity size={28} color="#f57c00" />
+          </div>
+          <div>
+            <h2 style={{ color: 'var(--text-main)', margin: 0, fontSize: '20px', fontWeight: '700' }}>Medical Log</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-sub)' }}>Record treatments & vaccines</p>
+          </div>
       </div>
       
+      {/* --- FORM --- */}
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '12px' }}>
-          <div className="form-group">
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+          <div className="form-group" style={{marginBottom: 0}}>
             <label className="form-label">Goat</label>
             <select name="goat_id" className="form-select" value={formData.goat_id} onChange={handleChange} required>
-                <option value="">{isLoading ? "⏳ Syncing..." : "-- Select --"}</option>
+                <option value="">{isLoading ? "⏳..." : "-- Select --"}</option>
                 {goats.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{marginBottom: 0}}>
             <label className="form-label">Date</label>
             <div style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
               <Calendar size={18} style={{position: 'absolute', left: '14px', color: '#f57c00', opacity: 0.7}} />
@@ -108,40 +103,24 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
           </div>
         </div>
 
-        {/* --- ELASTIC AUTO-SIZE ADMIN NOTES --- */}
         <div className="form-group">
           <label className="form-label">Admin Notes</label>
           <div style={{ position: 'relative' }}>
-            <FileText 
-                size={18} 
-                style={{ 
-                    position: 'absolute', 
-                    top: '14px', 
-                    left: '14px', 
-                    color: '#f57c00', 
-                    opacity: 0.6 
-                }} 
-            />
+            <FileText size={18} style={{ position: 'absolute', top: '16px', left: '14px', color: '#f57c00', opacity: 0.6 }} />
             <textarea 
                 ref={textareaRef}
                 name="notes" 
                 className="form-input" 
-                placeholder="Type your notes here... (Box grows as you type)" 
+                placeholder="Notes..." 
                 value={formData.notes} 
                 onChange={handleChange} 
                 style={{ 
-                    width: '100%', 
-                    paddingLeft: '45px', 
-                    paddingTop: '12px',
-                    minHeight: '50px', /* Starts small */
-                    maxHeight: '300px', /* Limits growth so it doesn't push nav off screen */
-                    lineHeight: '1.5',
-                    overflowY: 'auto',
-                    resize: 'none', /* Disable manual resize to keep UI clean */
+                    width: '100%', paddingLeft: '45px', paddingTop: '16px',
+                    minHeight: '100px', maxHeight: '300px',
+                    lineHeight: '1.5', overflowY: 'auto', resize: 'none',
                     backgroundColor: 'rgba(255, 255, 255, 0.03)',
                     border: '1px solid rgba(255, 152, 0, 0.15)',
-                    fontSize: '16px',
-                    transition: 'height 0.1s ease'
+                    fontSize: '16px'
                 }}
             ></textarea>
           </div>
@@ -160,7 +139,7 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
       </form>
 
       {successMsg && (
-        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: 'rgba(46, 125, 50, 0.1)', borderRadius: '10px', color: '#2e7d32', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', fontSize: '13px' }}>
+        <div style={{ padding: '10px', backgroundColor: 'rgba(46, 125, 50, 0.1)', borderRadius: '10px', color: '#2e7d32', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', fontSize: '13px' }}>
           <CheckCircle size={16} /> {successMsg}
         </div>
       )}
