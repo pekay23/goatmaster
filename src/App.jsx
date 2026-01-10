@@ -23,9 +23,9 @@ const Toast = ({ message, type, onClose }) => (
 );
 
 // --- ADD/EDIT FORM COMPONENT ---
-const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleSubmit, handleImageChange, onCancel, isEditing }) => {
+const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleSubmit, handleImageChange, onCancel, isEditing, onDelete }) => {
   return (
-    <div style={{width: '100%'}}>
+    <div className="add-goat-view">
       <div style={{textAlign:'center', padding:30, border:'2px dashed var(--border-color)', borderRadius:12, cursor:'pointer', marginBottom:20}}>
         <label style={{cursor:'pointer'}}>
           <input type="file" hidden onChange={handleImageChange} />
@@ -51,16 +51,33 @@ const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleS
           <label className="form-label">Date of Birth</label>
           <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
         </div>
+        
         <div style={{display:'flex', gap:10, marginTop:20}}>
           <button type="button" onClick={onCancel} style={{flex:1, padding:12, border:'1px solid var(--border-color)', background:'transparent', borderRadius:8, cursor:'pointer', color:'var(--text-main)'}}>Cancel</button>
+          
+          {/* DELETE BUTTON (Only shows if editing) */}
+          {isEditing && (
+            <button 
+              type="button" 
+              onClick={onDelete}
+              style={{
+                flex:1, padding:12, border:'1px solid #fecaca', background:'#fee2e2', 
+                borderRadius:8, cursor:'pointer', color:'#dc2626', fontWeight:'bold'
+              }}
+            >
+              Delete
+            </button>
+          )}
+
           <button type="submit" className="btn-primary" style={{flex:1, justifyContent:'center'}} disabled={isSubmitting || isUploading}>
-            {isUploading ? 'Uploading...' : (isEditing ? 'Update Profile' : 'Create Profile')}
+            {isUploading ? 'Uploading...' : (isEditing ? 'Update' : 'Create')}
           </button>
         </div>
       </form>
     </div>
   );
 };
+
 
 function App() {
   const [user, setUser] = useState(null);
