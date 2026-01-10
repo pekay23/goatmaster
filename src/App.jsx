@@ -200,17 +200,27 @@ function App() {
       <div className="goat-grid">
         {filtered.map(g => (
           <div key={g.id} className="goat-card" style={{position: 'relative'}}>
-            {/* EDIT BUTTON (Manual SVG) */}
-            <button 
+              <button 
               className="edit-btn"
               onClick={(e) => { e.stopPropagation(); handleEdit(g); }}
               aria-label="Edit Goat"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.2)', // Very subtle glass
+                backdropFilter: 'blur(4px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '50%',
+                width: '32px', height: '32px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 0
+              }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
+              <img 
+                src="/editlogo.png" 
+                alt="Edit" 
+                style={{ width: '16px', height: '16px', opacity: 0.8 }} 
+              />
             </button>
+
 
             {g.image_url ? <img src={g.image_url} className="goat-avatar" alt=""/> : <div className="goat-avatar" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>🐐</div>}
             <div className="goat-info">
