@@ -25,7 +25,7 @@
   --shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-/* --- BACKGROUND GRADIENTS --- */
+/* --- GLOBAL SETTINGS --- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html, body {
@@ -35,7 +35,7 @@ html, body {
   color: var(--text-main);
   background-color: var(--bg-app);
   
-  /* Mesh Gradient Background */
+  /* Mesh Gradient */
   background-image: 
     radial-gradient(at 0% 0%, hsla(140,60%,92%,1) 0px, transparent 50%),
     radial-gradient(at 100% 0%, hsla(190,60%,94%,1) 0px, transparent 50%),
@@ -51,47 +51,18 @@ html, body {
     radial-gradient(at 100% 100%, hsla(140,20%,12%,1) 0px, transparent 50%);
 }
 
-/* --- CENTERED APP SHELL --- */
-#root {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
+/* --- APP LAYOUT (CENTERED) --- */
+#root { display: flex; justify-content: center; width: 100%; }
 
 .app-layout {
   width: 100%;
-  max-width: 600px; /* Forces Mobile Width */
+  max-width: 600px; /* Constrains width on Desktop */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
-  background: transparent;
 }
 
-/* --- HEADER --- */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 20px;
-  padding-top: max(16px, env(safe-area-inset-top));
-  
-  /* Glass Effect */
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--border-color);
-  border-radius: 0 0 24px 24px;
-}
-
-[data-theme="dark"] .app-header {
-  background: rgba(30, 35, 41, 0.75);
-}
-
-.app-title { font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
-
-/* --- CONTENT AREA --- */
 .main-content {
   flex: 1;
   width: 100%;
@@ -99,39 +70,64 @@ html, body {
   padding-bottom: 100px; /* Space for bottom nav */
 }
 
+/* --- HEADER (FIXED ALIGNMENT) --- */
+.app-header {
+  position: sticky;
+  top: 10px; /* Floating slightly from top */
+  z-index: 100;
+  
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px;
+  margin-bottom: 20px; /* ADDS THE SPACE YOU WANTED */
+  
+  /* Glass Effect */
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  
+  border: 1px solid var(--border-color);
+  border-radius: 20px; /* Rounded pill shape */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+[data-theme="dark"] .app-header {
+  background: rgba(30, 35, 41, 0.75);
+}
+
+.app-title { 
+  font-size: 18px; 
+  font-weight: 700; 
+  margin: 0; 
+  letter-spacing: -0.2px;
+  color: var(--text-main);
+  text-transform: capitalize;
+}
+
 /* --- NAVIGATION --- */
 .nav-bar {
   position: fixed; bottom: 0; 
-  left: 50%; transform: translateX(-50%); /* Centered Fixed Nav */
+  left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 600px;
   
   display: flex; justify-content: space-around;
   padding: 12px 0; z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 12px);
   
   /* Glass Effect */
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-color);
   border-radius: 24px 24px 0 0;
 }
 
-[data-theme="dark"] .nav-bar {
-  background: rgba(30, 35, 41, 0.8);
-}
+[data-theme="dark"] .nav-bar { background: rgba(30, 35, 41, 0.85); }
 
-.nav-item {
-  display: flex; flex-direction: column; align-items: center;
-  font-size: 10px; color: var(--text-sub);
-  gap: 5px; background: none; border: none; cursor: pointer; flex: 1;
-}
+.nav-item { display: flex; flex-direction: column; align-items: center; background: none; border: none; font-size: 10px; color: var(--text-sub); gap: 5px; cursor: pointer; flex: 1; }
 .nav-item.active { color: var(--primary); font-weight: 600; }
 
-/* --- COMPONENTS & CARDS --- */
-.goat-grid {
-  display: flex; flex-direction: column; gap: 15px; width: 100%;
-}
+/* --- CARDS & PANELS --- */
+.goat-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; }
 
 .goat-card, .glass-panel {
   width: 100%;
@@ -146,15 +142,13 @@ html, body {
   box-sizing: border-box;
 }
 
-[data-theme="dark"] .goat-card, [data-theme="dark"] .glass-panel {
-  background: rgba(30, 35, 41, 0.5);
-}
+[data-theme="dark"] .goat-card, [data-theme="dark"] .glass-panel { background: rgba(30, 35, 41, 0.5); }
 
 .goat-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #eee; flex-shrink: 0; }
 .goat-info h3 { margin: 0 0 4px 0; font-size: 16px; }
 
 /* --- FORMS --- */
-.form-group { margin-bottom: 15px; }
+.form-group { margin-bottom: 15px; width: 100%; }
 .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
 .form-input, .form-select { 
   width: 100%; padding: 12px; 
@@ -167,8 +161,8 @@ html, body {
 
 /* --- UTILITIES --- */
 .btn-primary { 
-  background: var(--primary); color: white; padding: 10px 20px; 
-  border-radius: 12px; border: none; font-weight: 600; 
+  background: var(--primary); color: white; padding: 8px 16px; 
+  border-radius: 10px; border: none; font-weight: 700; 
   cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px;
 }
 
@@ -179,16 +173,22 @@ html, body {
 }
 .search-input { border: none; outline: none; background: transparent; width: 100%; color: var(--text-main); font-size: 16px; }
 
-/* --- EDIT BUTTON --- */
+/* --- EDIT BUTTON (Translucent Glass) --- */
 .edit-btn {
   position: absolute; top: 12px; right: 12px;
   width: 32px; height: 32px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid var(--border-color);
-  color: var(--primary);
+  
+  background: rgba(255, 255, 255, 0.3); /* Translucent */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; z-index: 20;
 }
+
+[data-theme="dark"] .edit-btn { background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.1); }
+.edit-btn:hover { background: rgba(255,255,255,0.6); }
 
 /* --- TOAST --- */
 .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; width: 90%; max-width: 400px; }
