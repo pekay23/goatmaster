@@ -12,6 +12,16 @@ import Login from './Login';
 const CLOUD_NAME = "dvjxdxhdr"; 
 const UPLOAD_PRESET = "goat_uploads";
 
+// --- SPLASH SCREEN COMPONENT ---
+const SplashScreen = () => (
+  <div className="splash-screen">
+    <div className="splash-content">
+      {/* Uses your custom image */}
+      <img src="/splashscreen.png" alt="Goat Master" className="splash-logo" />
+    </div>
+  </div>
+);
+
 // --- TOAST COMPONENT ---
 const Toast = ({ message, type, onClose }) => (
   <div className={`toast ${type} glass-panel`}>
@@ -22,13 +32,13 @@ const Toast = ({ message, type, onClose }) => (
   </div>
 );
 
-// --- DELETE CONFIRMATION MODAL (THEMED + LUCIDE ICON + CUSTOM BUTTONS) ---
+// --- DELETE CONFIRMATION MODAL ---
 const DeleteModal = ({ isOpen, onClose, onConfirm, title, message, confirmText, cancelText }) => {
   if (!isOpen) return null;
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0,0,0,0.5)', // Dimmed overlay
+      background: 'rgba(0,0,0,0.5)', 
       backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000
     }}>
@@ -42,64 +52,18 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, title, message, confirmText, 
         border: '1px solid var(--border-color)',
         animation: 'scaleIn 0.2s ease-out'
       }}>
-        {/* Warning Icon (Lucide) */}
-        <div style={{
-          margin: '0 auto 15px',
-          display: 'flex', justifyContent: 'center', alignItems: 'center'
-        }}>
-          <div style={{
-            background: '#fee2e2', width: '60px', height: '60px', borderRadius: '50%', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
+        <div style={{ margin: '0 auto 15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ background: '#fee2e2', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
              <AlertTriangle size={32} color="#dc2626" strokeWidth={2} />
           </div>
         </div>
         
-        <h3 style={{
-          margin: '0 0 10px', 
-          color: 'var(--text-main)', 
-          fontSize: '20px', 
-          fontWeight: '700'
-        }}>{title}</h3>
-        
-        <p style={{
-          margin: '0 0 25px', 
-          color: 'var(--text-sub)', 
-          fontSize: '15px', 
-          lineHeight: '1.5'
-        }}>{message}</p>
+        <h3 style={{ margin: '0 0 10px', color: 'var(--text-main)', fontSize: '20px', fontWeight: '700' }}>{title}</h3>
+        <p style={{ margin: '0 0 25px', color: 'var(--text-sub)', fontSize: '15px', lineHeight: '1.5' }}>{message}</p>
         
         <div style={{display: 'flex', gap: '12px'}}>
-          {/* Cancel Button */}
-          <button onClick={onClose} style={{
-            flex: 1, 
-            padding: '14px', 
-            borderRadius: '12px', 
-            border: 'none', 
-            background: 'var(--bg-app)', 
-            color: 'var(--text-sub)',    
-            cursor: 'pointer', 
-            fontWeight: '600', 
-            fontSize: '15px'
-          }}>
-            {cancelText || "No, keep it."}
-          </button>
-          
-          {/* Delete Button */}
-          <button onClick={onConfirm} style={{
-            flex: 1, 
-            padding: '14px', 
-            borderRadius: '12px', 
-            border: 'none', 
-            background: '#ef4444', 
-            color: 'white', 
-            cursor: 'pointer', 
-            fontWeight: '600', 
-            fontSize: '15px',
-            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
-          }}>
-            {confirmText || "Yes, Delete!"}
-          </button>
+          <button onClick={onClose} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: 'var(--bg-app)', color: 'var(--text-sub)', cursor: 'pointer', fontWeight: '600', fontSize: '15px' }}>{cancelText || "No, keep it."}</button>
+          <button onClick={onConfirm} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: '600', fontSize: '15px', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>{confirmText || "Yes, Delete!"}</button>
         </div>
       </div>
     </div>
@@ -132,10 +96,9 @@ const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleS
 };
 
 function App() {
+  const [loadingSplash, setLoadingSplash] = useState(true); // SPLASH STATE
   const [user, setUser] = useState(null);
   const [toast, setToast] = useState(null);
-  
-  // MODAL STATE
   const [modalOpen, setModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState({ title: '', message: '', confirmText: '', cancelText: '', onConfirm: () => {} });
 
@@ -144,11 +107,18 @@ function App() {
     setTimeout(() => setToast(null), 3000); 
   };
 
-  // Helper to open confirmation
   const confirmAction = (title, message, confirmText, cancelText, action) => {
     setModalConfig({ title, message, confirmText, cancelText, onConfirm: () => { action(); setModalOpen(false); } });
     setModalOpen(true);
   };
+
+  // --- SPLASH LOGIC ---
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadingSplash(false);
+    }, 2800); // 2.8 seconds total splash time
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('goat_user');
@@ -305,60 +275,15 @@ function App() {
     (filterSex === 'All' || g.sex === filterSex)
   );
 
+  // --- RENDER LOGIC ---
+  
+  // 1. Show Splash Screen if loading
+  if (loadingSplash) return <SplashScreen />;
+
+  // 2. Show Login if no user (after splash)
   if (!user) return <Login onLogin={handleLogin} />;
 
-  const ProfilesView = () => (
-    <div>
-      <div className="search-bar" style={{background:'var(--bg-card)', padding:10, borderRadius:12, border:'1px solid var(--border-color)', display:'flex', alignItems:'center', gap:10, marginBottom:15}}>
-        <Search size={18} color="var(--text-sub)" />
-        <input style={{border:'none', outline:'none', background:'transparent', width:'100%', color:'var(--text-main)'}} placeholder="Search..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} />
-      </div>
-      <div style={{display:'flex', gap:8, marginBottom:20, overflowX:'auto'}}>
-        {['All','F','M','W'].map(s => (
-          <button key={s} onClick={()=>setFilterSex(s)} className={`btn-filter ${filterSex === s ? 'active' : ''}`}>
-            {s==='All'?'All':s==='F'?'Does':s==='M'?'Bucks':'Wethers'}
-          </button>
-        ))}
-      </div>
-      
-      <div className="goat-grid">
-        {filtered.map(g => (
-          <div key={g.id} className="goat-card" style={{position: 'relative'}}>
-            
-            {/* EDIT BUTTON (Image Icon) */}
-            <button 
-              className="edit-btn"
-              onClick={(e) => { e.stopPropagation(); handleEdit(g); }}
-              aria-label="Edit Goat"
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(4px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '50%',
-                width: '32px', height: '32px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: 0
-              }}
-            >
-              <img 
-                src="/editlogo.png" 
-                alt="Edit" 
-                style={{ width: '16px', height: '16px', opacity: 0.8 }} 
-              />
-            </button>
-
-            {g.image_url ? <img src={g.image_url} className="goat-avatar" style={{width:50, height:50, borderRadius:'50%', objectFit:'cover'}} alt=""/> : <div className="goat-avatar" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>🐐</div>}
-            <div className="goat-info">
-              <h3>{g.name}</h3>
-              <div style={{fontSize:12, color:'var(--text-sub)'}}>ID: G00{g.id}</div>
-              <span style={{fontSize:11, background:'var(--bg-app)', padding:'2px 8px', borderRadius:4}}>{g.breed || 'Unknown'} • {g.sex}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
+  // 3. Show App
   return (
     <div className="app-layout">
       {/* GLOBAL MODAL */}
@@ -381,9 +306,53 @@ function App() {
           <AddGoatView formData={formData} setFormData={setFormData} isSubmitting={isSubmitting} isUploading={isUploading} handleSubmit={handleSubmit} handleImageChange={handleImageChange} onCancel={()=>setShowAddGoat(false)} isEditing={!!editingGoat} onDelete={handleDeleteGoat} />
         ) : (
           <div style={{width:'100%'}}>
-            {activeTab === 'profiles' && <ProfilesView />}
+            {activeTab === 'profiles' && (
+              <>
+                <div className="search-bar" style={{background:'var(--bg-card)', padding:10, borderRadius:12, border:'1px solid var(--border-color)', display:'flex', alignItems:'center', gap:10, marginBottom:15}}>
+                  <Search size={18} color="var(--text-sub)"/><input style={{border:'none', background:'none', color:'var(--text-main)', width:'100%', outline:'none'}} placeholder="Search herd..." onChange={e=>setSearchTerm(e.target.value)} />
+                </div>
+                <div style={{display:'flex', gap:8, marginBottom:20, overflowX:'auto'}}>
+                  {['All','F','M','W'].map(s => <button key={s} onClick={()=>setFilterSex(s)} className={`btn-filter ${filterSex === s ? 'active' : ''}`}>{s==='All'?'All':s==='F'?'Does':s==='M'?'Bucks':'Wethers'}</button>)}
+                </div>
+                <div className="goat-grid">
+                  {filtered.map(g => (
+                    <div key={g.id} className="goat-card" style={{position:'relative'}}>
+                      
+                      {/* EDIT BUTTON (Image Icon) */}
+                      <button 
+                        className="edit-btn"
+                        onClick={(e) => { e.stopPropagation(); handleEdit(g); }}
+                        aria-label="Edit Goat"
+                        style={{ 
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(4px)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          borderRadius: '50%',
+                          width: '32px', height: '32px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          padding: 0
+                        }}
+                      >
+                        <img 
+                          src="/editlogo.png" 
+                          alt="Edit" 
+                          style={{ width: '16px', height: '16px', opacity: 0.8 }} 
+                        />
+                      </button>
+
+                      {g.image_url ? <img src={g.image_url} className="goat-avatar" style={{width:50, height:50, borderRadius:'50%', objectFit:'cover'}} alt=""/> : <div className="goat-avatar" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>🐐</div>}
+                      <div className="goat-info">
+                        <h3>{g.name}</h3>
+                        <div style={{fontSize:12, color:'var(--text-sub)'}}>ID: G00{g.id}</div>
+                        <span style={{fontSize:11, background:'var(--bg-app)', padding:'2px 8px', borderRadius:4}}>{g.breed || 'Unknown'} • {g.sex}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
             {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
-            {activeTab === 'health' && <><AlertsPanel /><HealthPanel goats={goats} isLoading={isFetching} showToast={showToast} /></>}
+            {activeTab === 'health' && <><AlertsPanel /><HealthPanel goats={goats} isLoading={isFetching} showToast={showToast}/></>}
             {activeTab === 'reports' && <Reports />}
             
             {activeTab === 'settings' && (

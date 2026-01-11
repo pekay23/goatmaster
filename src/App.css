@@ -216,3 +216,36 @@ html, body {
     justify-content: flex-end;
   }
 }
+/* --- SPLASH SCREEN --- */
+.splash-screen {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  
+  /* GLASSY BACKGROUND that blends with your theme */
+  background: var(--bg-app); 
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* Fade out animation */
+  animation: fadeOut 0.5s ease-out 2.5s forwards;
+}
+
+.splash-content {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  animation: scaleUp 2s ease-out;
+}
+
+.splash-logo {
+  width: 120px; height: 120px; object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
+}
+
+@keyframes scaleUp {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; visibility: hidden; }
+}
