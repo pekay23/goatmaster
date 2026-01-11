@@ -13,6 +13,7 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
+  // --- AUTO-SIZE REMEDY ---
   const textareaRef = useRef(null);
   const adjustHeight = () => {
     const element = textareaRef.current;
@@ -52,7 +53,7 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
   };
 
   return (
-    <div className="glass-panel" style={{ 
+    <div className="glass-panel split-layout" style={{ 
       padding: '25px', 
       borderRadius: '24px', 
       border: '1px solid rgba(255, 152, 0, 0.2)',
@@ -131,8 +132,10 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
             padding: '15px', 
             borderRadius: '16px', 
             border: '1px dashed rgba(255, 152, 0, 0.2)',
-            width: '100%',           /* Ensure it doesn't stretch */
-            boxSizing: 'border-box'  /* Include padding in width calculation */
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%', /* Force full container width */
+            boxSizing: 'border-box' /* Ensure padding counts towards width */
         }}>
           <label className="form-label" style={{ color: '#e65100', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Calendar size={16} /> Remind me on:
@@ -143,7 +146,12 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
             className="form-input" 
             value={formData.next_due_date} 
             onChange={handleChange} 
-            style={{ marginBottom: 0, width: '100%', boxSizing: 'border-box' }} 
+            style={{ 
+                marginBottom: 0, 
+                width: '100%', /* Force input to fill container */
+                maxWidth: '100%', /* Prevent overflow */
+                boxSizing: 'border-box'
+            }} 
           />
         </div>
 
