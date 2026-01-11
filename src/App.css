@@ -216,14 +216,23 @@ html, body {
     justify-content: flex-end;
   }
 }
-/* --- SPLASH SCREEN (Responsive) --- */
+/* --- SPLASH SCREEN (Immersive Fix) --- */
 .splash-screen {
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  z-index: 9999;
-  display: flex; align-items: center; justifyContent: center;
-  background-color: var(--bg-app); /* Background behind the image on desktop */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100vh;      /* Fallback */
+  height: 100dvh;     /* Fills the ACTUAL mobile screen, including bars */
+  z-index: 2147483647; /* Maximum Z-Index */
   
-  /* The Fade Out */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-app);
+  
+  /* Fade out at the end */
   animation: fadeOut 0.5s ease-out 2.5s forwards;
 }
 
@@ -239,31 +248,29 @@ html, body {
 .splash-logo {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Default for mobile: Fill the screen */
+  object-fit: cover; /* Mobile: Fill entire screen */
   object-position: center;
   animation: slowZoom 3s ease-out forwards;
 }
 
-/* --- DESKTOP FIX --- */
+/* --- DESKTOP FIX (Keep the phone look on big screens) --- */
 @media (min-width: 600px) {
   .splash-logo {
-    /* On Desktop, don't stretch full width. Match the app's phone layout. */
     width: auto;
-    max-width: 600px; /* Same width as your app layout */
-    height: 100%;     /* Full height */
-    object-fit: contain; /* Ensure the whole vertical image is visible */
-    border-radius: 0;
-    box-shadow: 0 0 50px rgba(0,0,0,0.2); /* Nice shadow to make it pop */
+    max-width: 600px; /* Match app width */
+    height: 100%;
+    object-fit: contain; /* Show full image */
+    box-shadow: 0 0 50px rgba(0,0,0,0.3);
   }
   
-  /* Blur the background behind the image on desktop for a premium look */
+  /* Blurry background filler for desktop */
   .splash-screen::before {
     content: "";
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background-image: url('/splashscreen.png');
     background-size: cover;
     background-position: center;
-    filter: blur(20px) opacity(0.5);
+    filter: blur(30px) opacity(0.4);
     z-index: -1;
   }
 }
