@@ -22,38 +22,84 @@ const Toast = ({ message, type, onClose }) => (
   </div>
 );
 
-// --- DELETE CONFIRMATION MODAL ---
-const DeleteModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+// --- DELETE CONFIRMATION MODAL (THEMED + LUCIDE ICON + CUSTOM BUTTONS) ---
+const DeleteModal = ({ isOpen, onClose, onConfirm, title, message, confirmText, cancelText }) => {
   if (!isOpen) return null;
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000
+      background: 'rgba(0,0,0,0.5)', // Dimmed overlay
+      backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000
     }}>
-      <div className="glass-panel" style={{
-        background: 'var(--bg-card)', padding: '25px', borderRadius: '20px', 
-        width: '90%', maxWidth: '320px', textAlign: 'center',
-        border: '1px solid var(--border-color)', boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+      <div style={{
+        background: 'var(--bg-card)', 
+        padding: '30px', 
+        borderRadius: '24px', 
+        width: '85%', maxWidth: '320px', 
+        textAlign: 'center',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+        border: '1px solid var(--border-color)',
+        animation: 'scaleIn 0.2s ease-out'
       }}>
+        {/* Warning Icon (Lucide) */}
         <div style={{
-          background: '#fee2e2', width: '50px', height: '50px', borderRadius: '50%', 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px'
+          margin: '0 auto 15px',
+          display: 'flex', justifyContent: 'center', alignItems: 'center'
         }}>
-          <AlertTriangle size={24} color="#dc2626" />
+          <div style={{
+            background: '#fee2e2', width: '60px', height: '60px', borderRadius: '50%', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+             <AlertTriangle size={32} color="#dc2626" strokeWidth={2} />
+          </div>
         </div>
-        <h3 style={{margin: '0 0 10px', color: 'var(--text-main)', fontSize: '18px'}}>{title}</h3>
-        <p style={{margin: '0 0 20px', color: 'var(--text-sub)', fontSize: '14px', lineHeight: '1.5'}}>{message}</p>
         
-        <div style={{display: 'flex', gap: '10px'}}>
+        <h3 style={{
+          margin: '0 0 10px', 
+          color: 'var(--text-main)', 
+          fontSize: '20px', 
+          fontWeight: '700'
+        }}>{title}</h3>
+        
+        <p style={{
+          margin: '0 0 25px', 
+          color: 'var(--text-sub)', 
+          fontSize: '15px', 
+          lineHeight: '1.5'
+        }}>{message}</p>
+        
+        <div style={{display: 'flex', gap: '12px'}}>
+          {/* Cancel Button */}
           <button onClick={onClose} style={{
-            flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)', 
-            background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: '600'
-          }}>Cancel</button>
+            flex: 1, 
+            padding: '14px', 
+            borderRadius: '12px', 
+            border: 'none', 
+            background: 'var(--bg-app)', 
+            color: 'var(--text-sub)',    
+            cursor: 'pointer', 
+            fontWeight: '600', 
+            fontSize: '15px'
+          }}>
+            {cancelText || "No, keep it."}
+          </button>
+          
+          {/* Delete Button */}
           <button onClick={onConfirm} style={{
-            flex: 1, padding: '12px', borderRadius: '10px', border: 'none', 
-            background: '#dc2626', color: 'white', cursor: 'pointer', fontWeight: '600'
-          }}>Delete</button>
+            flex: 1, 
+            padding: '14px', 
+            borderRadius: '12px', 
+            border: 'none', 
+            background: '#ef4444', 
+            color: 'white', 
+            cursor: 'pointer', 
+            fontWeight: '600', 
+            fontSize: '15px',
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+          }}>
+            {confirmText || "Yes, Delete!"}
+          </button>
         </div>
       </div>
     </div>
@@ -71,45 +117,14 @@ const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleS
         </label>
       </div>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="form-label">Name</label>
-          <input className="form-input" name="name" value={formData.name} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} required />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Breed</label>
-          <input className="form-input" name="breed" value={formData.breed} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Sex</label>
-          <select className="form-select" name="sex" value={formData.sex} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})}>
-            <option value="F">Doe</option><option value="M">Buck</option><option value="W">Wether</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Date of Birth</label>
-          <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} />
-        </div>
-        
+        <div className="form-group"><label className="form-label">Name</label><input className="form-input" name="name" value={formData.name} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} required /></div>
+        <div className="form-group"><label className="form-label">Breed</label><input className="form-input" name="breed" value={formData.breed} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} /></div>
+        <div className="form-group"><label className="form-label">Sex</label><select className="form-select" name="sex" value={formData.sex} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})}><option value="F">Doe</option><option value="M">Buck</option><option value="W">Wether</option></select></div>
+        <div className="form-group"><label className="form-label">Date of Birth</label><input className="form-input" type="date" name="dob" value={formData.dob} onChange={e=>setFormData({...formData, [e.target.name]:e.target.value})} /></div>
         <div style={{display:'flex', gap:10, marginTop:20}}>
           <button type="button" onClick={onCancel} style={{flex:1, padding:12, border:'1px solid var(--border-color)', background:'transparent', borderRadius:8, cursor:'pointer', color:'var(--text-main)'}}>Cancel</button>
-          
-          {/* DELETE BUTTON (Only shows if editing) */}
-          {isEditing && (
-            <button 
-              type="button" 
-              onClick={onDelete}
-              style={{
-                flex:1, padding:12, border:'1px solid #fecaca', background:'#fee2e2', 
-                borderRadius:8, cursor:'pointer', color:'#dc2626', fontWeight:'bold'
-              }}
-            >
-              Delete
-            </button>
-          )}
-
-          <button type="submit" className="btn-primary" style={{flex:1, justifyContent:'center'}} disabled={isSubmitting || isUploading}>
-            {isUploading ? 'Uploading...' : (isEditing ? 'Update' : 'Create')}
-          </button>
+          {isEditing && <button type="button" onClick={onDelete} style={{flex:1, padding:12, border:'1px solid #fecaca', background:'#fee2e2', borderRadius:8, cursor:'pointer', color:'#dc2626', fontWeight:'bold'}}>Delete</button>}
+          <button type="submit" className="btn-primary" style={{flex:1, justifyContent:'center'}} disabled={isSubmitting || isUploading}>{isUploading ? 'Uploading...' : (isEditing ? 'Update' : 'Create')}</button>
         </div>
       </form>
     </div>
@@ -122,7 +137,7 @@ function App() {
   
   // MODAL STATE
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: () => {} });
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '', confirmText: '', cancelText: '', onConfirm: () => {} });
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -130,8 +145,8 @@ function App() {
   };
 
   // Helper to open confirmation
-  const confirmAction = (title, message, action) => {
-    setModalConfig({ title, message, onConfirm: () => { action(); setModalOpen(false); } });
+  const confirmAction = (title, message, confirmText, cancelText, action) => {
+    setModalConfig({ title, message, confirmText, cancelText, onConfirm: () => { action(); setModalOpen(false); } });
     setModalOpen(true);
   };
 
@@ -210,6 +225,8 @@ function App() {
     confirmAction(
       "Delete Goat?", 
       `Permanently remove ${editingGoat.name}?`,
+      "Yes, Delete!",
+      "No, keep it.",
       async () => {
         setIsSubmitting(true);
         try {
@@ -222,10 +239,22 @@ function App() {
     );
   };
 
+  const handleConfirmLogout = () => {
+    confirmAction(
+      "Log Out?", 
+      "Are you sure you want to sign out?", 
+      "Yes, Log Out",
+      "Cancel",
+      () => handleLogout()
+    );
+  };
+
   const handleDeleteAccount = () => {
     confirmAction(
       "Delete Account?", 
       "Delete your account and all data?",
+      "Yes, Delete!",
+      "No, keep it.",
       async () => {
         try {
           const res = await fetch('/.netlify/functions/delete-account', { method: 'DELETE', body: JSON.stringify({ username: user.username }) });
@@ -318,7 +347,7 @@ function App() {
               />
             </button>
 
-            {g.image_url ? <img src={g.image_url} className="goat-avatar" alt=""/> : <div className="goat-avatar" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>🐐</div>}
+            {g.image_url ? <img src={g.image_url} className="goat-avatar" style={{width:50, height:50, borderRadius:'50%', objectFit:'cover'}} alt=""/> : <div className="goat-avatar" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>🐐</div>}
             <div className="goat-info">
               <h3>{g.name}</h3>
               <div style={{fontSize:12, color:'var(--text-sub)'}}>ID: G00{g.id}</div>
@@ -333,7 +362,7 @@ function App() {
   return (
     <div className="app-layout">
       {/* GLOBAL MODAL */}
-      <DeleteModal isOpen={modalOpen} onClose={()=>setModalOpen(false)} onConfirm={modalConfig.onConfirm} title={modalConfig.title} message={modalConfig.message} />
+      <DeleteModal isOpen={modalOpen} onClose={()=>setModalOpen(false)} onConfirm={modalConfig.onConfirm} title={modalConfig.title} message={modalConfig.message} confirmText={modalConfig.confirmText} cancelText={modalConfig.cancelText} />
       
       {toast && <Toast message={toast.msg} type={toast.type} onClose={()=>setToast(null)} />}
       
@@ -380,7 +409,9 @@ function App() {
                 </div>
 
                 <h3 style={{color: 'var(--text-main)', marginTop: '30px', fontSize: '18px'}}>Account</h3>
-                <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--text-main)', fontWeight:600, marginBottom: 10}}>
+                
+                {/* LOG OUT BUTTON (Using Modal) */}
+                <div onClick={handleConfirmLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--text-main)', fontWeight:600, marginBottom: 10}}>
                    <LogOut size={20}/> Log Out
                 </div>
                 
