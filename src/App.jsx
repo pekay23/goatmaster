@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, Sun, Moon, Monitor, X, Edit2 } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, Sun, Moon, Monitor, X, Edit2, AlertTriangle } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
@@ -21,6 +21,44 @@ const Toast = ({ message, type, onClose }) => (
     </div>
   </div>
 );
+
+// --- DELETE CONFIRMATION MODAL ---
+const DeleteModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+  if (!isOpen) return null;
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000
+    }}>
+      <div className="glass-panel" style={{
+        background: 'var(--bg-card)', padding: '25px', borderRadius: '20px', 
+        width: '90%', maxWidth: '320px', textAlign: 'center',
+        border: '1px solid var(--border-color)', boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+      }}>
+        <div style={{
+          background: '#fee2e2', width: '50px', height: '50px', borderRadius: '50%', 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px'
+        }}>
+          <AlertTriangle size={24} color="#dc2626" />
+        </div>
+        <h3 style={{margin: '0 0 10px', color: 'var(--text-main)', fontSize: '18px'}}>{title}</h3>
+        <p style={{margin: '0 0 20px', color: 'var(--text-sub)', fontSize: '14px', lineHeight: '1.5'}}>{message}</p>
+        
+        <div style={{display: 'flex', gap: '10px'}}>
+          <button onClick={onClose} style={{
+            flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)', 
+            background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: '600'
+          }}>Cancel</button>
+          <button onClick={onConfirm} style={{
+            flex: 1, padding: '12px', borderRadius: '10px', border: 'none', 
+            background: '#dc2626', color: 'white', cursor: 'pointer', fontWeight: '600'
+          }}>Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- ADD/EDIT FORM COMPONENT ---
 const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleSubmit, handleImageChange, onCancel, isEditing, onDelete }) => {
@@ -78,14 +116,23 @@ const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleS
   );
 };
 
-
 function App() {
   const [user, setUser] = useState(null);
   const [toast, setToast] = useState(null);
+  
+  // MODAL STATE
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: () => {} });
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000); 
+  };
+
+  // Helper to open confirmation
+  const confirmAction = (title, message, action) => {
+    setModalConfig({ title, message, onConfirm: () => { action(); setModalOpen(false); } });
+    setModalOpen(true);
   };
 
   useEffect(() => {
@@ -158,6 +205,37 @@ function App() {
     setShowAddGoat(true);
   };
 
+  const handleDeleteGoat = () => {
+    if (!editingGoat) return;
+    confirmAction(
+      "Delete Goat?", 
+      `Permanently remove ${editingGoat.name}?`,
+      async () => {
+        setIsSubmitting(true);
+        try {
+          const res = await fetch('/.netlify/functions/delete-goat', { method: 'DELETE', body: JSON.stringify({ id: editingGoat.id }) });
+          if (res.ok) { showToast("Goat deleted."); fetchGoats(); setShowAddGoat(false); } 
+          else { showToast("Failed to delete", "error"); }
+        } catch (e) { showToast("Error deleting", "error"); } 
+        finally { setIsSubmitting(false); }
+      }
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    confirmAction(
+      "Delete Account?", 
+      "Delete your account and all data?",
+      async () => {
+        try {
+          const res = await fetch('/.netlify/functions/delete-account', { method: 'DELETE', body: JSON.stringify({ username: user.username }) });
+          if (res.ok) { alert("Account Deleted."); handleLogout(); } 
+          else { alert("Failed to delete account"); }
+        } catch (e) { alert("Error deleting account"); }
+      }
+    );
+  };
+
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -217,12 +295,14 @@ function App() {
       <div className="goat-grid">
         {filtered.map(g => (
           <div key={g.id} className="goat-card" style={{position: 'relative'}}>
-              <button 
+            
+            {/* EDIT BUTTON (Image Icon) */}
+            <button 
               className="edit-btn"
               onClick={(e) => { e.stopPropagation(); handleEdit(g); }}
               aria-label="Edit Goat"
               style={{ 
-                background: 'rgba(255, 255, 255, 0.2)', // Very subtle glass
+                background: 'rgba(255, 255, 255, 0.2)',
                 backdropFilter: 'blur(4px)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 borderRadius: '50%',
@@ -238,7 +318,6 @@ function App() {
               />
             </button>
 
-
             {g.image_url ? <img src={g.image_url} className="goat-avatar" alt=""/> : <div className="goat-avatar" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>🐐</div>}
             <div className="goat-info">
               <h3>{g.name}</h3>
@@ -253,42 +332,24 @@ function App() {
 
   return (
     <div className="app-layout">
-      {!showAddGoat && (
-        <nav className="nav-bar glass-panel">
-          <button className={`nav-item ${activeTab==='profiles'?'active':''}`} onClick={()=>setActiveTab('profiles')}><LayoutGrid size={24} /><span className="nav-label">Profiles</span></button>
-          <button className={`nav-item ${activeTab==='lineage'?'active':''}`} onClick={()=>setActiveTab('lineage')}><Dna size={24} /><span className="nav-label">Lineage</span></button>
-          <button className={`nav-item ${activeTab==='health'?'active':''}`} onClick={()=>setActiveTab('health')}><Activity size={24} /><span className="nav-label">Health</span></button>
-          <button className={`nav-item ${activeTab==='reports'?'active':''}`} onClick={()=>setActiveTab('reports')}><FileText size={24} /><span className="nav-label">Reports</span></button>
-          <button className={`nav-item ${activeTab==='settings'?'active':''}`} onClick={()=>setActiveTab('settings')}><Settings size={24} /><span className="nav-label">Settings</span></button>
-        </nav>
-      )}
-
-      <div className="main-content">
-        {toast && <Toast message={toast.msg} type={toast.type} onClose={()=>setToast(null)} />}
-        
-        <div className="app-header glass-panel">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
-            <h1 className="app-title">
-              {showAddGoat ? (editingGoat ? 'Edit Goat' : 'New Goat') : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-            </h1>
-          </div>
-          {activeTab === 'profiles' && !showAddGoat && (
-            <button className="btn-primary" onClick={handleAddNew}><Plus size={18}/> <span className="nav-label">Add</span></button>
-          )}
+      {/* GLOBAL MODAL */}
+      <DeleteModal isOpen={modalOpen} onClose={()=>setModalOpen(false)} onConfirm={modalConfig.onConfirm} title={modalConfig.title} message={modalConfig.message} />
+      
+      {toast && <Toast message={toast.msg} type={toast.type} onClose={()=>setToast(null)} />}
+      
+      <header className="app-header glass-panel">
+        <div style={{display:'flex', alignItems:'center', gap:10}}>
+          <img src="/logo.png" style={{width:28, height:28}} alt=""/>
+          <h1 className="app-title">{showAddGoat ? (editingGoat ? 'Edit Goat' : 'New Goat') : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h1>
         </div>
+        {!showAddGoat && activeTab === 'profiles' && (
+          <button className="btn-primary" onClick={handleAddNew}><Plus size={16}/> <span className="nav-label">Add</span></button>
+        )}
+      </header>
 
+      <main className="main-content">
         {showAddGoat ? (
-          <AddGoatView 
-            formData={formData} 
-            setFormData={setFormData} 
-            isSubmitting={isSubmitting} 
-            isUploading={isUploading} 
-            handleSubmit={handleSubmit} 
-            handleImageChange={handleImageChange} 
-            onCancel={() => setShowAddGoat(false)}
-            isEditing={!!editingGoat}
-          />
+          <AddGoatView formData={formData} setFormData={setFormData} isSubmitting={isSubmitting} isUploading={isUploading} handleSubmit={handleSubmit} handleImageChange={handleImageChange} onCancel={()=>setShowAddGoat(false)} isEditing={!!editingGoat} onDelete={handleDeleteGoat} />
         ) : (
           <div style={{width:'100%'}}>
             {activeTab === 'profiles' && <ProfilesView />}
@@ -299,7 +360,7 @@ function App() {
             {activeTab === 'settings' && (
               <div style={{display:'flex', flexDirection:'column', gap:15}}>
                 {/* Profile Card */}
-                <div className="glass-panel" style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '20px', borderRadius: '16px'}}>
+                <div className="glass-panel" style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '20px', borderRadius: '16px', marginBottom: '25px', border: '1px solid var(--border-color)'}}>
                   <div style={{width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 'bold'}}>
                     {user.username.charAt(0).toUpperCase()}
                   </div>
@@ -319,25 +380,31 @@ function App() {
                 </div>
 
                 <h3 style={{color: 'var(--text-main)', marginTop: '30px', fontSize: '18px'}}>Account</h3>
-                <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--text-main)', fontWeight:600}}>
+                <div onClick={handleLogout} style={{padding:15, background:'var(--bg-card)', borderRadius:12, border:'1px solid var(--border-color)', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'var(--text-main)', fontWeight:600, marginBottom: 10}}>
                    <LogOut size={20}/> Log Out
                 </div>
-                <div onClick={async () => {
-                  if (window.confirm("⚠️ Are you sure? This will delete your account and all data immediately.")) {
-                    try {
-                      const res = await fetch('/.netlify/functions/delete-account', { method: 'DELETE', body: JSON.stringify({ username: user.username }) });
-                      if (res.ok) { alert("Account Deleted."); handleLogout(); } else { alert("Failed to delete account"); }
-                    } catch (e) { alert("Error deleting account"); }
-                  }
-                }} style={{padding:15, background:'#fee2e2', borderRadius:12, border:'1px solid #fecaca', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'#dc2626', fontWeight:600}}>
+                
+                {/* ACCOUNT DELETION (Uses Modal) */}
+                <div onClick={handleDeleteAccount} style={{padding:15, background:'#fee2e2', borderRadius:12, border:'1px solid #fecaca', display:'flex', gap:10, alignItems:'center', cursor:'pointer', color:'#dc2626', fontWeight:600}}>
                    <LogOut size={20}/> Delete Account
                 </div>
+                
                 <SettingsFooter />
               </div>
             )}
           </div>
         )}
-      </div>
+      </main>
+
+      {!showAddGoat && (
+        <nav className="nav-bar glass-panel">
+          <button className={`nav-item ${activeTab==='profiles'?'active':''}`} onClick={()=>setActiveTab('profiles')}><LayoutGrid size={20}/><span>Profiles</span></button>
+          <button className={`nav-item ${activeTab==='lineage'?'active':''}`} onClick={()=>setActiveTab('lineage')}><Dna size={20}/><span>Lineage</span></button>
+          <button className={`nav-item ${activeTab==='health'?'active':''}`} onClick={()=>setActiveTab('health')}><Activity size={20}/><span>Health</span></button>
+          <button className={`nav-item ${activeTab==='reports'?'active':''}`} onClick={()=>setActiveTab('reports')}><FileText size={20}/><span>Reports</span></button>
+          <button className={`nav-item ${activeTab==='settings'?'active':''}`} onClick={()=>setActiveTab('settings')}><Settings size={20}/><span>Settings</span></button>
+        </nav>
+      )}
     </div>
   );
 }
