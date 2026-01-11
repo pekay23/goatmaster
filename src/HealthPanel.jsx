@@ -126,7 +126,7 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
           </div>
         </div>
 
-                <div className="form-group" style={{ 
+        <div className="form-group" style={{ 
             background: 'rgba(255, 152, 0, 0.05)', 
             padding: '15px', 
             borderRadius: '16px', 
