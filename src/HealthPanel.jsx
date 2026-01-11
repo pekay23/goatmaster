@@ -126,11 +126,25 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
           </div>
         </div>
 
-        <div className="form-group" style={{ background: 'rgba(255, 152, 0, 0.05)', padding: '15px', borderRadius: '16px', border: '1px dashed rgba(255, 152, 0, 0.2)' }}>
+                <div className="form-group" style={{ 
+            background: 'rgba(255, 152, 0, 0.05)', 
+            padding: '15px', 
+            borderRadius: '16px', 
+            border: '1px dashed rgba(255, 152, 0, 0.2)',
+            width: '100%',           /* Ensure it doesn't stretch */
+            boxSizing: 'border-box'  /* Include padding in width calculation */
+        }}>
           <label className="form-label" style={{ color: '#e65100', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Calendar size={16} /> Remind me on:
           </label>
-          <input type="date" name="next_due_date" className="form-input" value={formData.next_due_date} onChange={handleChange} style={{ marginBottom: 0 }} />
+          <input 
+            type="date" 
+            name="next_due_date" 
+            className="form-input" 
+            value={formData.next_due_date} 
+            onChange={handleChange} 
+            style={{ marginBottom: 0, width: '100%', boxSizing: 'border-box' }} 
+          />
         </div>
 
         <button type="submit" className="btn-primary" disabled={isSubmitting || isLoading} style={{ width: '100%', justifyContent: 'center', marginTop: '15px', background: '#f57c00', padding: '14px', borderRadius: '12px' }}>
