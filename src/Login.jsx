@@ -1,119 +1,161 @@
 import React, { useState } from 'react';
 
 const Login = ({ onLogin }) => {
-  const [isRegistering, setIsRegistering] = useState(false); // Toggle state
+  const [isRegistering, setIsRegistering] = useState(false);
   const [creds, setCreds] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
+    setIsLoading(true);
 
-    // DECIDE: Are we Logging in or Signing up?
-    const endpoint = isRegistering ? '/.netlify/functions/signup' : '/.netlify/functions/login';
+    const endpoint = isRegistering
+      ? '/.netlify/functions/signup'
+      : '/.netlify/functions/login';
 
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
-        body: JSON.stringify(creds)
+        body: JSON.stringify(creds),
       });
-
       const data = await res.json();
 
       if (res.ok) {
         if (isRegistering) {
-          // Registration Success
-          setSuccessMsg("Account created! Please log in.");
-          setIsRegistering(false); // Switch back to login mode
-          setCreds({ username: '', password: '' }); // Clear form
+          setSuccessMsg('Account created! Please log in.');
+          setIsRegistering(false);
+          setCreds({ username: '', password: '' });
         } else {
-          // Login Success
           onLogin(data);
         }
       } else {
-        // Error (Wrong password or Username taken)
-        setError(data.error || "Authentication failed");
+        setError(data.error || 'Authentication failed');
       }
-    } catch (err) {
-      setError("Network error. Please try again.");
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div style={{ 
-      height: '100vh', 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      backgroundColor: '#f0f2f5',
-      fontFamily: 'sans-serif'
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '20px',
+      backgroundColor: 'var(--bg-app)',
+      backgroundImage: 'radial-gradient(at 0% 0%, hsla(140,60%,92%,1) 0px, transparent 50%), radial-gradient(at 100% 0%, hsla(190,60%,94%,1) 0px, transparent 50%), radial-gradient(at 100% 100%, hsla(140,60%,96%,1) 0px, transparent 50%)',
     }}>
-      <div style={{ 
-        padding: '30px', 
-        backgroundColor: 'white', 
-        borderRadius: '12px', 
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+      <div style={{
+        padding: '36px 32px',
+        backgroundColor: 'var(--bg-card)',
+        borderRadius: '24px',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.10)',
+        border: '1px solid var(--border-color)',
         width: '100%',
-        maxWidth: '350px',
-        textAlign: 'center'
+        maxWidth: '400px',
+        textAlign: 'center',
       }}>
-        <h1 style={{ marginBottom: '10px', fontSize: '28px' }}>🐐 Goat Master</h1>
-        <h3 style={{ color: '#555', marginBottom: '25px', fontWeight: 'normal' }}>
-          {isRegistering ? "Create Account" : "Welcome Back"}
-        </h3>
-        
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <input 
-            type="text" 
-            placeholder="Username" 
-            value={creds.username}
-            onChange={(e) => setCreds({...creds, username: e.target.value})}
-            style={{ padding: '14px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '16px' }}
-            required
-          />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            value={creds.password}
-            onChange={(e) => setCreds({...creds, password: e.target.value})}
-            style={{ padding: '14px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '16px' }}
-            required
-          />
-          
-          <button type="submit" style={{ 
-            padding: '14px', 
-            backgroundColor: isRegistering ? '#007bff' : '#28a745', // Blue for Sign Up, Green for Login
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '8px', 
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            marginTop: '10px'
-          }}>
-            {isRegistering ? "Sign Up" : "Log In"}
+        {/* Logo */}
+        <div style={{ marginBottom: '8px' }}>
+          <img src="/logo.png" alt="Goat Master" style={{ width: 56, height: 56, borderRadius: 14 }} />
+        </div>
+
+        <h1 style={{ margin: '0 0 6px', fontSize: '26px', fontWeight: 800, color: 'var(--text-main)' }}>
+          Goat Master
+        </h1>
+        <p style={{ margin: '0 0 28px', color: 'var(--text-sub)', fontSize: '15px' }}>
+          {isRegistering ? 'Create your account' : 'Welcome back'}
+        </p>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Username
+            </label>
+            <input
+              type="text"
+              placeholder="Enter username"
+              value={creds.username}
+              onChange={(e) => setCreds({ ...creds, username: e.target.value })}
+              style={{
+                width: '100%', padding: '13px 14px', border: '1.5px solid var(--border-color)',
+                borderRadius: '12px', fontSize: '16px', background: 'var(--bg-app)',
+                color: 'var(--text-main)', fontFamily: 'inherit', boxSizing: 'border-box',
+                outline: 'none', transition: 'border-color 0.2s',
+              }}
+              onFocus={e => e.target.style.borderColor = '#28a745'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-color)'}
+              required
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Password
+            </label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={creds.password}
+              onChange={(e) => setCreds({ ...creds, password: e.target.value })}
+              style={{
+                width: '100%', padding: '13px 14px', border: '1.5px solid var(--border-color)',
+                borderRadius: '12px', fontSize: '16px', background: 'var(--bg-app)',
+                color: 'var(--text-main)', fontFamily: 'inherit', boxSizing: 'border-box',
+                outline: 'none', transition: 'border-color 0.2s',
+              }}
+              onFocus={e => e.target.style.borderColor = '#28a745'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-color)'}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            style={{
+              padding: '14px', marginTop: '4px',
+              backgroundColor: isRegistering ? '#007bff' : '#28a745',
+              color: 'white', border: 'none', borderRadius: '14px',
+              fontSize: '16px', fontWeight: 700, cursor: isLoading ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit', opacity: isLoading ? 0.7 : 1,
+              transition: 'opacity 0.2s',
+            }}
+          >
+            {isLoading ? 'Please wait…' : isRegistering ? 'Create Account' : 'Log In'}
           </button>
         </form>
 
-        {/* Error / Success Messages */}
-        {error && <p style={{ color: '#dc3545', marginTop: '15px', fontWeight: '500' }}>⚠️ {error}</p>}
-        {successMsg && <p style={{ color: '#28a745', marginTop: '15px', fontWeight: '500' }}>✅ {successMsg}</p>}
+        {error && (
+          <div style={{ marginTop: 16, padding: '10px 14px', background: '#fee2e2', borderRadius: 10, color: '#dc2626', fontSize: 14, fontWeight: 500 }}>
+            ⚠️ {error}
+          </div>
+        )}
 
-        <hr style={{ margin: '25px 0', border: 'none', borderTop: '1px solid #eee' }} />
+        {successMsg && (
+          <div style={{ marginTop: 16, padding: '10px 14px', background: '#e6f4ea', borderRadius: 10, color: '#28a745', fontSize: 14, fontWeight: 500 }}>
+            ✅ {successMsg}
+          </div>
+        )}
 
-        {/* Toggle Button */}
-        <p style={{ color: '#666', fontSize: '14px' }}>
-          {isRegistering ? "Already have an account?" : "Don't have an account?"}
+        <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
+
+        <p style={{ color: 'var(--text-sub)', fontSize: 14, margin: '0 0 8px' }}>
+          {isRegistering ? 'Already have an account?' : "Don't have an account?"}
         </p>
-        <button 
-          onClick={() => { setIsRegistering(!isRegistering); setError(''); setSuccessMsg(''); }} 
-          style={{ background: 'none', border: 'none', color: '#007bff', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+        <button
+          onClick={() => { setIsRegistering(!isRegistering); setError(''); setSuccessMsg(''); }}
+          style={{ background: 'none', border: 'none', color: '#007bff', fontWeight: 700, cursor: 'pointer', fontSize: 14, fontFamily: 'inherit' }}
         >
-          {isRegistering ? "Log In here" : "Create one now"}
+          {isRegistering ? 'Log in here' : 'Create one now'}
         </button>
-
       </div>
     </div>
   );
