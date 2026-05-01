@@ -20,7 +20,7 @@ const BreedingPanel = ({ goats, isLoading }) => {
 
     if (!formData.dam_id || !formData.date_bred) return alert("Mother and Date are required");
 
-    const res = await fetch('/.netlify/functions/add-breeding', {
+    const res = await fetch('/api/breeding', {
       method: 'POST',
       body: JSON.stringify(formData)
     });

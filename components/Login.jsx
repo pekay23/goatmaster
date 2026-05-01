@@ -14,8 +14,8 @@ const Login = ({ onLogin }) => {
     setIsLoading(true);
 
     const endpoint = isRegistering
-      ? '/.netlify/functions/signup'
-      : '/.netlify/functions/login';
+      ? '/api/auth/signup'
+      : '/api/auth/login';
 
     try {
       const res = await fetch(endpoint, {

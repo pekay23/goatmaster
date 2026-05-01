@@ -38,7 +38,7 @@ const HealthPanel = ({ goats, isLoading, showToast }) => {
     setIsSubmitting(true);
     setSuccessMsg('');
     try {
-      const res = await fetch('/.netlify/functions/add-health-log', { method: 'POST', body: JSON.stringify(formData) });
+      const res = await fetch('/api/health', { method: 'POST', body: JSON.stringify(formData) });
       if (res.ok) {
         if (showToast) showToast("Medical record saved!");
         setSuccessMsg("Record added successfully!");
