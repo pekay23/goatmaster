@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
 import AlertsPanel from './AlertsPanel';
 import SettingsFooter from './SettingsFooter';
 import Login from './Login';
+import GoatScanner from './GoatScanner';
 
 const CLOUD_NAME = "dvjxdxhdr";
 const UPLOAD_PRESET = "goat_uploads";
@@ -270,6 +271,7 @@ export default function MainApp() {
             )}
             {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
             {activeTab === 'health' && <><AlertsPanel /><HealthPanel goats={goats} isLoading={isFetching} showToast={showToast} /></>}
+            {activeTab === 'scan' && <GoatScanner goats={goats} onScanComplete={(res) => { if (res?.goat) showToast(`Matched: ${res.goat.name}`, 'success'); }} />}
             {activeTab === 'reports' && <Reports />}
             {activeTab === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 15, maxWidth: 600 }}>

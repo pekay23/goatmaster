@@ -8,13 +8,13 @@ export const metadata = {
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Goat Master' },
   icons: { icon: '/logo.png', apple: '/logo.png' },
-  themeColor: '#28a745',
 };
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  themeColor: '#28a745',
 };
 
 export default function RootLayout({ children }) {
