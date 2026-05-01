@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { sanitiseString, sanitiseDate, requireFields } from '@/lib/validate';
 
-export async function GET() {
+export async function GET(request) {
+  const { user, error } = await requireAuth(request);
+  if (error) return error;
   try {
-    const { rows } = await pool.query('SELECT * FROM goats ORDER BY created_at DESC');
+    const { rows } = await pool.query(
+      'SELECT * FROM goats WHERE user_id = $1 ORDER BY created_at DESC',
+      [user.userId]
+    );
     return NextResponse.json(rows);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -11,14 +18,25 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const { user, error } = await requireAuth(request);
+  if (error) return error;
   try {
-    const data = await request.json();
-    const dob = data.dob === '' ? null : data.dob;
-    const breed = data.breed === '' ? null : data.breed;
-    const sex = data.sex || 'F';
+    const body = await request.json();
+    const fieldErr = requireFields(body, ['name']);
+    if (fieldErr) return NextResponse.json({ error: fieldErr }, { status: 400 });
+
+    const name     = sanitiseString(body.name, 100);
+    const breed    = sanitiseString(body.breed, 100) || null;
+    const sex      = ['F','M','W'].includes(body.sex) ? body.sex : 'F';
+    const dob      = sanitiseDate(body.dob);
+    const imageUrl = sanitiseString(body.image_url, 500) || null;
+    const earTag   = sanitiseString(body.ear_tag, 50) || null;
+    const qrCode   = sanitiseString(body.qr_code, 200) || null;
+
     const { rows } = await pool.query(
-      `INSERT INTO goats (name, sex, breed, dob, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [data.name, sex, breed, dob, data.image_url]
+      `INSERT INTO goats (name, sex, breed, dob, image_url, ear_tag, qr_code, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      [name, sex, breed, dob, imageUrl, earTag, qrCode, user.userId]
     );
     return NextResponse.json(rows[0]);
   } catch (err) {
