@@ -11,41 +11,65 @@ export async function POST(request) {
 
     const results = [];
 
-    // 1. Add user_id to goats (multi-tenancy)
-    await pool.query(`
-      ALTER TABLE goats ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
-      ALTER TABLE goats ADD COLUMN IF NOT EXISTS ear_tag  VARCHAR(50);
-      ALTER TABLE goats ADD COLUMN IF NOT EXISTS qr_code  VARCHAR(200);
-
-      CREATE TABLE IF NOT EXISTS goat_embeddings (
-        id         SERIAL PRIMARY KEY,
-        goat_id    INTEGER NOT NULL REFERENCES goats(id) ON DELETE CASCADE,
-        embedding  FLOAT8[] NOT NULL,
-        source     VARCHAR(20) DEFAULT 'enrollment',
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      );
-
-      CREATE TABLE IF NOT EXISTS scan_logs (
-        id              SERIAL PRIMARY KEY,
-        matched_goat_id INTEGER REFERENCES goats(id) ON DELETE SET NULL,
-        user_id         INTEGER REFERENCES users(id) ON DELETE SET NULL,
-        confidence      FLOAT4,
-        breed_guess     VARCHAR(100),
-        scan_method     VARCHAR(20),
-        image_url       VARCHAR(500),
-        created_at      TIMESTAMPTZ DEFAULT NOW()
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_goats_user_id      ON goats(user_id);
-      CREATE INDEX IF NOT EXISTS idx_embeddings_goat_id ON goat_embeddings(goat_id);
+    // 0. Ensure 'users' table has an 'id' column (handling legacy schema)
+    const { rows: usersColumns } = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'id'
     `);
+
+    if (usersColumns.length === 0) {
+      await pool.query('ALTER TABLE users ADD COLUMN id BIGSERIAL PRIMARY KEY');
+      results.push('added id column to users');
+    }
+
+    // 1. Add columns to goats and create new tables
+    const migrationStatements = [
+      'CREATE EXTENSION IF NOT EXISTS vector',
+      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE',
+      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS ear_tag VARCHAR(50)',
+      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS date_of_birth DATE',
+      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS photos JSONB DEFAULT \'[]\'',
+      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS notes TEXT',
+      `CREATE TABLE IF NOT EXISTS goat_embeddings (
+        id BIGSERIAL PRIMARY KEY,
+        goat_id BIGINT REFERENCES goats(id) ON DELETE CASCADE,
+        embedding vector(1024),
+        source VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `CREATE INDEX IF NOT EXISTS goat_embeddings_ivfflat_idx 
+      ON goat_embeddings USING ivfflat (embedding vector_cosine_ops) 
+      WITH (lists = 100)`,
+      `CREATE TABLE IF NOT EXISTS scan_logs (
+        id BIGSERIAL PRIMARY KEY,
+        matched_goat_id BIGINT REFERENCES goats(id) ON DELETE SET NULL,
+        user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+        confidence FLOAT,
+        scan_method VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`,
+      'CREATE INDEX IF NOT EXISTS idx_goats_user_id ON goats(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_embeddings_goat_id ON goat_embeddings(goat_id)'
+    ];
+
+    for (const stmt of migrationStatements) {
+      try {
+        await pool.query(stmt);
+      } catch (e) {
+        // Skip if error is "already exists" but log others
+        if (!e.message.includes('already exists')) {
+          console.error('[migrate-step]', e.message);
+          results.push(`Error: ${e.message}`);
+        }
+      }
+    }
     results.push('schema updated');
 
     // 2. Hash any remaining plaintext passwords
     const { rows: users } = await pool.query('SELECT id, password FROM users');
     let hashed = 0;
     for (const u of users) {
-      // bcrypt hashes start with $2b$ — skip already-hashed ones
       if (!u.password.startsWith('$2')) {
         const hash = await bcrypt.hash(u.password, 12);
         await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hash, u.id]);

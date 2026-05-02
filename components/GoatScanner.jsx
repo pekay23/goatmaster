@@ -1,15 +1,21 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Camera, Upload, X, CheckCircle, AlertCircle, RefreshCw, Zap, Eye } from 'lucide-react';
+import { Camera, Upload, X, CheckCircle, AlertCircle, RefreshCw, Zap, Eye, Video } from 'lucide-react';
+import { getLocalMatch } from '@/lib/localDb';
+import { createWorker } from 'tesseract.js';
 
 // ── TF.js is loaded lazily to avoid blocking the initial bundle ──
 let tfLoaded = false;
 let mobilenet = null;
+let tf = null;
 
 async function loadModels() {
   if (tfLoaded) return;
-  const tf = await import('@tensorflow/tfjs');
+  tf = await import('@tensorflow/tfjs');
   const mn = await import('@tensorflow-models/mobilenet');
+  
+  // Initialize TF.js
+  await tf.ready();
   mobilenet = await mn.load({ version: 2, alpha: 1.0 });
   tfLoaded = true;
   return { tf, mobilenet };
@@ -18,20 +24,24 @@ async function loadModels() {
 // Extract a 1024-dim embedding from a canvas / img element via MobileNet
 async function extractEmbedding(imgElement) {
   if (!mobilenet) await loadModels();
-  const tf = await import('@tensorflow/tfjs');
-  const activation = mobilenet.infer(imgElement, true); // true = intermediate features
-  const data = await activation.data();
-  activation.dispose();
-  return Array.from(data);
+  
+  return tf.tidy(() => {
+    // Explicit tensor conversion as per Phase 1 requirements
+    const tensor = tf.browser.fromPixels(imgElement)
+      .resizeNearestNeighbor([224, 224])
+      .toFloat()
+      .expandDims();
+    
+    // mobileNet.infer can take a tensor or an image
+    const activation = mobilenet.infer(tensor, true); 
+    return Array.from(activation.dataSync());
+  });
 }
 
 // ── BREED HEURISTIC ──
-// Until a fine-tuned breed model is trained, we use colour & shape heuristics
-// from MobileNet's top-5 classifications as a rough guide.
 async function guessBreed(imgElement) {
   if (!mobilenet) await loadModels();
   const preds = await mobilenet.classify(imgElement, 5);
-  // Map ImageNet labels that overlap with goat breeds
   const breedHints = {
     'Angora': ['wool', 'angora', 'fleece'],
     'Boer': ['goat', 'ibex', 'chamois'],
@@ -61,15 +71,67 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
   const [state, setState]       = useState(STATE.IDLE);
   const [modelsReady, setModelsReady] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
-  const [facing, setFacing]     = useState('environment'); // back camera on mobile
-  const [result, setResult]     = useState(null);   // { goat, confidence, method, breedGuess }
+  const [facing, setFacing]     = useState('environment');
+  const [result, setResult]     = useState(null);
   const [frameCount, setFrameCount] = useState(0);
   const [enrollGoatId, setEnrollGoatId] = useState('');
   const [enrollCount, setEnrollCount]   = useState(0);
   const [capturedThumb, setCapturedThumb] = useState(null);
   const [error, setError]       = useState('');
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrText, setOcrText]       = useState('');
 
-  // Pre-load models on mount
+  // ── OVERLAY RENDERING ──
+  const drawOverlay = useCallback((isScanning, matchedGoat = null) => {
+    const canvas = overlayRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const { width, height } = canvas;
+    ctx.clearRect(0, 0, width, height);
+
+    if (!isScanning && !matchedGoat) return;
+
+    // Draw scan area brackets
+    const boxW = width * 0.5;
+    const boxH = height * 0.6;
+    const x = (width - boxW) / 2;
+    const y = (height - boxH) / 2;
+
+    ctx.strokeStyle = matchedGoat ? '#22c55e' : '#4ade80';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+
+    // Draw corners
+    const len = 30;
+    // Top-left
+    ctx.beginPath(); ctx.moveTo(x, y + len); ctx.lineTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
+    // Top-right
+    ctx.beginPath(); ctx.moveTo(x + boxW - len, y); ctx.lineTo(x + boxW, y); ctx.lineTo(x + boxW, y + len); ctx.stroke();
+    // Bottom-left
+    ctx.beginPath(); ctx.moveTo(x, y + boxH - len); ctx.lineTo(x, y + boxH); ctx.lineTo(x + len, y + boxH); ctx.stroke();
+    // Bottom-right
+    ctx.beginPath(); ctx.moveTo(x + boxW - len, y + boxH); ctx.lineTo(x + boxW, y + boxH); ctx.lineTo(x + boxW, y + boxH - len); ctx.stroke();
+
+    if (isScanning) {
+      // Animated scan line
+      const scanY = y + (Math.sin(Date.now() / 400) * 0.5 + 0.5) * boxH;
+      const grad = ctx.createLinearGradient(x, scanY, x + boxW, scanY);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(0.5, 'rgba(74, 222, 128, 0.5)');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, scanY - 2, boxW, 4);
+    }
+  }, []);
+
+  // Sync overlay size with video
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (state === STATE.SCANNING) drawOverlay(true);
+    }, 30);
+    return () => clearInterval(timer);
+  }, [state, drawOverlay]);
+
   useEffect(() => {
     loadModels().then(() => setModelsReady(true)).catch(console.error);
     return () => stopCamera();
@@ -94,26 +156,22 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          if (overlayRef.current) {
+            overlayRef.current.width = videoRef.current.videoWidth;
+            overlayRef.current.height = videoRef.current.videoHeight;
+          }
+        };
         await videoRef.current.play();
       }
       setCameraActive(true);
       setState(STATE.SCANNING);
       startFrameLoop();
     } catch (err) {
-      setError('Camera access denied. Please allow camera permissions and try again.');
+      setError('Camera access denied or hardware error.');
       setState(STATE.IDLE);
     }
   };
-
-  const flipCamera = async () => {
-    setFacing(f => f === 'environment' ? 'user' : 'environment');
-    if (cameraActive) {
-      stopCamera();
-      // startCamera will pick up the new facing state via the useEffect below
-    }
-  };
-
-  useEffect(() => { if (cameraActive) startCamera(); }, [facing]);
 
   const captureFrame = useCallback(() => {
     const video = videoRef.current;
@@ -134,11 +192,27 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
         guessBreed(canvasEl),
       ]);
 
-      // Hit the server for identity matching
+      // Phase 2: Check local re-ID cache first for instant results
+      const localMatch = await getLocalMatch(embedding, 0.88);
+      
+      if (localMatch) {
+        console.log('[scan] Instant local match found:', localMatch.goat.name);
+        setResult({ ...localMatch, breedGuess: breedResult.breed });
+        setCapturedThumb(canvasEl.toDataURL('image/jpeg', 0.7));
+        setState(STATE.RESULT);
+        stopCamera();
+        if (onScanComplete) onScanComplete(localMatch);
+        return;
+      }
+
+      // Fallback to server for high-accuracy or missing local match
       const res = await fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ embedding }),
+        body: JSON.stringify({ 
+          embedding,
+          image: canvasEl.toDataURL('image/jpeg', 0.8) 
+        }),
       });
       const data = await res.json();
 
@@ -157,81 +231,130 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
     frameTimerRef.current = setInterval(async () => {
       framesSinceLastScan++;
       setFrameCount(n => n + 1);
-      // Draw preview overlay every frame, scan every 20 frames (~2s at 10fps)
       if (framesSinceLastScan >= 20) {
         framesSinceLastScan = 0;
         const canvas = captureFrame();
         if (canvas) runScan(canvas);
       }
-    }, 100); // 10 fps
+    }, 100);
   }, [captureFrame, runScan]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     setState(STATE.LOADING);
     setError('');
-    const img = new Image();
-    img.onload = async () => {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      await runScan(canvas);
-    };
-    img.src = URL.createObjectURL(file);
+
+    if (file.type.startsWith('video/')) {
+      // Video processing
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      video.muted = true;
+      video.onloadeddata = async () => {
+        video.currentTime = video.duration / 2; // Grab middle frame
+      };
+      video.onseeked = async () => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        await runScan(canvas);
+      };
+    } else {
+      // Image processing
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        await runScan(canvas);
+      };
+      img.src = URL.createObjectURL(file);
+    }
   };
 
-  const handleEnroll = async () => {
-    if (!enrollGoatId || !capturedThumb) return;
+  const [enrollFrames, setEnrollFrames] = useState([]);
+  const [enrollProgress, setEnrollProgress] = useState(0);
+
+  const captureEnrollFrame = () => {
+    const canvas = captureFrame();
+    if (!canvas) return;
+    const b64 = canvas.toDataURL('image/jpeg', 0.8);
+    setEnrollFrames(prev => [...prev, b64]);
+  };
+
+  const handleBatchEnroll = async () => {
+    if (!enrollGoatId || enrollFrames.length === 0) return;
     setState(STATE.ENROLLING);
-    const img = new Image();
-    img.onload = async () => {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      canvas.width = img.width; canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      const embedding = await extractEmbedding(canvas);
-      await fetch('/api/enroll', {
+    setEnrollProgress(0);
+    
+    try {
+      const res = await fetch('/api/enroll', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ goatId: parseInt(enrollGoatId), embedding }),
+        body: JSON.stringify({ goat_id: enrollGoatId, images: enrollFrames }),
       });
-      const countRes = await fetch(`/api/enroll?goatId=${enrollGoatId}`);
-      const countData = await countRes.json();
-      setEnrollCount(countData.count);
-      setState(STATE.ENROLLED);
-    };
-    img.src = capturedThumb;
+      const data = await res.json();
+      if (data.ok) {
+        setEnrollCount(data.count);
+        setState(STATE.ENROLLED);
+      } else {
+        setError(data.error || 'Enrollment failed');
+        setState(STATE.RESULT);
+      }
+    } catch (err) {
+      setError('Connection error during enrollment');
+      setState(STATE.RESULT);
+    }
+  };
+
+  const runOcr = async (canvasEl) => {
+    setOcrLoading(true);
+    try {
+      const worker = await createWorker('eng');
+      const { data: { text } } = await worker.recognize(canvasEl);
+      await worker.terminate();
+      const cleanText = text.replace(/[^a-zA-Z0-9-]/g, '').trim();
+      setOcrText(cleanText);
+      return cleanText;
+    } catch (err) {
+      console.warn('[ocr] Failed', err);
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  const handleVerifyTag = async () => {
+    const canvas = captureFrame();
+    if (!canvas) return;
+    const text = await runOcr(canvas);
+    
+    if (!result?.goat && text) {
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ earTag: text }),
+      });
+      const data = await res.json();
+      if (data.goat) setResult(data);
+    }
   };
 
   const reset = () => {
     stopCamera();
     setResult(null); setCapturedThumb(null); setError('');
     setEnrollGoatId(''); setEnrollCount(0);
+    setEnrollFrames([]); setEnrollProgress(0);
+    setOcrText(''); setOcrLoading(false);
     setState(STATE.IDLE); setFrameCount(0);
   };
 
-  // ── CONFIDENCE DISPLAY ──
-  const ConfidenceBadge = ({ score }) => {
-    const pct = Math.round((score ?? 0) * 100);
-    const color = pct >= 80 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <div style={{ width: 80, height: 6, background: 'rgba(0,0,0,0.1)', borderRadius: 3, overflow: 'hidden' }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3, transition: 'width 0.5s' }} />
-        </div>
-        <span style={{ fontSize: 13, fontWeight: 700, color }}>{pct}%</span>
-      </div>
-    );
-  };
-
-  // ── RENDER ──
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-      {/* Header */}
       <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px' }}>
         <div style={{ background: '#e6f4ea', padding: 10, borderRadius: 12 }}>
           <Camera size={26} color="var(--primary)" />
@@ -239,7 +362,7 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
         <div>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-main)' }}>Goat Scanner</h2>
           <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--text-sub)' }}>
-            {modelsReady ? '✓ AI model ready' : '⏳ Loading model…'}
+            {modelsReady ? '✓ AI core loaded' : '⏳ Initializing AI…'}
           </p>
         </div>
         {state !== STATE.IDLE && (
@@ -249,121 +372,84 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
         )}
       </div>
 
-      {/* Mode toggle */}
       {state === STATE.IDLE && (
         <div style={{ display: 'flex', gap: 10 }}>
           {['camera', 'upload'].map(m => (
             <button key={m} onClick={() => setMode(m)} className={`btn-filter ${mode === m ? 'active' : ''}`} style={{ flex: 1, padding: '11px 0', fontSize: 14 }}>
-              {m === 'camera' ? <><Camera size={15} style={{ marginRight: 6, verticalAlign: 'middle' }} />Live Camera</> : <><Upload size={15} style={{ marginRight: 6, verticalAlign: 'middle' }} />Upload Image</>}
+              {m === 'camera' ? <><Camera size={15} style={{ marginRight: 6, verticalAlign: 'middle' }} />Live Camera</> : <><Upload size={15} style={{ marginRight: 6, verticalAlign: 'middle' }} />Video / Photo</>}
             </button>
           ))}
         </div>
       )}
 
-      {/* Error */}
       {error && (
         <div style={{ padding: '12px 16px', background: '#fee2e2', borderRadius: 12, border: '1px solid #fecaca', color: '#dc2626', fontSize: 14, display: 'flex', gap: 8, alignItems: 'center' }}>
           <AlertCircle size={16} /> {error}
         </div>
       )}
 
-      {/* Camera viewport */}
       {(state === STATE.IDLE || state === STATE.LOADING || state === STATE.SCANNING) && mode === 'camera' && (
         <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', background: '#111', aspectRatio: '4/3', width: '100%' }}>
           <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'cover', display: cameraActive ? 'block' : 'none' }} playsInline muted />
+          <canvas ref={overlayRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }} />
 
-          {/* Scan frame overlay */}
-          {cameraActive && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              {/* Corner brackets */}
-              {[['0%','0%','right','bottom'],['0%','auto','right','top'],['auto','0%','left','bottom'],['auto','auto','left','top']].map(([t,b,r,l], i) => (
-                <div key={i} style={{ position: 'absolute', top: t === 'auto' ? undefined : '20%', bottom: b === 'auto' ? undefined : '20%', right: r === 'left' ? undefined : '25%', left: l === 'right' ? undefined : '25%', width: 28, height: 28, borderTop: t !== 'auto' ? '3px solid #4ade80' : undefined, borderBottom: b !== 'auto' ? '3px solid #4ade80' : undefined, borderLeft: l !== 'right' ? '3px solid #4ade80' : undefined, borderRight: r !== 'left' ? '3px solid #4ade80' : undefined }} />
-              ))}
-              {/* Scan line */}
-              <div style={{ position: 'absolute', left: '25%', right: '25%', height: 2, background: 'linear-gradient(90deg, transparent, #4ade80, transparent)', animation: 'scanLine 2s linear infinite' }} />
-            </div>
-          )}
-
-          {/* Placeholder when camera not active */}
           {!cameraActive && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
               <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Camera size={28} color="rgba(255,255,255,0.4)" />
               </div>
-              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Camera not started</span>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Waiting to start camera</span>
             </div>
           )}
 
-          {/* Frame counter */}
           {cameraActive && (
-            <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.5)', borderRadius: 8, padding: '4px 10px', fontSize: 11, color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.5)', borderRadius: 8, padding: '4px 10px', fontSize: 11, color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 5, zIndex: 20 }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1s infinite' }} />
-              LIVE
+              LIVE SCANNING
             </div>
-          )}
-
-          {/* Flip camera button */}
-          {cameraActive && (
-            <button onClick={flipCamera} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: 10, padding: '8px 10px', cursor: 'pointer', color: 'white' }}>
-              <RefreshCw size={16} />
-            </button>
           )}
         </div>
       )}
 
-      {/* Hidden canvas for capture */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Action buttons — IDLE */}
       {state === STATE.IDLE && mode === 'camera' && (
         <button onClick={startCamera} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: 16, fontSize: 16, borderRadius: 16 }} disabled={!modelsReady}>
-          <Zap size={18} /> {modelsReady ? 'Start Scanning' : 'Loading Model…'}
+          <Zap size={18} /> {modelsReady ? 'Start Camera' : 'Warming up AI…'}
         </button>
       )}
 
       {state === STATE.IDLE && mode === 'upload' && (
-        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 36, border: '2px dashed var(--border-color)', borderRadius: 20, cursor: 'pointer', background: 'rgba(255,255,255,0.3)', transition: 'background 0.2s' }}>
+        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 36, border: '2px dashed var(--border-color)', borderRadius: 20, cursor: 'pointer', background: 'rgba(255,255,255,0.3)' }}>
           <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleFileUpload} disabled={!modelsReady} />
-          <Upload size={32} color="var(--text-sub)" />
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: 15 }}>Tap to select photo or video</div>
-            <div style={{ color: 'var(--text-sub)', fontSize: 13, marginTop: 4 }}>JPG, PNG, MP4 supported</div>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+            <Video size={32} color="var(--primary)" />
           </div>
-          {!modelsReady && <div style={{ fontSize: 12, color: 'var(--text-sub)' }}>⏳ Loading AI model first…</div>}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: 15 }}>Upload Goat Media</div>
+            <div style={{ color: 'var(--text-sub)', fontSize: 13, marginTop: 4 }}>Select a photo or short video clip</div>
+          </div>
         </label>
       )}
 
-      {/* Scanning state indicator */}
       {state === STATE.SCANNING && (
         <div className="glass-panel" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1s infinite', flexShrink: 0 }} />
           <div>
-            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-main)' }}>Scanning…</div>
-            <div style={{ fontSize: 12, color: 'var(--text-sub)' }}>Analysing frame {frameCount} — hold steady near the goat's face</div>
+            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-main)' }}>Analyzing live frames…</div>
+            <div style={{ fontSize: 12, color: 'var(--text-sub)' }}>Processing {frameCount} tensors. Focus on the goat.</div>
           </div>
         </div>
       )}
 
-      {state === STATE.LOADING && (
-        <div className="glass-panel" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 22, height: 22, border: '3px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
-          <span style={{ color: 'var(--text-main)', fontSize: 14 }}>Starting camera…</span>
-        </div>
-      )}
-
-      {/* ── RESULT PANEL ── */}
       {state === STATE.RESULT && result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-          {/* Captured image with overlay */}
           {capturedThumb && (
             <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', width: '100%', aspectRatio: '4/3' }}>
               <img src={capturedThumb} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              {/* Bounding box overlay for matched goat */}
               {result.goat && (
-                <div style={{ position: 'absolute', top: '20%', left: '28%', right: '28%', bottom: '18%', border: `3px solid ${result.lowConfidence ? '#f59e0b' : '#22c55e'}`, borderRadius: 12, pointerEvents: 'none' }}>
-                  {/* Name tag at top of box */}
-                  <div style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', background: result.lowConfidence ? '#f59e0b' : '#22c55e', color: 'white', padding: '4px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                <div style={{ position: 'absolute', top: '20%', left: '25%', right: '25%', bottom: '20%', border: `3px solid ${result.lowConfidence ? '#f59e0b' : '#22c55e'}`, borderRadius: 12, pointerEvents: 'none' }}>
+                  <div style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', background: result.lowConfidence ? '#f59e0b' : '#22c55e', color: 'white', padding: '4px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
                     {result.goat.name}
                   </div>
                 </div>
@@ -371,7 +457,6 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
             </div>
           )}
 
-          {/* Result card */}
           <div className="glass-panel" style={{ padding: 20, flexDirection: 'column', gap: 16, display: 'flex', alignItems: 'flex-start' }}>
             {result.goat ? (
               <>
@@ -383,74 +468,88 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--text-main)' }}>{result.goat.name}</h3>
-                      {result.lowConfidence
-                        ? <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>UNCERTAIN</span>
-                        : <CheckCircle size={18} color="#22c55e" />
-                      }
+                      {!result.lowConfidence && <CheckCircle size={18} color="#22c55e" />}
                     </div>
                     <div style={{ fontSize: 13, color: 'var(--text-sub)', marginTop: 3 }}>
-                      ID: G{String(result.goat.id).padStart(3, '0')} · {result.goat.breed || result.breedGuess || 'Unknown breed'} · {result.goat.sex}
+                      {result.goat.breed || result.breedGuess} · {result.goat.sex}
                     </div>
                   </div>
                 </div>
-
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 13, color: 'var(--text-sub)' }}>Match confidence</span>
-                    <ConfidenceBadge score={result.confidence} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 13, color: 'var(--text-sub)' }}>Method</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', textTransform: 'capitalize' }}>{result.method || 'face'}</span>
-                  </div>
-                  {result.breedGuess && result.breedGuess !== 'Unknown' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 13, color: 'var(--text-sub)' }}>Breed detected</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)' }}>{result.breedGuess}</span>
-                    </div>
-                  )}
+                <div style={{ width: '100%', background: 'rgba(0,0,0,0.03)', borderRadius: 12, padding: 12, display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-sub)' }}>Match Score</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: result.lowConfidence ? '#f59e0b' : '#22c55e' }}>{Math.round(result.confidence * 100)}%</span>
                 </div>
 
-                {/* Low confidence: show best guess with option to correct */}
-                {result.lowConfidence && (
-                  <div style={{ width: '100%', background: '#fef3c7', borderRadius: 12, padding: '12px 14px', border: '1px solid #fde68a' }}>
-                    <p style={{ margin: '0 0 10px', fontSize: 13, color: '#92400e', fontWeight: 600 }}>⚠️ Low confidence — is this correct?</p>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => setState(STATE.IDLE)} style={{ flex: 1, padding: '9px 0', borderRadius: 10, border: '1px solid #d97706', background: 'transparent', color: '#92400e', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit' }}>Rescan</button>
-                    </div>
-                  </div>
+                {result.goat.ear_tag && (
+                   <div style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-main)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: 10, color: 'var(--text-sub)', fontWeight: 700, letterSpacing: '0.05em' }}>OFFICIAL EAR TAG</span>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-main)' }}>{result.goat.ear_tag}</span>
+                      </div>
+                      {ocrText ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: ocrText.toLowerCase().includes(result.goat.ear_tag.toLowerCase()) ? '#16a34a' : '#dc2626' }}>
+                          <CheckCircle size={18} />
+                          <span style={{ fontSize: 13, fontWeight: 800 }}>{ocrText.toLowerCase().includes(result.goat.ear_tag.toLowerCase()) ? 'VERIFIED' : 'MISMATCH'}</span>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={handleVerifyTag} 
+                          disabled={ocrLoading}
+                          className="btn-filter" 
+                          style={{ padding: '8px 12px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, background: 'var(--primary)', color: 'white', border: 'none' }}
+                        >
+                          {ocrLoading ? <RefreshCw size={14} className="spin" /> : <Eye size={14} />}
+                          Verify Tag
+                        </button>
+                      )}
+                   </div>
                 )}
               </>
             ) : (
               <div style={{ width: '100%', textAlign: 'center', padding: '10px 0' }}>
-                <div style={{ fontSize: 40, marginBottom: 8 }}>🔍</div>
-                <h3 style={{ margin: '0 0 6px', color: 'var(--text-main)', fontSize: 18 }}>No match found</h3>
-                <p style={{ margin: 0, color: 'var(--text-sub)', fontSize: 14 }}>
-                  {result.breedGuess && result.breedGuess !== 'Unknown' ? `Looks like a ${result.breedGuess}. ` : ''}
-                  This goat may not be enrolled yet.
-                </p>
+                <h3 style={{ margin: '0 0 6px', color: 'var(--text-main)', fontSize: 18 }}>Goat Not Recognized</h3>
+                <p style={{ margin: 0, color: 'var(--text-sub)', fontSize: 14 }}>Breed Guess: {result.breedGuess}</p>
               </div>
             )}
           </div>
 
-          {/* ── ENROLL SECTION ── */}
           <div className="glass-panel" style={{ padding: 18, flexDirection: 'column', gap: 14, display: 'flex' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Eye size={18} color="var(--primary)" />
               <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-main)' }}>
-                {state === STATE.ENROLLED ? 'Enrolled ✓' : 'Enroll this photo'}
+                {state === STATE.ENROLLED ? 'Enrollment Complete ✓' : 'Batch Enrollment'}
               </span>
             </div>
 
             {state === STATE.ENROLLED ? (
               <div style={{ background: '#e6f4ea', borderRadius: 10, padding: '10px 14px', color: '#166534', fontSize: 14, fontWeight: 600 }}>
-                ✓ Photo saved — this goat now has {enrollCount} training photo{enrollCount !== 1 ? 's' : ''}. Add 5+ for best accuracy.
+                ✓ {enrollFrames.length} photos added — total {enrollCount} training photos.
               </div>
             ) : (
               <>
                 <p style={{ margin: 0, fontSize: 13, color: 'var(--text-sub)' }}>
-                  Save this frame as a training photo for a goat. Add 5–15 photos from different angles.
+                  Take 5–15 photos from different angles (front, side, ears) for best accuracy.
                 </p>
+                
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                  {enrollFrames.map((f, i) => (
+                    <div key={i} style={{ position: 'relative', width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+                      <img src={f} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                      <button onClick={() => setEnrollFrames(prev => prev.filter((_, idx) => idx !== i))} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.5)', border: 'none', color: 'white', borderRadius: '50%', padding: 2, display: 'flex' }}><X size={10} /></button>
+                    </div>
+                  ))}
+                  {enrollFrames.length < 15 && (
+                    <button onClick={captureEnrollFrame} style={{ width: 48, height: 48, borderRadius: 8, border: '2px dashed var(--border-color)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sub)', flexShrink: 0 }}>
+                      <Camera size={18} />
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-sub)' }}>{enrollFrames.length} / 15 frames</span>
+                   {enrollFrames.length > 0 && <button onClick={() => setEnrollFrames([])} style={{ fontSize: 11, color: '#ef4444', border: 'none', background: 'transparent', cursor: 'pointer' }}>Clear All</button>}
+                </div>
+
                 <div>
                   <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--text-sub)', marginBottom: 6 }}>Select goat to enroll</label>
                   <select
@@ -459,48 +558,28 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
                     onChange={e => setEnrollGoatId(e.target.value)}
                   >
                     <option value="">— pick a goat —</option>
-                    {goats.map(g => <option key={g.id} value={g.id}>{g.name} ({g.breed || 'Unknown breed'})</option>)}
+                    {goats.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                   </select>
                 </div>
+
                 <button
-                  onClick={handleEnroll}
+                  onClick={handleBatchEnroll}
                   className="btn-primary"
                   style={{ width: '100%', justifyContent: 'center', padding: 13 }}
-                  disabled={!enrollGoatId || state === STATE.ENROLLING}
+                  disabled={!enrollGoatId || enrollFrames.length < 3 || state === STATE.ENROLLING}
                 >
-                  {state === STATE.ENROLLING ? 'Saving…' : '+ Save as Training Photo'}
+                  {state === STATE.ENROLLING ? 'Processing Batch…' : `Enroll ${enrollFrames.length} Photos`}
                 </button>
+                {enrollFrames.length < 3 && <p style={{ margin: 0, fontSize: 11, color: 'var(--text-sub)', textAlign: 'center' }}>Capture at least 3 photos</p>}
               </>
             )}
           </div>
-
-          <button onClick={reset} className="btn-filter" style={{ width: '100%', padding: 13 }}>Scan Another Goat</button>
+          <button onClick={reset} className="btn-filter" style={{ width: '100%', padding: 13 }}>Scan Another</button>
         </div>
       )}
 
-      {/* Instructions */}
-      {state === STATE.IDLE && (
-        <div className="glass-panel" style={{ padding: '16px 18px', flexDirection: 'column', gap: 10, display: 'flex', alignItems: 'flex-start' }}>
-          <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-main)' }}>How it works</h4>
-          {[
-            ['1', "Point camera at a goat's face or body"],
-            ['2', 'AI extracts a visual fingerprint on-device'],
-            ['3', 'Matched against enrolled goats in your database'],
-            ['4', 'Enroll new photos to improve accuracy over time'],
-          ].map(([n, t]) => (
-            <div key={n} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--primary-bg)', color: 'var(--primary)', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{n}</div>
-              <span style={{ fontSize: 13, color: 'var(--text-sub)', lineHeight: 1.5 }}>{t}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Keyframe animations injected once */}
       <style>{`
-        @keyframes scanLine { 0% { top: 20%; } 50% { top: 78%; } 100% { top: 20%; } }
-        @keyframes pulse    { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        @keyframes spin     { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
       `}</style>
     </div>
   );

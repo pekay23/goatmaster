@@ -8,7 +8,12 @@ export async function GET(request) {
   if (error) return error;
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM goats WHERE user_id = $1 ORDER BY created_at DESC',
+      `SELECT g.*, COUNT(ge.id)::int as photo_count
+       FROM goats g
+       LEFT JOIN goat_embeddings ge ON g.id = ge.goat_id
+       WHERE g.user_id = $1
+       GROUP BY g.id
+       ORDER BY g.created_at DESC`,
       [user.userId]
     );
     return NextResponse.json(rows);

@@ -8,6 +8,8 @@ import AlertsPanel from './AlertsPanel';
 import SettingsFooter from './SettingsFooter';
 import Login from './Login';
 import GoatScanner from './GoatScanner';
+import ErrorBoundary from './ErrorBoundary';
+import { saveEmbeddings, initDb } from '@/lib/localDb';
 
 // ── SPLASH ──────────────────────────────────────────────────────
 const SplashScreen = () => (
@@ -104,7 +106,14 @@ const GoatCard = ({ goat, onEdit }) => (
       ? <img src={goat.image_url} className="goat-avatar" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover' }} alt="" />
       : <div className="goat-avatar">🐐</div>}
     <div className="goat-info">
-      <h3>{goat.name}</h3>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+        <h3 style={{ margin: 0 }}>{goat.name}</h3>
+        {goat.photo_count > 0 && (
+          <span style={{ fontSize: 10, color: 'var(--primary)', fontWeight: 800, background: 'var(--primary-bg)', padding: '2px 6px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Camera size={10} /> {goat.photo_count}
+          </span>
+        )}
+      </div>
       <div style={{ fontSize: 12, color: 'var(--text-sub)', marginBottom: 4 }}>
         ID: G{String(goat.id).padStart(3, '0')}{goat.ear_tag ? ` · ${goat.ear_tag}` : ''}
       </div>
@@ -174,12 +183,37 @@ export default function MainApp() {
     setModalOpen(true);
   }, []);
 
-  const handleLogin = (u) => { setUser(u); localStorage.setItem('goat_user', JSON.stringify(u)); };
+  const syncLocalCache = useCallback(async () => {
+    try {
+      const res = await fetch('/api/goats/embeddings', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        await saveEmbeddings(data);
+        console.log(`[sync] ${data.length} embeddings cached locally.`);
+      }
+    } catch (e) {
+      console.warn('[sync] Failed to refresh local cache:', e);
+    }
+  }, []);
+
+  const handleLogin = (u) => { 
+    setUser(u); 
+    localStorage.setItem('goat_user', JSON.stringify(u));
+    syncLocalCache(); 
+  };
+  
   const handleLogout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
     localStorage.removeItem('goat_user');
-  }, []);
+    // Clear IndexedDB on logout for privacy
+    try {
+      const db = await initDb();
+      const tx = db.transaction('embeddings', 'readwrite');
+      await tx.objectStore('embeddings').clear();
+      await tx.done;
+    } catch (e) { console.warn('Failed to clear local cache on logout', e); }
+  }, [syncLocalCache]);
 
   // Goats
   const fetchGoats = useCallback(async () => {
@@ -303,9 +337,11 @@ export default function MainApp() {
 
             {/* SCAN */}
             {activeTab === 'scan' && (
-              <GoatScanner goats={goats} onScanComplete={(res) => {
-                if (res?.goat) showToast(`Matched: ${res.goat.name} (${Math.round((res.confidence ?? 0) * 100)}%)`, 'success');
-              }} />
+              <ErrorBoundary>
+                <GoatScanner goats={goats} onScanComplete={(res) => {
+                  if (res?.goat) showToast(`Matched: ${res.goat.name} (${Math.round((res.confidence ?? 0) * 100)}%)`, 'success');
+                }} />
+              </ErrorBoundary>
             )}
 
             {/* LINEAGE */}

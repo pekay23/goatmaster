@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+ultralytics
+torch
+torchvision
+psycopg2-binary
+numpy
+python-multipart
+python-dotenv

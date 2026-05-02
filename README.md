@@ -1,16 +1,40 @@
-# React + Vite
+# 🐐 Goat Master
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A hybrid ML-based goat identification system using Next.js, TensorFlow.js, and pgvector.
 
-Currently, two official plugins are available:
+## 🚀 Getting Started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project uses **[Bun](https://bun.sh)** for high-performance dependency management and execution.
 
-## React Compiler
+### Prerequisites
+- [Bun v1.0+](https://bun.sh/docs/installation)
+- PostgreSQL with [pgvector](https://github.com/pgvector/pgvector) extension
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Installation
+```bash
+bun install
+```
 
-## Expanding the ESLint configuration
+### Environment Setup
+Create a `.env` file based on your credentials:
+```env
+DATABASE_URL="postgres://user:pass@localhost:5432/goatmaster"
+JWT_SECRET="your-secret"
+MIGRATE_SECRET="migration-key"
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Database Migration
+Initialize the schema and enable pgvector:
+```bash
+curl -H "x-migrate-secret: your-migration-key" http://localhost:3000/api/db-migrate
+```
+
+### Development
+```bash
+bun dev
+```
+
+## 🧠 ML Architecture
+- **On-device**: TF.js (MobileNetV3 + custom re-ID) for instant local matching.
+- **Server-side**: FastAPI + YOLOv8 + ResNet (Phase 3 pending) for high-accuracy verification.
+- **Vector Search**: PostgreSQL `pgvector` with `<=>` cosine distance operator.

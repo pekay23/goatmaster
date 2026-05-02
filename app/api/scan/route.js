@@ -2,23 +2,14 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 
-function cosine(a, b) {
-  if (!a || !b || a.length !== b.length) return 0;
-  let dot = 0, normA = 0, normB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i]; normA += a[i] * a[i]; normB += b[i] * b[i];
-  }
-  const denom = Math.sqrt(normA) * Math.sqrt(normB);
-  return denom === 0 ? 0 : dot / denom;
-}
-
 export async function POST(request) {
   const { user, error } = await requireAuth(request);
   if (error) return error;
 
   try {
-    const { embedding, earTag, qrCode } = await request.json();
+    const { embedding, image, earTag, qrCode } = await request.json();
 
+    // 1. Primary Signal: QR or Ear Tag (100% confidence)
     if (qrCode || earTag) {
       const col = qrCode ? 'qr_code' : 'ear_tag';
       const val = qrCode || earTag;
@@ -26,40 +17,70 @@ export async function POST(request) {
         `SELECT * FROM goats WHERE ${col}=$1 AND user_id=$2 LIMIT 1`,
         [val, user.userId]
       );
-      if (rows.length > 0) return NextResponse.json({ goat: rows[0], confidence: 1.0, method: col });
+      if (rows.length > 0) {
+        return NextResponse.json({ goat: rows[0], confidence: 1.0, method: col });
+      }
     }
 
+    // 2. High-Accuracy Signal: Server-side ML Microservice (YOLOv8 + ResNet)
+    if (image && process.env.ML_SERVICE_URL) {
+      try {
+        const mlRes = await fetch(`${process.env.ML_SERVICE_URL}/scan`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-ML-Key': process.env.ML_SERVICE_KEY
+          },
+          body: JSON.stringify({ image_b64: image, user_id: user.userId })
+        });
+        if (mlRes.ok) {
+          const mlData = await mlRes.json();
+          return NextResponse.json(mlData);
+        }
+      } catch (mlErr) {
+        console.warn('[scan-proxy] ML service unreachable, falling back to basic vector search', mlErr.message);
+      }
+    }
+
+    // 3. Fallback/Secondary Signal: Visual Embedding (pgvector similarity)
     if (embedding?.length) {
-      const { rows: embRows } = await pool.query(
-        `SELECT ge.goat_id, ge.embedding, g.*
-         FROM goat_embeddings ge JOIN goats g ON g.id = ge.goat_id
-         WHERE g.user_id = $1`,
-        [user.userId]
+      const vectorStr = `[${embedding.join(',')}]`;
+      const { rows } = await pool.query(
+        `SELECT 
+           g.*, 
+           1 - (ge.embedding <=> $1::vector) as similarity
+         FROM goat_embeddings ge 
+         JOIN goats g ON g.id = ge.goat_id
+         WHERE g.user_id = $2
+         ORDER BY ge.embedding <=> $1::vector
+         LIMIT 1`,
+        [vectorStr, user.userId]
       );
 
-      let best = null, bestScore = 0;
-      for (const row of embRows) {
-        const score = cosine(embedding, row.embedding);
-        if (score > bestScore) { bestScore = score; best = row; }
-      }
+      if (rows.length > 0) {
+        const best = rows[0];
+        const score = parseFloat(best.similarity);
+        const threshold = 0.75;
+        const lowConfidence = score < threshold;
 
-      if (best && bestScore >= 0.72) {
         await pool.query(
           `INSERT INTO scan_logs (matched_goat_id, user_id, confidence, scan_method)
            VALUES ($1,$2,$3,'face')`,
-          [best.goat_id, user.userId, bestScore]
+          [best.id, user.userId, score]
         );
-        const { embedding: _, ...goat } = best;
-        return NextResponse.json({ goat, confidence: bestScore, method: 'face' });
-      }
-      if (best) {
-        const { embedding: _, ...goat } = best;
-        return NextResponse.json({ goat, confidence: bestScore, method: 'face', lowConfidence: true });
+
+        return NextResponse.json({ 
+          goat: best, 
+          confidence: score, 
+          method: 'face',
+          lowConfidence 
+        });
       }
     }
 
     return NextResponse.json({ goat: null, confidence: 0, method: null });
   } catch (err) {
+    console.error('[scan]', err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

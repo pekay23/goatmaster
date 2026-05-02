@@ -17,6 +17,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "file-saver": "^2.0.5",
+    "idb": "^8.0.3",
     "jose": "^6.2.3",
     "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.7",
@@ -24,7 +25,8 @@
     "next": "^16.2.4",
     "pg": "^8.16.3",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
