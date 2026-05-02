@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
@@ -8,6 +8,7 @@ import AlertsPanel from './AlertsPanel';
 import SettingsFooter from './SettingsFooter';
 import Login from './Login';
 import GoatScanner from './GoatScanner';
+import SmartScanner from './SmartScanner';
 import ErrorBoundary from './ErrorBoundary';
 import { saveEmbeddings, initDb } from '@/lib/localDb';
 
@@ -129,6 +130,7 @@ const EMPTY_FORM = { name: '', breed: '', sex: 'F', dob: '', image_url: '', ear_
 const NAV_TABS = [
   { id: 'profiles', label: 'Profiles', icon: LayoutGrid },
   { id: 'scan',     label: 'Scan',     icon: ScanLine },
+  { id: 'smart',    label: 'Smart',    icon: Sparkles },
   { id: 'lineage',  label: 'Lineage',  icon: Dna },
   { id: 'health',   label: 'Health',   icon: Activity },
   { id: 'reports',  label: 'Reports',  icon: FileText },
@@ -321,13 +323,29 @@ export default function MainApp() {
                   ))}
                 </div>
                 {isFetching ? (
-                  <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: 40 }}>Loading herd…</p>
-                ) : (
                   <div className="goat-grid">
+                    {[1,2,3,4].map(i => (
+                      <div key={i} className="skeleton skeleton-card" style={{ display: 'flex', gap: 14, padding: 14, alignItems: 'center' }}>
+                        <div className="skeleton" style={{ width: 52, height: 52, borderRadius: '50%', flexShrink: 0 }} />
+                        <div style={{ flex: 1 }}>
+                          <div className="skeleton skeleton-line medium" />
+                          <div className="skeleton skeleton-line short" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="goat-grid tab-content">
                     {filtered.map(g => <GoatCard key={g.id} goat={g} onEdit={handleEdit} />)}
                     {!filtered.length && (
-                      <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 20px', color: 'var(--text-sub)' }}>
-                        {searchTerm ? 'No goats match your search.' : 'No goats yet — add your first one!'}
+                      <div style={{ gridColumn: '1/-1' }} className="empty-state">
+                        <div className="empty-state-icon">{searchTerm ? '🔍' : '🐐'}</div>
+                        <h3>{searchTerm ? 'No matches found' : 'Your herd is empty'}</h3>
+                        <p>
+                          {searchTerm
+                            ? `No goats match "${searchTerm}". Try a different search.`
+                            : 'Tap "Add Goat" to add manually, or use the Smart tab to scan and discover your whole herd at once.'}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -341,6 +359,13 @@ export default function MainApp() {
                 <GoatScanner goats={goats} onScanComplete={(res) => {
                   if (res?.goat) showToast(`Matched: ${res.goat.name} (${Math.round((res.confidence ?? 0) * 100)}%)`, 'success');
                 }} />
+              </ErrorBoundary>
+            )}
+
+            {/* SMART SCAN — auto-discovery */}
+            {activeTab === 'smart' && (
+              <ErrorBoundary>
+                <SmartScanner goats={goats} showToast={showToast} onComplete={fetchGoats} />
               </ErrorBoundary>
             )}
 
