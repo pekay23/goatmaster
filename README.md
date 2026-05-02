@@ -26,7 +26,9 @@ MIGRATE_SECRET="migration-key"
 ### Database Migration
 Initialize the schema and enable pgvector:
 ```bash
-curl -H "x-migrate-secret: your-migration-key" http://localhost:3000/api/db-migrate
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"secret": "your-migration-key"}' \
+  http://localhost:3000/api/db-migrate
 ```
 
 ### Development

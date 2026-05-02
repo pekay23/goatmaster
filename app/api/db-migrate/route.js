@@ -104,6 +104,33 @@ export async function POST(request) {
     await run('idx embeddings.goat_id', `CREATE INDEX IF NOT EXISTS idx_embeddings_goat_id ON goat_embeddings(goat_id)`);
     await run('idx scan_logs.user_id',  `CREATE INDEX IF NOT EXISTS idx_scan_logs_user_id ON scan_logs(user_id)`);
 
+    // ── 7. Health & Breeding Logs ─────────────────────────────────
+    await run('create health_logs', `
+      CREATE TABLE IF NOT EXISTS health_logs (
+        id            BIGSERIAL PRIMARY KEY,
+        goat_id       BIGINT NOT NULL REFERENCES goats(id) ON DELETE CASCADE,
+        event_date    DATE NOT NULL,
+        treatment     VARCHAR(200) NOT NULL,
+        notes         TEXT,
+        next_due_date DATE,
+        created_at    TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await run('create breeding_logs', `
+      CREATE TABLE IF NOT EXISTS breeding_logs (
+        id                     BIGSERIAL PRIMARY KEY,
+        dam_id                 BIGINT NOT NULL REFERENCES goats(id) ON DELETE CASCADE,
+        sire_id                BIGINT REFERENCES goats(id) ON DELETE SET NULL,
+        date_bred              DATE NOT NULL,
+        estimated_kidding_date DATE,
+        actual_kidding_date    DATE,
+        notes                  TEXT,
+        created_at             TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await run('idx health.goat_id',   `CREATE INDEX IF NOT EXISTS idx_health_logs_goat_id ON health_logs(goat_id)`);
+    await run('idx breeding.dam_id',  `CREATE INDEX IF NOT EXISTS idx_breeding_logs_dam_id ON breeding_logs(dam_id)`);
+
     // ── 7. Hash any plaintext passwords ──────────────────────────
     const { rows: users } = await pool.query('SELECT id, password FROM users');
     let hashed = 0;
@@ -115,6 +142,10 @@ export async function POST(request) {
       }
     }
     results.push(`✓ ${hashed} password(s) hashed`);
+
+    // ── 7.5 Normalize usernames to lowercase ─────────────────────
+    const { rowCount: updatedUsernames } = await pool.query('UPDATE users SET username = LOWER(username) WHERE username != LOWER(username)');
+    results.push(`✓ ${updatedUsernames} username(s) normalized to lowercase`);
 
     // ── 8. Assign orphaned goats to first user ───────────────────
     const { rows: firstUser } = await pool.query('SELECT id FROM users ORDER BY id LIMIT 1');
@@ -128,6 +159,6 @@ export async function POST(request) {
     return NextResponse.json({ ok: true, results });
   } catch (err) {
     console.error('[migrate]', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

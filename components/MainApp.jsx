@@ -156,7 +156,7 @@ export default function MainApp() {
   const [theme, setTheme]               = useState('system');
 
   // Splash
-  useEffect(() => { const t = setTimeout(() => setLoadingSplash(false), 2800); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setLoadingSplash(false), 1000); return () => clearTimeout(t); }, []);
 
   // Theme
   useEffect(() => { const saved = localStorage.getItem('goat_theme'); if (saved) setTheme(saved); }, []);

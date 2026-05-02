@@ -28,7 +28,7 @@ export async function POST(request) {
     const err = requireFields(body, ['username', 'password']);
     if (err) return NextResponse.json({ error: err }, { status: 400 });
 
-    const username = sanitiseString(body.username, 50);
+    const username = sanitiseString(body.username, 50).toLowerCase();
     const password = body.password;
 
     const { rows } = await pool.query(

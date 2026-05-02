@@ -4,6 +4,8 @@ import io
 import numpy as np
 import torch
 import psycopg2
+from psycopg2.pool import ThreadedConnectionPool
+from contextlib import contextmanager
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Header, Depends
 from pydantic import BaseModel
 from PIL import Image
@@ -45,10 +47,25 @@ preprocess = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-# ── DATABASE CONNECTION ──
-def get_db():
-    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
-    return conn
+# ── DATABASE CONNECTION POOL ──
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    print("WARNING: DATABASE_URL is missing!")
+
+# Create a pool with 1 to 10 connections
+pool = ThreadedConnectionPool(1, 10, dsn=DATABASE_URL)
+
+@contextmanager
+def get_db_connection():
+    conn = pool.getconn()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        pool.putconn(conn)
 
 class ScanRequest(BaseModel):
     image_b64: str
@@ -62,7 +79,7 @@ async def scan_goat(request: ScanRequest):
         img = Image.open(io.BytesIO(img_data)).convert("RGB")
         
         # 2. Detect Goat (YOLOv8)
-        results = detection_model(img)
+        results = detection_model(img, verbose=False)
         # Filter for 'sheep' or 'goat' classes (in COCO, 18 is sheep, sometimes used for goats)
         # We take the highest confidence detection
         goat_box = None
@@ -85,24 +102,19 @@ async def scan_goat(request: ScanRequest):
         # 4. Vector Search (pgvector)
         vector_str = "[" + ",".join(map(str, embedding)) + "]"
         
-        conn = get_db()
-        cur = conn.cursor()
-        
-        # Match using 1 - cosine distance
-        cur.execute("""
-            SELECT 
-                g.id, g.name, g.breed, g.sex, g.image_url,
-                1 - (ge.embedding <=> %s::vector) as similarity
-            FROM goat_embeddings ge
-            JOIN goats g ON g.id = ge.goat_id
-            WHERE g.user_id = %s
-            ORDER BY ge.embedding <=> %s::vector
-            LIMIT 1
-        """, (vector_str, request.user_id, vector_str))
-        
-        match = cur.fetchone()
-        cur.close()
-        conn.close()
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT 
+                        g.id, g.name, g.breed, g.sex, g.image_url,
+                        1 - (ge.embedding <=> %s::vector) as similarity
+                    FROM goat_embeddings ge
+                    JOIN goats g ON g.id = ge.goat_id
+                    WHERE g.user_id = %s
+                    ORDER BY ge.embedding <=> %s::vector
+                    LIMIT 1
+                """, (vector_str, request.user_id, vector_str))
+                match = cur.fetchone()
 
         if match:
             return {
@@ -120,8 +132,8 @@ async def scan_goat(request: ScanRequest):
         return {"goat": None, "confidence": 0, "method": "server_resnet"}
 
     except Exception as e:
-        print(f"ML Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"ML Scan Error: {e}")
+        raise HTTPException(status_code=500, detail="Error during goat identification")
 
 class EnrollRequest(BaseModel):
     images: list[str] # List of base64 strings
@@ -158,7 +170,7 @@ async def enroll_goat(request: EnrollRequest):
 
     except Exception as e:
         print(f"Enroll Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error during enrollment processing")
 
 @app.get("/health")
 async def health():

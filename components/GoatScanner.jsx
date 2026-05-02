@@ -28,7 +28,7 @@ async function extractEmbedding(imgElement) {
   return tf.tidy(() => {
     // Explicit tensor conversion as per Phase 1 requirements
     const tensor = tf.browser.fromPixels(imgElement)
-      .resizeNearestNeighbor([224, 224])
+      .resizeBilinear([224, 224])
       .toFloat()
       .expandDims();
     

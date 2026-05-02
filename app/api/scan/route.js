@@ -81,6 +81,6 @@ export async function POST(request) {
     return NextResponse.json({ goat: null, confidence: 0, method: null });
   } catch (err) {
     console.error('[scan]', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

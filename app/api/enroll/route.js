@@ -59,7 +59,7 @@ export async function POST(request) {
     return NextResponse.json({ ok: true, count: parseInt(countRows[0].count) });
   } catch (err) {
     console.error('[enroll]', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -79,6 +79,6 @@ export async function GET(request) {
     );
     return NextResponse.json({ count: parseInt(rows[0].count) });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

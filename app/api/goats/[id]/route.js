@@ -36,7 +36,7 @@ export async function PUT(request, { params }) {
     );
     return NextResponse.json(rows[0]);
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -55,6 +55,6 @@ export async function DELETE(request, { params }) {
     await pool.query('DELETE FROM goats          WHERE id=$1 AND user_id=$2', [id, user.userId]);
     return NextResponse.json({ message: 'Deleted' });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
