@@ -11,81 +11,118 @@ export async function POST(request) {
 
     const results = [];
 
-    // 0. Ensure 'users' table has an 'id' column (handling legacy schema)
-    const { rows: usersColumns } = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'users' AND column_name = 'id'
+    const run = async (label, sql, params = []) => {
+      try {
+        await pool.query(sql, params);
+        results.push(`✓ ${label}`);
+      } catch (e) {
+        results.push(`⚠ ${label}: ${e.message}`);
+      }
+    };
+
+    // ── 1. Ensure users table has an id column ────────────────────
+    const { rows: hasId } = await pool.query(`
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name='users' AND column_name='id'
+    `);
+    if (hasId.length === 0) {
+      await run('users: add id (bigserial)', `ALTER TABLE users ADD COLUMN id BIGSERIAL`);
+      // Only add PK if there isn't one already
+      const { rows: hasPk } = await pool.query(`
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_name='users' AND constraint_type='PRIMARY KEY'
+      `);
+      if (hasPk.length === 0) {
+        await run('users: set primary key', `ALTER TABLE users ADD PRIMARY KEY (id)`);
+      } else {
+        results.push('✓ users: primary key already exists — skipped');
+      }
+    } else {
+      results.push('✓ users.id already exists — skipped');
+    }
+
+    // ── 2. Try pgvector extension (needs superuser or rds_superuser) ──
+    await run('extension: pgvector', `CREATE EXTENSION IF NOT EXISTS vector`);
+
+    // ── 3. goats columns ──────────────────────────────────────────
+    await run('goats.user_id', `ALTER TABLE goats ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id) ON DELETE CASCADE`);
+    await run('goats.ear_tag', `ALTER TABLE goats ADD COLUMN IF NOT EXISTS ear_tag VARCHAR(50)`);
+    await run('goats.qr_code', `ALTER TABLE goats ADD COLUMN IF NOT EXISTS qr_code VARCHAR(200)`);
+    await run('goats.notes',   `ALTER TABLE goats ADD COLUMN IF NOT EXISTS notes TEXT`);
+
+    // ── 4. goat_embeddings ────────────────────────────────────────
+    // Try with pgvector type first, fall back to float8[] if extension unavailable
+    const { rows: hasVector } = await pool.query(`
+      SELECT 1 FROM pg_extension WHERE extname='vector'
     `);
 
-    if (usersColumns.length === 0) {
-      await pool.query('ALTER TABLE users ADD COLUMN id BIGSERIAL PRIMARY KEY');
-      results.push('added id column to users');
+    if (hasVector.length > 0) {
+      await run('create goat_embeddings (vector)', `
+        CREATE TABLE IF NOT EXISTS goat_embeddings (
+          id         BIGSERIAL PRIMARY KEY,
+          goat_id    BIGINT NOT NULL REFERENCES goats(id) ON DELETE CASCADE,
+          embedding  vector(1024),
+          source     VARCHAR(50) DEFAULT 'enrollment',
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      await run('idx goat_embeddings ivfflat', `
+        CREATE INDEX IF NOT EXISTS goat_embeddings_ivfflat_idx
+        ON goat_embeddings USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100)
+      `);
+    } else {
+      // pgvector not available — use float8 array (fallback, cosine done in JS)
+      await run('create goat_embeddings (float8[] fallback)', `
+        CREATE TABLE IF NOT EXISTS goat_embeddings (
+          id         BIGSERIAL PRIMARY KEY,
+          goat_id    BIGINT NOT NULL REFERENCES goats(id) ON DELETE CASCADE,
+          embedding  FLOAT8[] NOT NULL,
+          source     VARCHAR(50) DEFAULT 'enrollment',
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      results.push('⚠ pgvector unavailable — using float8[] (cosine done in-app). Enable pgvector in DB for best performance.');
     }
 
-    // 1. Add columns to goats and create new tables
-    const migrationStatements = [
-      'CREATE EXTENSION IF NOT EXISTS vector',
-      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE',
-      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS ear_tag VARCHAR(50)',
-      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS date_of_birth DATE',
-      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS photos JSONB DEFAULT \'[]\'',
-      'ALTER TABLE goats ADD COLUMN IF NOT EXISTS notes TEXT',
-      `CREATE TABLE IF NOT EXISTS goat_embeddings (
-        id BIGSERIAL PRIMARY KEY,
-        goat_id BIGINT REFERENCES goats(id) ON DELETE CASCADE,
-        embedding vector(1024),
-        source VARCHAR(50),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )`,
-      `CREATE INDEX IF NOT EXISTS goat_embeddings_ivfflat_idx 
-      ON goat_embeddings USING ivfflat (embedding vector_cosine_ops) 
-      WITH (lists = 100)`,
-      `CREATE TABLE IF NOT EXISTS scan_logs (
-        id BIGSERIAL PRIMARY KEY,
+    // ── 5. scan_logs ──────────────────────────────────────────────
+    await run('create scan_logs', `
+      CREATE TABLE IF NOT EXISTS scan_logs (
+        id              BIGSERIAL PRIMARY KEY,
         matched_goat_id BIGINT REFERENCES goats(id) ON DELETE SET NULL,
-        user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
-        confidence FLOAT,
-        scan_method VARCHAR(50),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )`,
-      'CREATE INDEX IF NOT EXISTS idx_goats_user_id ON goats(user_id)',
-      'CREATE INDEX IF NOT EXISTS idx_embeddings_goat_id ON goat_embeddings(goat_id)'
-    ];
+        confidence      FLOAT4,
+        breed_guess     VARCHAR(100),
+        scan_method     VARCHAR(20),
+        image_url       VARCHAR(500),
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await run('scan_logs.user_id', `ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id) ON DELETE SET NULL`);
 
-    for (const stmt of migrationStatements) {
-      try {
-        await pool.query(stmt);
-      } catch (e) {
-        // Skip if error is "already exists" but log others
-        if (!e.message.includes('already exists')) {
-          console.error('[migrate-step]', e.message);
-          results.push(`Error: ${e.message}`);
-        }
-      }
-    }
-    results.push('schema updated');
+    // ── 6. Indexes ────────────────────────────────────────────────
+    await run('idx goats.user_id',      `CREATE INDEX IF NOT EXISTS idx_goats_user_id ON goats(user_id)`);
+    await run('idx embeddings.goat_id', `CREATE INDEX IF NOT EXISTS idx_embeddings_goat_id ON goat_embeddings(goat_id)`);
+    await run('idx scan_logs.user_id',  `CREATE INDEX IF NOT EXISTS idx_scan_logs_user_id ON scan_logs(user_id)`);
 
-    // 2. Hash any remaining plaintext passwords
+    // ── 7. Hash any plaintext passwords ──────────────────────────
     const { rows: users } = await pool.query('SELECT id, password FROM users');
     let hashed = 0;
     for (const u of users) {
-      if (!u.password.startsWith('$2')) {
+      if (u.password && !u.password.startsWith('$2')) {
         const hash = await bcrypt.hash(u.password, 12);
-        await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hash, u.id]);
+        await pool.query('UPDATE users SET password=$1 WHERE id=$2', [hash, u.id]);
         hashed++;
       }
     }
-    results.push(`${hashed} password(s) hashed`);
+    results.push(`✓ ${hashed} password(s) hashed`);
 
-    // 3. Assign existing goats to first user if user_id is null
+    // ── 8. Assign orphaned goats to first user ───────────────────
     const { rows: firstUser } = await pool.query('SELECT id FROM users ORDER BY id LIMIT 1');
     if (firstUser.length > 0) {
       const { rowCount } = await pool.query(
-        'UPDATE goats SET user_id = $1 WHERE user_id IS NULL',
-        [firstUser[0].id]
+        'UPDATE goats SET user_id=$1 WHERE user_id IS NULL', [firstUser[0].id]
       );
-      results.push(`${rowCount} orphaned goat(s) assigned to user ${firstUser[0].id}`);
+      results.push(`✓ ${rowCount} goat(s) assigned to user id=${firstUser[0].id}`);
     }
 
     return NextResponse.json({ ok: true, results });
