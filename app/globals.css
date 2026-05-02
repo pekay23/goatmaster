@@ -89,7 +89,7 @@ html, body {
   align-items: center;
   padding: 14px 20px;
   margin: 0 10px 20px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-light);
@@ -98,7 +98,7 @@ html, body {
 }
 
 [data-theme="dark"] .app-header {
-  background: rgba(30, 35, 41, 0.85);
+  background: rgba(30, 35, 41, 0.96);
 }
 
 .app-title {
@@ -814,3 +814,21 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .toast {
   animation: slideDown 0.3s ease-out;
 }
+
+/* ============================================================
+   INVISIBLE SCROLLBARS — keeps scroll, hides chrome everywhere
+   ============================================================ */
+html { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+body { scrollbar-width: none; -ms-overflow-style: none; }
+body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+*::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+* { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+
+/* Scroll-padding so sticky header doesn't cover anchored content */
+html { scroll-padding-top: 100px; }
+
+/* Add a tiny top buffer to the add-goat-view so first field never sits behind header */
+.add-goat-view { padding-top: 4px; }

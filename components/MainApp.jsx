@@ -10,6 +10,7 @@ import Login from './Login';
 import GoatScanner from './GoatScanner';
 import SmartScanner from './SmartScanner';
 import BreedReference from './BreedReference';
+import MaturationHelper from './MaturationHelper';
 import ErrorBoundary from './ErrorBoundary';
 import { BREEDS } from '@/lib/breeds';
 import { saveEmbeddings, initDb } from '@/lib/localDb';
@@ -379,9 +380,12 @@ export default function MainApp() {
             {/* SCAN */}
             {activeTab === 'scan' && (
               <ErrorBoundary>
-                <GoatScanner goats={goats} onScanComplete={(res) => {
-                  if (res?.goat) showToast(`Matched: ${res.goat.name} (${Math.round((res.confidence ?? 0) * 100)}%)`, 'success');
-                }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <MaturationHelper goats={goats} onSelectGoat={(g) => showToast(`Tap "Save as Training Photo" on the next scan and pick ${g.name} to update them.`, 'success')} />
+                  <GoatScanner goats={goats} onScanComplete={(res) => {
+                    if (res?.goat) showToast(`Matched: ${res.goat.name} (${Math.round((res.confidence ?? 0) * 100)}%)`, 'success');
+                  }} />
+                </div>
               </ErrorBoundary>
             )}
 

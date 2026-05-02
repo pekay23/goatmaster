@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, useMemo } from 'react';
 import { BREEDS } from '@/lib/breeds';
-import { X, Search, MapPin, Ruler, Palette } from 'lucide-react';
+import { X, Search, Palette, BookOpen, Award } from 'lucide-react';
+import BreedIdentifier from './BreedIdentifier';
 
 const TYPE_COLORS = {
   dairy:     { bg: '#dbeafe', fg: '#1e40af', label: 'Dairy' },
@@ -32,7 +33,6 @@ const BreedDetailModal = ({ breed, onClose }) => {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: 20, animation: 'fadeIn 0.2s ease-out' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-card)', borderRadius: 24, width: '100%', maxWidth: 480, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', animation: 'scaleIn 0.2s ease-out' }}>
-        {/* Header */}
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🐐</div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -47,7 +47,6 @@ const BreedDetailModal = ({ breed, onClose }) => {
           </button>
         </div>
 
-        {/* Body */}
         <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
             <div style={{ fontSize: 11, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, marginBottom: 6 }}>How to identify</div>
@@ -89,13 +88,14 @@ const FactBox = ({ label, value }) => (
 );
 
 export default function BreedReference({ onClose }) {
+  const [view, setView] = useState('identify'); // identify | library
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedBreed, setSelectedBreed] = useState(null);
 
   const filtered = useMemo(() => {
     return BREEDS.filter(b => {
-      if (b.id === 'mixed') return false; // Hide the catch-all
+      if (b.id === 'mixed') return false;
       if (typeFilter !== 'all' && b.type !== typeFilter) return false;
       if (search) {
         const q = search.toLowerCase();
@@ -107,13 +107,14 @@ export default function BreedReference({ onClose }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Top bar with close button */}
       <div className="glass-panel" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ background: 'linear-gradient(135deg, #fef3c7, #fde68a)', padding: 10, borderRadius: 12 }}>
           <span style={{ fontSize: 22 }}>📚</span>
         </div>
         <div style={{ flex: 1 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Breed Reference</h2>
-          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--text-sub)' }}>{BREEDS.length - 1} breeds catalogued</p>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Breeds</h2>
+          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--text-sub)' }}>Identify or browse {BREEDS.length - 1} breeds</p>
         </div>
         {onClose && (
           <button onClick={onClose} style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 10, padding: 8, cursor: 'pointer', color: 'var(--text-sub)' }}>
@@ -122,40 +123,54 @@ export default function BreedReference({ onClose }) {
         )}
       </div>
 
-      <div className="search-bar">
-        <Search size={18} color="var(--text-sub)" />
-        <input className="search-input" placeholder="Search breeds…" value={search} onChange={e => setSearch(e.target.value)} />
+      {/* View toggle */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button onClick={() => setView('identify')} className={`btn-filter ${view === 'identify' ? 'active' : ''}`} style={{ flex: 1, padding: '11px 0', fontSize: 14, gap: 6, display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Award size={15} /> Identify
+        </button>
+        <button onClick={() => setView('library')} className={`btn-filter ${view === 'library' ? 'active' : ''}`} style={{ flex: 1, padding: '11px 0', fontSize: 14, gap: 6, display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }}>
+          <BookOpen size={15} /> Library
+        </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-        {[
-          ['all',       'All'],
-          ['dairy',     'Dairy'],
-          ['meat',      'Meat'],
-          ['fiber',     'Fiber'],
-          ['dual',      'Dual'],
-          ['companion', 'Pet'],
-        ].map(([val, label]) => (
-          <button key={val} onClick={() => setTypeFilter(val)} className={`btn-filter ${typeFilter === val ? 'active' : ''}`}>{label}</button>
-        ))}
-      </div>
+      {view === 'identify' && <BreedIdentifier />}
 
-      <div className="goat-grid">
-        {filtered.map(b => <BreedCard key={b.id} breed={b} onClick={() => setSelectedBreed(b)} />)}
-        {filtered.length === 0 && (
-          <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-            <div className="empty-state-icon">🔍</div>
-            <h3>No breeds match</h3>
-            <p>Try a different search or filter</p>
+      {view === 'library' && (
+        <>
+          <div className="search-bar">
+            <Search size={18} color="var(--text-sub)" />
+            <input className="search-input" placeholder="Search breeds…" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-        )}
-      </div>
+
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {[
+              ['all',       'All'],
+              ['dairy',     'Dairy'],
+              ['meat',      'Meat'],
+              ['fiber',     'Fiber'],
+              ['dual',      'Dual'],
+              ['companion', 'Pet'],
+            ].map(([val, label]) => (
+              <button key={val} onClick={() => setTypeFilter(val)} className={`btn-filter ${typeFilter === val ? 'active' : ''}`}>{label}</button>
+            ))}
+          </div>
+
+          <div className="goat-grid">
+            {filtered.map(b => <BreedCard key={b.id} breed={b} onClick={() => setSelectedBreed(b)} />)}
+            {filtered.length === 0 && (
+              <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+                <div className="empty-state-icon">🔍</div>
+                <h3>No breeds match</h3>
+                <p>Try a different search or filter</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       <BreedDetailModal breed={selectedBreed} onClose={() => setSelectedBreed(null)} />
 
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      `}</style>
+      <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
     </div>
   );
 }
