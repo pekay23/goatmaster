@@ -253,16 +253,42 @@ export default function MainApp() {
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_NAME;
+    const preset    = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET;
+    if (!cloudName || !preset) {
+      showToast('Photo upload not configured. Contact support.', 'error');
+      return;
+    }
+
+    // 5 MB limit — protects users from accidental huge uploads
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image too large (max 5 MB). Please pick a smaller one.', 'error');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file.', 'error');
+      return;
+    }
+
     setIsUploading(true);
     const data = new FormData();
     data.append('file', file);
-    data.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_PRESET || 'goat_uploads');
+    data.append('upload_preset', preset);
     try {
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_NAME || 'dvjxdxhdr'}/image/upload`, { method: 'POST', body: data });
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        { method: 'POST', body: data }
+      );
+      if (!res.ok) throw new Error('upload failed');
       const json = await res.json();
       if (json.secure_url) setFormData(p => ({ ...p, image_url: json.secure_url }));
-    } catch { showToast('Image upload failed', 'error'); }
-    finally { setIsUploading(false); }
+      else throw new Error('no url in response');
+    } catch {
+      showToast('Image upload failed. Please try again.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -318,7 +344,7 @@ export default function MainApp() {
       {/* ── HEADER ── */}
       <header className="app-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo.png" style={{ width: 28, height: 28, borderRadius: 6 }} alt="" />
+          <img src="/icon-192.png" style={{ width: 28, height: 28, borderRadius: 6 }} alt="" />
           <h1 className="app-title">{showForm ? (editingGoat ? 'Edit Goat' : 'New Goat') : NAV_TABS.find(t => t.id === activeTab)?.label}</h1>
         </div>
         {!showForm && activeTab === 'profiles' && (

@@ -24,11 +24,14 @@ export const metadata = {
   },
   icons: {
     icon: [
-      { url: '/logo.png', sizes: '192x192', type: 'image/png' },
-      { url: '/logo.png', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.ico',     sizes: 'any' },
+      { url: '/favicon-16.png',  sizes: '16x16',   type: 'image/png' },
+      { url: '/favicon-32.png',  sizes: '32x32',   type: 'image/png' },
+      { url: '/icon-192.png',    sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png',    sizes: '512x512', type: 'image/png' },
     ],
-    apple: [{ url: '/logo.png', sizes: '180x180' }],
-    shortcut: '/logo.png',
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    shortcut: '/favicon.ico',
   },
   openGraph: {
     type: 'website',
@@ -37,13 +40,13 @@ export const metadata = {
     siteName: 'Goat Master',
     title: 'Goat Master — Smart Herd Management',
     description: 'AI-powered goat farming app: identify individual goats, classify breeds, and track health & breeding all in one place.',
-    images: [{ url: '/logo.png', width: 1200, height: 1200, alt: 'Goat Master' }],
+    images: [{ url: '/icon-512.png', width: 512, height: 512, alt: 'Goat Master' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Goat Master — Smart Herd Management',
     description: 'AI-powered goat farming app for the modern shepherd.',
-    images: ['/logo.png'],
+    images: ['/icon-512.png'],
   },
   robots: {
     index: true,

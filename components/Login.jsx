@@ -47,7 +47,7 @@ export default function Login({ onLogin }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', backgroundColor: 'var(--bg-app)' }}>
       <div style={{ padding: '36px 32px', backgroundColor: 'var(--bg-card)', borderRadius: '24px', boxShadow: '0 8px 40px rgba(0,0,0,0.10)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
-        <img src="/logo.png" alt="Goat Master" style={{ width: 56, height: 56, borderRadius: 14, marginBottom: 8 }} />
+        <img src="/icon-192.png" alt="Goat Master" style={{ width: 56, height: 56, borderRadius: 14, marginBottom: 8 }} />
         <h1 style={{ margin: '0 0 6px', fontSize: '26px', fontWeight: 800, color: 'var(--text-main)' }}>Goat Master</h1>
         <p style={{ margin: '0 0 28px', color: 'var(--text-sub)', fontSize: '15px' }}>
           {isRegistering ? 'Create your account' : 'Welcome back'}
