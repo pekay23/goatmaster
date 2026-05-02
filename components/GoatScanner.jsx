@@ -38,23 +38,21 @@ async function extractEmbedding(imgElement) {
   });
 }
 
-// ── BREED HEURISTIC ──
-async function guessBreed(imgElement) {
+// ── BREED HEURISTIC (now uses comprehensive 26-breed knowledge base) ──
+import { identifyBreed, analyseImageColours } from '@/lib/breeds';
+
+async function guessBreed(imgElement, canvas) {
   if (!mobilenet) await loadModels();
-  const preds = await mobilenet.classify(imgElement, 5);
-  const breedHints = {
-    'Angora': ['wool', 'angora', 'fleece'],
-    'Boer': ['goat', 'ibex', 'chamois'],
-    'Nubian': ['goat', 'deer'],
-    'Alpine': ['mountain goat', 'ibex', 'chamois'],
-    'Saanen': ['white', 'goat'],
+  const predictions = await mobilenet.classify(imgElement, 5);
+  const colourAnalysis = analyseImageColours(canvas);
+  const result = identifyBreed({ predictions, colourAnalysis, userRegion: 'GH' });
+  return {
+    breed: result.best.name,
+    breedId: result.best.id,
+    probability: result.best.confidence,
+    alternatives: result.alternatives,
+    distinguishing: result.best.distinguishing,
   };
-  for (const [breed, keywords] of Object.entries(breedHints)) {
-    if (preds.some(p => keywords.some(k => p.className.toLowerCase().includes(k)))) {
-      return { breed, probability: preds[0]?.probability ?? 0 };
-    }
-  }
-  return { breed: 'Unknown', probability: 0 };
 }
 
 // ── SCAN STATES ──
@@ -189,7 +187,7 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
     try {
       const [embedding, breedResult] = await Promise.all([
         extractEmbedding(canvasEl),
-        guessBreed(canvasEl),
+        guessBreed(canvasEl, canvasEl),
       ]);
 
       // Phase 2: Check local re-ID cache first for instant results

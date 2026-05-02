@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles, BookOpen, ChevronRight } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
@@ -9,7 +9,9 @@ import SettingsFooter from './SettingsFooter';
 import Login from './Login';
 import GoatScanner from './GoatScanner';
 import SmartScanner from './SmartScanner';
+import BreedReference from './BreedReference';
 import ErrorBoundary from './ErrorBoundary';
+import { BREEDS } from '@/lib/breeds';
 import { saveEmbeddings, initDb } from '@/lib/localDb';
 
 // ── SPLASH ──────────────────────────────────────────────────────
@@ -63,13 +65,22 @@ const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleS
       </label>
     </div>
     <form onSubmit={handleSubmit}>
-      {[['Name','name','text',true],['Breed','breed','text',false]].map(([label,name,type,req]) => (
-        <div key={name} className="form-group">
-          <label className="form-label">{label}</label>
-          <input className="form-input" name={name} type={type} value={formData[name]}
-            onChange={e => setFormData(p => ({ ...p, [e.target.name]: e.target.value }))} required={req} />
-        </div>
-      ))}
+      <div className="form-group">
+        <label className="form-label">Name</label>
+        <input className="form-input" name="name" value={formData.name}
+          onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} required />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Breed</label>
+        <input className="form-input" name="breed" list="breed-options" value={formData.breed}
+          onChange={e => setFormData(p => ({ ...p, breed: e.target.value }))}
+          placeholder="Type or pick from list…" />
+        <datalist id="breed-options">
+          {BREEDS.filter(b => b.id !== 'mixed').map(b => (
+            <option key={b.id} value={b.name}>{b.origin} · {b.type}</option>
+          ))}
+        </datalist>
+      </div>
       <div className="form-group">
         <label className="form-label">Sex</label>
         <select className="form-select" name="sex" value={formData.sex} onChange={e => setFormData(p => ({ ...p, sex: e.target.value }))}>
@@ -143,6 +154,7 @@ export default function MainApp() {
   const [toast, setToast]       = useState(null);
   const [modalOpen, setModalOpen]     = useState(false);
   const [modalConfig, setModalConfig] = useState({});
+  const [showBreedRef, setShowBreedRef] = useState(false);
 
   const [activeTab, setActiveTab]   = useState('profiles');
   const [showForm, setShowForm]     = useState(false);
@@ -285,6 +297,17 @@ export default function MainApp() {
   if (loadingSplash) return <SplashScreen />;
   if (!user) return <Login onLogin={handleLogin} />;
 
+  // Breed reference takes over the full screen when open
+  if (showBreedRef) {
+    return (
+      <div className="app-layout">
+        <main className="main-content" style={{ padding: '20px 16px 40px' }}>
+          <BreedReference onClose={() => setShowBreedRef(false)} />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="app-layout">
       <DeleteModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onConfirm={modalConfig.onConfirm}
@@ -411,6 +434,17 @@ export default function MainApp() {
                     </button>
                   ))}
                 </div>
+
+                {/* Knowledge */}
+                <h3 style={{ color: 'var(--text-main)', margin: '8px 0 0', fontSize: 16 }}>Knowledge</h3>
+                <button onClick={() => setShowBreedRef(true)}
+                  style={{ padding: 15, background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border-color)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 600, fontSize: 15, fontFamily: 'inherit', width: '100%', justifyContent: 'space-between' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <BookOpen size={20} />
+                    <span>Browse {BREEDS.length - 1} Breeds</span>
+                  </span>
+                  <ChevronRight size={18} color="var(--text-sub)" />
+                </button>
 
                 {/* Account actions */}
                 <h3 style={{ color: 'var(--text-main)', margin: '8px 0 0', fontSize: 16 }}>Account</h3>

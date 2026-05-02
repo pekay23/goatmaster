@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, Upload, Sparkles, Check, X, Edit3, Loader2, Zap, AlertCircle, Plus, RefreshCw, ChevronRight } from 'lucide-react';
 import { BulkDiscoverySession, estimateSharpness } from '@/lib/bulkDiscovery';
+import { identifyBreed, analyseImageColours } from '@/lib/breeds';
 
 // ── TF.js lazy loader ─────────────────────────────────────────────
 let tfLoaded = false, mobilenet = null, tf = null;
@@ -23,20 +24,12 @@ async function extractEmbedding(imgEl) {
   });
 }
 
-async function guessBreed(imgEl) {
+async function guessBreed(imgEl, canvas) {
   if (!mobilenet) await loadModels();
-  const preds = await mobilenet.classify(imgEl, 5);
-  const hints = {
-    'Angora': ['wool', 'angora', 'fleece'],
-    'Boer':   ['goat', 'ibex'],
-    'Nubian': ['deer'],
-    'Alpine': ['mountain goat', 'chamois'],
-    'Saanen': ['white'],
-  };
-  for (const [breed, kw] of Object.entries(hints)) {
-    if (preds.some(p => kw.some(k => p.className.toLowerCase().includes(k)))) return breed;
-  }
-  return 'Unknown';
+  const predictions = await mobilenet.classify(imgEl, 5);
+  const colourAnalysis = analyseImageColours(canvas || imgEl);
+  const result = identifyBreed({ predictions, colourAnalysis, userRegion: 'GH' });
+  return result.best.name;
 }
 
 // ── STATES ─────────────────────────────────────────────────────────
@@ -200,7 +193,7 @@ export default function SmartScanner({ goats = [], onComplete, showToast }) {
     if (!sessionRef.current) return null;
     try {
       const [embedding, breed] = await Promise.all([
-        extractEmbedding(canvas), guessBreed(canvas),
+        extractEmbedding(canvas), guessBreed(canvas, canvas),
       ]);
       const sharpness = estimateSharpness(canvas);
       const thumb = canvas.toDataURL('image/jpeg', 0.7);
