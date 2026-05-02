@@ -6,7 +6,7 @@ const AlertsPanel = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/alerts')
+    fetch('/api/alerts', { credentials: 'include' })
       .then(res => res.json())
       .then(data => { setAlerts(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

@@ -27,7 +27,7 @@ const Reports = () => {
     setLoading(true);
     setTableSearch('');
     setSortConfig({ key: null, direction: 'asc' });
-    fetch(`/api/reports?type=${reportType}`)
+    fetch(`/api/reports?type=${reportType}`, { credentials: 'include' })
       .then(res => res.json())
       .then(resData => { setData(cleanData(Array.isArray(resData) ? resData : [])); setLoading(false); })
       .catch(() => setLoading(false));

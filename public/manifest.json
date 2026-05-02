@@ -1,20 +1,36 @@
 {
-  "name": "Goat Master",
-  "short_name": "GoatMaster",
+  "name": "Goat Master — Smart Herd Management",
+  "short_name": "Goat Master",
+  "description": "Manage your goat herd: profiles, health records, breeding logs, and AI-powered scanning to identify individual goats and breeds.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "background_color": "#f0f2f5",
   "theme_color": "#28a745",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "lifestyle", "utilities"],
   "icons": [
+    { "src": "/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
     {
-      "src": "/logo.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "name": "Scan a goat",
+      "short_name": "Scan",
+      "description": "Open the AI scanner to identify a goat",
+      "url": "/?tab=scan",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "name": "Smart Scan",
+      "short_name": "Smart",
+      "description": "Auto-discover multiple goats at once",
+      "url": "/?tab=smart",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

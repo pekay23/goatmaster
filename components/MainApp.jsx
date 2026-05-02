@@ -397,7 +397,7 @@ export default function MainApp() {
             )}
 
             {/* LINEAGE */}
-            {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} />}
+            {activeTab === 'lineage' && <BreedingPanel goats={goats} isLoading={isFetching} showToast={showToast} />}
 
             {/* HEALTH */}
             {activeTab === 'health' && <><AlertsPanel /><HealthPanel goats={goats} isLoading={isFetching} showToast={showToast} /></>}

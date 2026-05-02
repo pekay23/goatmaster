@@ -1,57 +1,43 @@
 import React from 'react';
+import { Mail, FileText, Shield } from 'lucide-react';
 
-const SettingsFooter = () => {
+export default function SettingsFooter() {
   return (
-    <footer style={{ 
-      marginTop: '40px', 
-      padding: '20px', 
-      borderTop: '1px solid var(--border-color)', 
-      textAlign: 'center', 
+    <footer style={{
+      marginTop: 32,
+      padding: 20,
+      borderTop: '1px solid var(--border-color)',
+      textAlign: 'center',
       color: 'var(--text-sub)',
-      fontSize: '0.9em',
-      backgroundColor: 'var(--bg-card)'
+      fontSize: 13,
     }}>
-      
-      {/* App Version Info */}
-      <div style={{ marginBottom: '10px' }}>
-        <strong>Goat Master</strong> v1.0.0
+      {/* App version */}
+      <div style={{ marginBottom: 14 }}>
+        <strong style={{ color: 'var(--text-main)' }}>Goat Master</strong>
+        <span style={{ marginLeft: 8, fontSize: 11, opacity: 0.7 }}>v1.1.0</span>
       </div>
 
-      {/* Support Links */}
-      <div style={{ marginBottom: '15px' }}>
-        <a href="mailto:samuel.hughes.23@outlook.com" style={{ color: 'var(--primary)', textDecoration: 'none', margin: '0 10px' }}>
-          📧 Contact Support
+      {/* Support */}
+      <a href="mailto:samuel.hughes.23@outlook.com"
+        style={{ color: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600, marginBottom: 14 }}>
+        <Mail size={14} /> Contact Support
+      </a>
+
+      {/* Legal links */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 14, flexWrap: 'wrap' }}>
+        <a href="/legal/privacy" target="_blank" rel="noopener noreferrer"
+          style={{ color: 'var(--text-sub)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13 }}>
+          <Shield size={12} /> Privacy Policy
+        </a>
+        <a href="/legal/terms" target="_blank" rel="noopener noreferrer"
+          style={{ color: 'var(--text-sub)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13 }}>
+          <FileText size={12} /> Terms of Service
         </a>
       </div>
 
-      {/* Compliance Links */}
-      <div>
-        <a 
-          href="/privacy.md" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          style={{ color: 'var(--text-sub)', textDecoration: 'underline', margin: '0 5px' }}
-        >
-          Privacy Policy
-        </a>
-        
-        <span style={{ margin: '0 5px' }}>&bull;</span>
-        
-        <a 
-          href="/terms.md" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          style={{ color: 'var(--text-sub)', textDecoration: 'underline', margin: '0 5px' }}
-        >
-          Terms of Service
-        </a>
-      </div>
-
-      <div style={{ marginTop: '20px', fontSize: '0.8em', color: '#999' }}>
-        &copy; {new Date().getFullYear()} Goat Master Inc.
+      <div style={{ fontSize: 11, color: '#999' }}>
+        © {new Date().getFullYear()} Goat Master · Made in Ghana 🇬🇭
       </div>
     </footer>
   );
-};
-
-export default SettingsFooter;
+}
