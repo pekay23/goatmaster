@@ -1,0 +1,4 @@
+tensorflow>=2.15.0
+tensorflowjs>=4.17.0
+onnx>=1.15.0
+coremltools>=7.1

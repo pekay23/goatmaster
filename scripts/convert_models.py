@@ -22,19 +22,32 @@ def convert_h5_to_tfjs(h5_path, output_dir):
 def convert_onnx_to_tfjs(onnx_path, output_dir):
     """
     Converts an ONNX model (e.g. from PyTorch ArcFace) to TF.js.
-    First converts ONNX -> SavedModel, then SavedModel -> TF.js.
+    Uses onnx2tf for high-fidelity conversion to SavedModel first.
     """
-    import onnx
-    from onnx_tf.backend import prepare
+    import onnx2tf
+    import shutil
 
     print(f"--- Converting {onnx_path} to TF.js ---")
-    onnx_model = onnx.load(onnx_path)
-    tf_rep = prepare(onnx_model)
     
     saved_model_path = "temp_saved_model"
-    tf_rep.export_graph(saved_model_path)
+    if os.path.exists(saved_model_path):
+        shutil.rmtree(saved_model_path)
+
+    # Convert ONNX -> SavedModel
+    # not_use_onnxsim=True avoids build issues with onnxsim on some systems
+    onnx2tf.convert(
+        input_onnx_file_path=onnx_path,
+        output_folder_path=saved_model_path,
+        not_use_onnxsim=True
+    )
     
+    # Convert SavedModel -> TF.js
     tfjs.converters.convert_tf_saved_model(saved_model_path, output_dir)
+    
+    # Cleanup
+    if os.path.exists(saved_model_path):
+        shutil.rmtree(saved_model_path)
+        
     print(f"✓ Saved to {output_dir}")
 
 if __name__ == "__main__":
