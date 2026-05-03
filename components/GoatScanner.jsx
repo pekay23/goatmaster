@@ -526,9 +526,29 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
             ) : (
               <>
                 <p style={{ margin: 0, fontSize: 13, color: 'var(--text-sub)' }}>
-                  Take 5–15 photos from different angles (front, side, ears) for best accuracy.
+                  Capture 5–15 photos from <b>different angles</b> to train the AI. More angles = better recognition.
                 </p>
-                
+
+                {/* Angle guide */}
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {[
+                    { label: 'Front', icon: '正', done: enrollFrames.length >= 1 },
+                    { label: 'Left',  icon: '◧', done: enrollFrames.length >= 3 },
+                    { label: 'Right', icon: '◨', done: enrollFrames.length >= 5 },
+                    { label: 'Rear',  icon: '⊡', done: enrollFrames.length >= 7 },
+                    { label: 'Close', icon: '⊕', done: enrollFrames.length >= 9 },
+                  ].map(a => (
+                    <div key={a.label} style={{
+                      padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                      background: a.done ? '#dcfce7' : 'var(--bg-app)',
+                      color: a.done ? '#166534' : 'var(--text-sub)',
+                      border: `1px solid ${a.done ? '#86efac' : 'var(--border-color)'}`,
+                    }}>
+                      {a.icon} {a.label}
+                    </div>
+                  ))}
+                </div>
+
                 <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
                   {enrollFrames.map((f, i) => (
                     <div key={i} style={{ position: 'relative', width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
@@ -544,7 +564,7 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-sub)' }}>{enrollFrames.length} / 15 frames</span>
+                   <span style={{ fontSize: 12, fontWeight: 600, color: enrollFrames.length >= 5 ? '#166534' : 'var(--text-sub)' }}>{enrollFrames.length} / 15 frames {enrollFrames.length >= 5 ? '— good coverage!' : enrollFrames.length >= 3 ? '— add more angles' : ''}</span>
                    {enrollFrames.length > 0 && <button onClick={() => setEnrollFrames([])} style={{ fontSize: 11, color: '#ef4444', border: 'none', background: 'transparent', cursor: 'pointer' }}>Clear All</button>}
                 </div>
 

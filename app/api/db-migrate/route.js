@@ -131,6 +131,21 @@ export async function POST(request) {
     await run('idx health.goat_id',   `CREATE INDEX IF NOT EXISTS idx_health_logs_goat_id ON health_logs(goat_id)`);
     await run('idx breeding.dam_id',  `CREATE INDEX IF NOT EXISTS idx_breeding_logs_dam_id ON breeding_logs(dam_id)`);
 
+    // ── 7a. ID corrections log (feedback loop for re-training) ──
+    await run('create id_corrections', `
+      CREATE TABLE IF NOT EXISTS id_corrections (
+        id              BIGSERIAL PRIMARY KEY,
+        user_id         BIGINT REFERENCES users(id) ON DELETE SET NULL,
+        correction_type VARCHAR(20) NOT NULL,
+        source_goat_id  BIGINT REFERENCES goats(id) ON DELETE SET NULL,
+        target_goat_id  BIGINT REFERENCES goats(id) ON DELETE SET NULL,
+        embedding       FLOAT8[],
+        notes           TEXT,
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await run('idx corrections.user_id', `CREATE INDEX IF NOT EXISTS idx_corrections_user_id ON id_corrections(user_id)`);
+
     // ── 7. Hash any plaintext passwords ──────────────────────────
     const { rows: users } = await pool.query('SELECT id, password FROM users');
     let hashed = 0;

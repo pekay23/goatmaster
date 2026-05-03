@@ -162,9 +162,17 @@ export default function SmartScanner({ goats = [], onComplete, showToast }) {
   const [progress, setProgress]     = useState(0); // 0–100
   const [summary, setSummary]       = useState(null); // { matched: [], newGoats: [] }
 
-  // Pre-load models in background
+  // Server-side embedding: better quality when ML service is available
+  const useServerEmbedRef = useRef(false);
+
+  // Pre-load models + probe for server embedding availability
   useEffect(() => {
     loadModels().then(() => setModelsReady(true)).catch(console.error);
+    // Check if server-side embedding is available (non-blocking)
+    fetch('/api/smart-scan/embed', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { useServerEmbedRef.current = !!d.available; })
+      .catch(() => {});
     return () => stopCamera();
   }, []);
 
@@ -188,12 +196,37 @@ export default function SmartScanner({ goats = [], onComplete, showToast }) {
     }
   }, []);
 
+  // ── EXTRACT EMBEDDING (server or client) ──────────────────────
+  const getEmbedding = useCallback(async (canvas) => {
+    // Try server-side first (YOLOv8 crop + ResNet50 = better quality)
+    if (useServerEmbedRef.current) {
+      try {
+        const b64 = canvas.toDataURL('image/jpeg', 0.8);
+        const res = await fetch('/api/smart-scan/embed', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_b64: b64 }),
+        });
+        if (res.ok) {
+          const { embedding } = await res.json();
+          if (embedding?.length) return embedding;
+        }
+        // Server failed — disable for rest of session to keep embedding space consistent
+        useServerEmbedRef.current = false;
+      } catch {
+        useServerEmbedRef.current = false;
+      }
+    }
+    // Fallback to client-side MobileNet
+    return extractEmbedding(canvas);
+  }, []);
+
   // ── PROCESS A SINGLE FRAME ───────────────────────────────────
   const processFrame = useCallback(async (canvas) => {
     if (!sessionRef.current) return null;
     try {
       const [embedding, breed] = await Promise.all([
-        extractEmbedding(canvas), guessBreed(canvas, canvas),
+        getEmbedding(canvas), guessBreed(canvas, canvas),
       ]);
       const sharpness = estimateSharpness(canvas);
       const thumb = canvas.toDataURL('image/jpeg', 0.7);
@@ -210,7 +243,7 @@ export default function SmartScanner({ goats = [], onComplete, showToast }) {
       console.error('[smart-scan] frame error', e);
       return null;
     }
-  }, []);
+  }, [getEmbedding]);
 
   // ── LIVE CAMERA START ─────────────────────────────────────────
   const startCamera = async () => {

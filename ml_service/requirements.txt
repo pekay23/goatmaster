@@ -5,5 +5,7 @@ torch
 torchvision
 psycopg2-binary
 numpy
+Pillow
 python-multipart
 python-dotenv
+pyyaml
