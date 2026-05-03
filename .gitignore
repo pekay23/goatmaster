@@ -27,6 +27,12 @@ __pycache__/
 *.weights
 *.h5
 
+# ML Training artifacts
+ml_service/datasets/
+ml_service/training_data/
+ml_service/runs/
+ml_service/goat_dataset/
+
 # OS / IDE
 .DS_Store
 .vscode/

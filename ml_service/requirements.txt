@@ -9,3 +9,5 @@ Pillow
 python-multipart
 python-dotenv
 pyyaml
+roboflow
+inference-sdk

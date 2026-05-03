@@ -3,7 +3,32 @@
     "allow": [
       "Bash(grep -r \"edit\\\\|profile\\\\|identity\\\\|form\" /c/Projects/goatmaster/components/*.jsx)",
       "Read(//c/Users/PC/AppData/Local/Temp/claude/c--Projects-goatmaster/871f9dba-9879-43f1-b995-bfd6dcd2bc38/tasks/**)",
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "WebFetch(domain:universe.roboflow.com)",
+      "WebFetch(domain:api.roboflow.com)",
+      "Bash(pip install:*)",
+      "Bash(where python:*)",
+      "Bash(where pip:*)",
+      "Bash(where python3:*)",
+      "Bash(where pip3:*)",
+      "Bash(c:/Projects/goatmaster/ml_service/.venv/Scripts/pip.exe install:*)",
+      "Bash(.venv/Scripts/python.exe -c \"from inference_sdk import InferenceHTTPClient; print\\('inference-sdk OK'\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"from roboflow import Roboflow; print\\('roboflow OK'\\)\")",
+      "Bash(.venv/Scripts/python.exe -c ':*)",
+      "Bash(ls -la /c/Projects/goatmaster/ml_service/README*)",
+      "Bash(where huggingface-cli:*)",
+      "Bash(c:/Projects/goatmaster/ml_service/.venv/Scripts/pip.exe show:*)",
+      "Bash(c:/Projects/goatmaster/ml_service/.venv/Scripts/huggingface-cli.exe whoami:*)",
+      "Bash(c:/Projects/goatmaster/ml_service/.venv/Scripts/hf.exe whoami:*)",
+      "Bash(c:/Projects/goatmaster/ml_service/.venv/Scripts/hf.exe auth:*)",
+      "Bash(c:/Projects/goatmaster/ml_service/.venv/Scripts/hf.exe upload:*)",
+      "Read(//tmp/**)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/main.py /tmp/tmp.bMEErc1fws/)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/requirements.txt /tmp/tmp.bMEErc1fws/)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/Dockerfile /tmp/tmp.bMEErc1fws/)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/README.md /tmp/tmp.bMEErc1fws/)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/export_training_data.py /tmp/tmp.bMEErc1fws/)",
+      "Bash(xxd)"
     ]
   }
 }

@@ -25,9 +25,40 @@ async def verify_key(x_ml_key: str = Header(None)):
         raise HTTPException(status_code=403, detail="Invalid API Key")
 
 # ── MODEL LOADING ──
-# Using YOLOv8n (nano) for efficiency, ResNet50 for high-quality re-ID
-print("Loading YOLOv8...")
-detection_model = YOLO('yolov8n.pt') 
+# Detection: Use custom-trained YOLO weights if available, else Roboflow API, else COCO fallback
+ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
+ROBOFLOW_MODEL_ID = os.getenv("ROBOFLOW_MODEL_ID")  # e.g. "humans-and-animals-detection-gauua/1"
+roboflow_model = None
+
+# Priority 1: Custom-trained YOLOv8 on goats
+custom_yolo_path = os.path.join(os.path.dirname(__file__), "yolov8n_goats.pt")
+if os.path.exists(custom_yolo_path):
+    print(f"Loading custom goat detector: {custom_yolo_path}")
+    detection_model = YOLO(custom_yolo_path)
+    DETECTION_MODE = "custom_yolo"
+# Priority 2: Roboflow hosted model (your trained RF-DETR)
+elif ROBOFLOW_API_KEY and ROBOFLOW_MODEL_ID:
+    try:
+        from inference_sdk import InferenceHTTPClient
+        roboflow_model = InferenceHTTPClient(
+            api_url="https://detect.roboflow.com",
+            api_key=ROBOFLOW_API_KEY,
+        )
+        print(f"Using Roboflow model: {ROBOFLOW_MODEL_ID}")
+        detection_model = YOLO('yolov8n.pt')  # fallback for non-goat detections
+        DETECTION_MODE = "roboflow"
+    except ImportError:
+        print("WARNING: inference_sdk not installed. Run: pip install inference-sdk")
+        print("Falling back to COCO YOLOv8n.")
+        detection_model = YOLO('yolov8n.pt')
+        DETECTION_MODE = "coco_fallback"
+# Priority 3: Default COCO-pretrained (detects sheep/cow as proxy)
+else:
+    print("Loading YOLOv8n (COCO) — sheep/cow fallback mode")
+    detection_model = YOLO('yolov8n.pt')
+    DETECTION_MODE = "coco_fallback"
+
+print(f"Detection mode: {DETECTION_MODE}")
 
 print("Loading ResNet50...")
 base_resnet = models.resnet50(pretrained=True)
@@ -76,6 +107,57 @@ def get_db_connection():
     finally:
         pool.putconn(conn)
 
+def detect_goat_box(img):
+    """Detect a goat in the image and return (crop, detected_bool).
+    Uses the best available detection model."""
+
+    if DETECTION_MODE == "roboflow" and roboflow_model:
+        try:
+            # Convert PIL to bytes for Roboflow API
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG")
+            buf.seek(0)
+
+            result = roboflow_model.infer(buf.read(), model_id=ROBOFLOW_MODEL_ID)
+            predictions = result.get("predictions", [])
+
+            # Find the best goat detection
+            goat_classes = {"goat", "sheep", "cow", "deer"}  # accept related classes
+            best = None
+            best_conf = 0
+            for pred in predictions:
+                cls_name = pred.get("class", "").lower()
+                conf = pred.get("confidence", 0)
+                if cls_name in goat_classes and conf > best_conf:
+                    best = pred
+                    best_conf = conf
+
+            if best:
+                x, y, w, h = best["x"], best["y"], best["width"], best["height"]
+                box = (x - w/2, y - h/2, x + w/2, y + h/2)
+                return img.crop(box), True
+        except Exception as e:
+            print(f"Roboflow detection failed, falling back to local YOLO: {e}")
+
+    # Local YOLO detection (custom or COCO fallback)
+    results = detection_model(img, verbose=False)
+
+    if DETECTION_MODE == "custom_yolo":
+        # Custom model has "goat" as class 0 (or similar)
+        for r in results:
+            for box in r.boxes:
+                goat_box = box.xyxy[0].cpu().numpy()
+                return img.crop((goat_box[0], goat_box[1], goat_box[2], goat_box[3])), True
+    else:
+        # COCO fallback: sheep=18, cow=19
+        for r in results:
+            for box in r.boxes:
+                if int(box.cls[0]) in [18, 19]:
+                    goat_box = box.xyxy[0].cpu().numpy()
+                    return img.crop((goat_box[0], goat_box[1], goat_box[2], goat_box[3])), True
+
+    return img, False  # No detection — use full image
+
 class ScanRequest(BaseModel):
     image_b64: str
     user_id: int
@@ -86,22 +168,9 @@ async def scan_goat(request: ScanRequest):
         # 1. Decode Image
         img_data = base64.b64decode(request.image_b64.split(",")[-1])
         img = Image.open(io.BytesIO(img_data)).convert("RGB")
-        
-        # 2. Detect Goat (YOLOv8)
-        results = detection_model(img, verbose=False)
-        # Filter for 'sheep' or 'goat' classes (in COCO, 18 is sheep, sometimes used for goats)
-        # We take the highest confidence detection
-        goat_box = None
-        for r in results:
-            for box in r.boxes:
-                if int(box.cls[0]) in [18, 19]: # Sheep or Cow (fallback classes)
-                    goat_box = box.xyxy[0].cpu().numpy()
-                    break
-        
-        # If no goat detected, use full image (fallback)
-        crop = img
-        if goat_box is not None:
-            crop = img.crop((goat_box[0], goat_box[1], goat_box[2], goat_box[3]))
+
+        # 2. Detect Goat
+        crop, detected = detect_goat_box(img)
 
         # 3. Extract Embedding (ResNet50)
         input_tensor = preprocess(crop).unsqueeze(0)
@@ -154,20 +223,7 @@ async def embed_image(request: EmbedRequest):
         img_data = base64.b64decode(request.image_b64.split(",")[-1])
         img = Image.open(io.BytesIO(img_data)).convert("RGB")
 
-        # Detect goat bounding box
-        results = detection_model(img, verbose=False)
-        goat_box = None
-        detected = False
-        for r in results:
-            for box in r.boxes:
-                if int(box.cls[0]) in [18, 19]:
-                    goat_box = box.xyxy[0].cpu().numpy()
-                    detected = True
-                    break
-
-        crop = img
-        if goat_box is not None:
-            crop = img.crop((goat_box[0], goat_box[1], goat_box[2], goat_box[3]))
+        crop, detected = detect_goat_box(img)
 
         input_tensor = preprocess(crop).unsqueeze(0)
         with torch.no_grad():
@@ -191,17 +247,8 @@ async def enroll_goat(request: EnrollRequest):
             img = Image.open(io.BytesIO(img_data)).convert("RGB")
             
             # 2. Detect & Crop
-            results = detection_model(img, verbose=False)
-            goat_box = None
-            for r in results:
-                for box in r.boxes:
-                    if int(box.cls[0]) in [18, 19]:
-                        goat_box = box.xyxy[0].cpu().numpy()
-                        break
-            
-            crop = img
-            if goat_box is not None:
-                crop = img.crop((goat_box[0], goat_box[1], goat_box[2], goat_box[3]))
+            # 2. Detect & Crop
+            crop, _ = detect_goat_box(img)
 
             # 3. Embed
             input_tensor = preprocess(crop).unsqueeze(0)
@@ -217,7 +264,7 @@ async def enroll_goat(request: EnrollRequest):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "models_loaded": True}
+    return {"status": "ok", "models_loaded": True, "detection_mode": DETECTION_MODE}
 
 # ── TRAINING ENDPOINTS ──
 
