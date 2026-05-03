@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"edit\\\\|profile\\\\|identity\\\\|form\" /c/Projects/goatmaster/components/*.jsx)",
+      "Read(//c/Users/PC/AppData/Local/Temp/claude/c--Projects-goatmaster/871f9dba-9879-43f1-b995-bfd6dcd2bc38/tasks/**)",
+      "Bash(xargs basename:*)"
+    ]
+  }
+}

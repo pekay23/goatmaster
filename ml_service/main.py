@@ -49,14 +49,23 @@ preprocess = transforms.Compose([
 
 # ── DATABASE CONNECTION POOL ──
 DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    print("WARNING: DATABASE_URL is missing!")
+pool = None
 
-# Create a pool with 1 to 10 connections
-pool = ThreadedConnectionPool(1, 10, dsn=DATABASE_URL)
+if DATABASE_URL:
+    try:
+        # Create a pool with 1 to 10 connections
+        pool = ThreadedConnectionPool(1, 10, dsn=DATABASE_URL)
+        print("Database connection pool initialized.")
+    except Exception as e:
+        print(f"ERROR: Could not initialize database pool: {e}")
+else:
+    print("WARNING: DATABASE_URL is missing! Database features will be unavailable.")
 
 @contextmanager
 def get_db_connection():
+    if not pool:
+        raise HTTPException(status_code=503, detail="Database connection unavailable")
+    
     conn = pool.getconn()
     try:
         yield conn

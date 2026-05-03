@@ -92,7 +92,7 @@ const AddGoatView = ({ formData, setFormData, isSubmitting, isUploading, handleS
       </div>
       <div className="form-group">
         <label className="form-label">Date of Birth</label>
-        <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e => setFormData(p => ({ ...p, dob: e.target.value }))} />
+        <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e => setFormData(p => ({ ...p, dob: e.target.value }))} onInvalid={e => e.preventDefault()} />
       </div>
       <div className="form-group">
         <label className="form-label">Ear Tag #</label>
