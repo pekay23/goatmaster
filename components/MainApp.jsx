@@ -19,7 +19,15 @@ import { saveEmbeddings, initDb } from '@/lib/localDb';
 const SplashScreen = () => (
   <div className="splash-screen">
     <div className="splash-content">
-      <img src="/splashscreen.png" alt="Goat Master" className="splash-logo" />
+      <div className="splash-logo-container">
+        <img src="/splashscreen.png" alt="Goat Master" className="splash-logo" />
+        <div className="splash-shimmer"></div>
+      </div>
+      <h1 className="splash-brand">Goat Master</h1>
+      <div className="splash-loader">
+        <div className="splash-loader-bar"></div>
+      </div>
+      <p className="splash-tagline">Intelligent Herd Management</p>
     </div>
   </div>
 );
@@ -333,7 +341,7 @@ export default function MainApp() {
   const [theme, setTheme]               = useState('system');
 
   // Splash
-  useEffect(() => { const t = setTimeout(() => setLoadingSplash(false), 1000); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setLoadingSplash(false), 3600); return () => clearTimeout(t); }, []);
 
   // Theme
   useEffect(() => { const saved = localStorage.getItem('goat_theme'); if (saved) setTheme(saved); }, []);
