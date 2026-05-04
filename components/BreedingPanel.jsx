@@ -60,7 +60,7 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div className="glass-panel" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div className="glass-panel" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', boxSizing: 'border-box' }}>
         <div style={{ background: '#fce4ec', padding: 10, borderRadius: 12 }}>
           <Dna size={24} color="#e91e63" />
         </div>
@@ -82,39 +82,35 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
       </div>
 
       {view === 'add' && (
-        <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <div className="breeding-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Dam (Doe)</label>
-              <select name="dam_id" className="form-select" value={formData.dam_id} onChange={handleChange} required>
-                <option value="">{isLoading ? '⏳…' : '— Select —'}</option>
-                {dams.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
-              {dams.length === 0 && !isLoading && (
-                <p style={{ fontSize: 11, color: 'var(--text-sub)', margin: '4px 0 0' }}>No does in herd yet.</p>
-              )}
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Sire (Buck)</label>
-              <select name="sire_id" className="form-select" value={formData.sire_id} onChange={handleChange}>
-                <option value="">— Optional —</option>
-                {sires.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
-            </div>
+        <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 16, width: '100%', boxSizing: 'border-box' }}>
+          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
+            <label className="form-label">Dam (Doe)</label>
+            <select name="dam_id" className="form-select" value={formData.dam_id} onChange={handleChange} required style={{ width: '100%' }}>
+              <option value="">{isLoading ? '⏳…' : '— Select —'}</option>
+              {dams.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
+            <label className="form-label">Sire (Buck)</label>
+            <select name="sire_id" className="form-select" value={formData.sire_id} onChange={handleChange} style={{ width: '100%' }}>
+              <option value="">— Optional —</option>
+              {sires.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
             <label className="form-label">Date Bred</label>
-            <div style={{ position: 'relative' }}>
-              <Calendar size={18} style={{ position: 'absolute', left: 14, top: 15, color: '#e91e63', opacity: 0.8, pointerEvents: 'none' }} />
-              <input type="date" name="date_bred" className="form-input" value={formData.date_bred} onChange={handleChange} required style={{ paddingLeft: 42 }} />
+            <div style={{ position: 'relative', width: '100%' }}>
+              <Calendar size={18} style={{ position: 'absolute', left: 14, top: 11, color: '#e91e63', opacity: 0.8, pointerEvents: 'none' }} />
+              <input type="date" name="date_bred" className="form-input" value={formData.date_bred} onChange={handleChange} required style={{ paddingLeft: 42, width: '100%', boxSizing: 'border-box' }} />
             </div>
           </div>
 
           <button type="submit" className="btn-primary" disabled={isSubmitting || isLoading}
-            style={{ width: '100%', justifyContent: 'center', background: '#e91e63', padding: 16, fontSize: 16, borderRadius: 14, boxShadow: '0 4px 12px rgba(233,30,99,0.3)' }}>
-            <Calculator size={18} />
-            {isSubmitting ? 'Calculating…' : 'Save & Estimate Kidding Date'}
+            style={{ width: '100%', justifyContent: 'center', padding: 15, fontSize: 16, borderRadius: 16, marginTop: 4, boxShadow: '0 4px 12px rgba(233,30,99,0.2)' }}>
+            <Calendar size={18} />
+            {isSubmitting ? 'Saving…' : 'Save & Estimate Kidding Date'}
           </button>
 
           {latestSuccess && (

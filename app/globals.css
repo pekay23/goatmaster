@@ -44,6 +44,8 @@
 html, body {
   margin: 0; padding: 0;
   width: 100%; min-height: 100vh;
+  overflow-x: hidden; /* Prevent horizontal scroll leaks */
+  position: relative;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--text-main);
   background-color: var(--bg-app);
@@ -389,16 +391,16 @@ html, body {
 .form-input,
 .form-select {
   display: block;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   padding: 11px 14px; /* More compact */
   border: 1.5px solid var(--border-color);
   background: rgba(255, 255, 255, 0.5);
   color: var(--text-main);
   border-radius: 12px;
   font-size: 15px; /* Sleeker font size */
-  box-sizing: border-box;
+  box-sizing: border-box !important;
   font-family: inherit;
   transition: border-color 0.2s;
 }

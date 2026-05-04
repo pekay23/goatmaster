@@ -73,7 +73,7 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* HEADER */}
-      <div className="glass-panel" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div className="glass-panel" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', boxSizing: 'border-box' }}>
         <div style={{ background: '#fff3e0', padding: 10, borderRadius: 12 }}>
           <Activity size={24} color="#f57c00" />
         </div>
@@ -96,45 +96,44 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
       </div>
 
       {view === 'add' && (
-        <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Goat</label>
-              <select name="goat_id" className="form-select" value={formData.goat_id} onChange={handleChange} required>
-                <option value="">{isLoading ? '⏳…' : '— Select —'}</option>
-                {goats.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Date</label>
-              <input type="date" name="event_date" className="form-input" value={formData.event_date} onChange={handleChange} required />
-            </div>
+        <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 16, width: '100%', boxSizing: 'border-box' }}>
+          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
+            <label className="form-label">Goat</label>
+            <select name="goat_id" className="form-select" value={formData.goat_id} onChange={handleChange} required style={{ width: '100%', boxSizing: 'border-box' }}>
+              <option value="">{isLoading ? '⏳…' : '— Select —'}</option>
+              {goats.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
+            <label className="form-label">Date</label>
+            <input type="date" name="event_date" className="form-input" value={formData.event_date} onChange={handleChange} required style={{ width: '100%', boxSizing: 'border-box' }} />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
             <label className="form-label">Treatment / Procedure</label>
-            <div style={{ position: 'relative' }}>
-              <Syringe size={18} style={{ position: 'absolute', left: 14, top: 15, color: '#f57c00', opacity: 0.8 }} />
-              <input type="text" name="treatment" className="form-input" placeholder="What was done?" value={formData.treatment} onChange={handleChange} required style={{ paddingLeft: 42 }} />
+            <div style={{ position: 'relative', width: '100%' }}>
+              <Syringe size={18} style={{ position: 'absolute', left: 14, top: 11, color: '#f57c00', opacity: 0.8 }} />
+              <input type="text" name="treatment" className="form-input" placeholder="What was done?" value={formData.treatment} onChange={handleChange} required style={{ paddingLeft: 42, width: '100%', boxSizing: 'border-box' }} />
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
             <label className="form-label">Notes</label>
             <textarea ref={textareaRef} name="notes" className="form-input" placeholder="Optional details…" value={formData.notes} onChange={handleChange}
-              style={{ minHeight: 100, maxHeight: 240, resize: 'none', overflowY: 'auto', lineHeight: 1.6, padding: '12px 14px' }} />
+              style={{ minHeight: 80, maxHeight: 200, resize: 'none', overflowY: 'auto', lineHeight: 1.5, width: '100%', boxSizing: 'border-box' }} />
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0, background: 'rgba(245, 124, 0, 0.05)', padding: 16, borderRadius: 14, border: '1px dashed rgba(245, 124, 0, 0.25)' }}>
-            <label className="form-label" style={{ color: '#f57c00', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <div className="form-group" style={{ marginBottom: 0, background: 'rgba(245, 124, 0, 0.05)', padding: '14px 16px', borderRadius: 14, border: '1px dashed rgba(245, 124, 0, 0.25)', width: '100%', boxSizing: 'border-box' }}>
+            <label className="form-label" style={{ color: '#f57c00', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Calendar size={16} /> Remind me on (optional)
             </label>
             <input type="date" name="next_due_date" className="form-input" value={formData.next_due_date} onChange={handleChange}
-              style={{ marginBottom: 0 }} />
+              style={{ marginBottom: 0, width: '100%', boxSizing: 'border-box' }} />
           </div>
 
           <button type="submit" className="btn-primary" disabled={isSubmitting || isLoading}
-            style={{ width: '100%', justifyContent: 'center', background: '#f57c00', padding: 16, fontSize: 16, borderRadius: 14, boxShadow: '0 4px 12px rgba(245,124,0,0.3)' }}>
+            style={{ width: '100%', justifyContent: 'center', background: '#f57c00', padding: 15, fontSize: 16, borderRadius: 16, marginTop: 4, boxShadow: '0 4px 12px rgba(245,124,0,0.2)' }}>
             <CheckCircle size={18} />
             {isSubmitting ? 'Saving…' : 'Save Health Record'}
           </button>
