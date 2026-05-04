@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { sanitiseString, sanitiseDate, requireFields } from '@/lib/validate';
+import { checkGoatLimit } from '@/lib/tierLimits';
 
 export async function GET(request) {
   const { user, error } = await requireAuth(request);
@@ -26,6 +27,14 @@ export async function POST(request) {
   const { user, error } = await requireAuth(request);
   if (error) return error;
   try {
+    const { allowed, current, max } = await checkGoatLimit(user.userId);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `Goat limit reached (${current}/${max}). Upgrade your plan.`, upgrade: true },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const fieldErr = requireFields(body, ['name']);
     if (fieldErr) return NextResponse.json({ error: fieldErr }, { status: 400 });

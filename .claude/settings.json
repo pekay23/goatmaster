@@ -28,7 +28,36 @@
       "Bash(cp c:/Projects/goatmaster/ml_service/Dockerfile /tmp/tmp.bMEErc1fws/)",
       "Bash(cp c:/Projects/goatmaster/ml_service/README.md /tmp/tmp.bMEErc1fws/)",
       "Bash(cp c:/Projects/goatmaster/ml_service/export_training_data.py /tmp/tmp.bMEErc1fws/)",
-      "Bash(xxd)"
+      "Bash(xxd)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/main.py /tmp/hf_deploy/)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/requirements.txt /tmp/hf_deploy/)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/Dockerfile /tmp/hf_deploy/)",
+      "Bash(cp c:/Projects/goatmaster/ml_service/README.md /tmp/hf_deploy/)",
+      "WebFetch(domain:app.roboflow.com)",
+      "Bash(curl -s \"https://api.roboflow.com/samuel-hughes/humans-and-animals-detection-gauua/1?api_key=KdOlrrAzDTBqIHd5jiGk\")",
+      "Bash(python3 -m json.tool)",
+      "WebFetch(domain:pekay23-goat-master-ml.hf.space)",
+      "Bash(ls -la c:/Projects/goatmaster/.env*)",
+      "mcp__claude_ai_Vercel__list_teams",
+      "mcp__claude_ai_Vercel__list_projects",
+      "mcp__claude_ai_Vercel__get_project",
+      "Bash(openssl rand:*)",
+      "Bash(npx vercel:*)",
+      "Bash(vercel whoami:*)",
+      "Bash(vercel env:*)",
+      "Bash(vercel --prod)",
+      "Read(//d/Projects/aerojet-academy/app/api/staff/users/**)",
+      "Bash(npx next:*)",
+      "Bash(curl -s -X POST https://goatmaster-tau.vercel.app/api/db-migrate -H 'Content-Type: application/json' -d '{\"secret\":\"59fdda628e27cb4a21aa367122d598914eb17bb8e6da654e225c4a8e9ef8ed69\"}')",
+      "Bash(printf '59fdda628e27cb4a21aa367122d598914eb17bb8e6da654e225c4a8e9ef8ed69')",
+      "Bash(printf 'pekay23')",
+      "Bash(curl -s -X POST https://goatmaster-tau.vercel.app/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"pekay23\",\"password\":\"test\"}')",
+      "Bash(curl -s https://goatmaster-tau.vercel.app/api/admin/users)",
+      "Bash(python3 -c \"import sys,json; print\\(json.dumps\\(json.load\\(sys.stdin\\),indent=2\\)\\)\")",
+      "Bash(printf 'admin')"
+    ],
+    "additionalDirectories": [
+      "c:\\Projects\\goatmaster\\app\\api\\admin\\users"
     ]
   }
 }

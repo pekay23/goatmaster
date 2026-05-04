@@ -262,6 +262,10 @@ async def enroll_goat(request: EnrollRequest):
         print(f"Enroll Error: {e}")
         raise HTTPException(status_code=500, detail="Error during enrollment processing")
 
+@app.get("/")
+async def root():
+    return {"service": "Goat Master ML", "status": "running", "detection_mode": DETECTION_MODE}
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "models_loaded": True, "detection_mode": DETECTION_MODE}

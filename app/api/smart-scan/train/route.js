@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { checkFeatureAccess } from '@/lib/tierLimits';
 
 /**
  * POST /api/smart-scan/train
@@ -7,8 +8,15 @@ import { requireAuth } from '@/lib/auth';
  * Uses goat photos already in the database.
  */
 export async function POST(request) {
-  const { error } = await requireAuth(request);
+  const { user, error } = await requireAuth(request);
   if (error) return error;
+
+  if (!(await checkFeatureAccess(user.userId, 'ai_training'))) {
+    return NextResponse.json(
+      { error: 'AI Training requires Pro plan.', upgrade: true },
+      { status: 403 }
+    );
+  }
 
   if (!process.env.ML_SERVICE_URL) {
     return NextResponse.json({ error: 'ML service not configured' }, { status: 503 });

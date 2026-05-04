@@ -146,7 +146,68 @@ export async function POST(request) {
     `);
     await run('idx corrections.user_id', `CREATE INDEX IF NOT EXISTS idx_corrections_user_id ON id_corrections(user_id)`);
 
-    // ── 7. Hash any plaintext passwords ──────────────────────────
+    // ── 8. User management columns ─────────────────────────────
+    await run('users.role',              `ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
+    await run('users.subscription_tier', `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT 'free'`);
+    await run('users.is_active',         `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE`);
+    await run('users.created_at',        `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()`);
+    await run('idx users.role',          `CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)`);
+
+    // ── 9. Subscription tiers config ──────────────────────────────
+    await run('create subscription_tiers', `
+      CREATE TABLE IF NOT EXISTS subscription_tiers (
+        id                  VARCHAR(20) PRIMARY KEY,
+        name                VARCHAR(50) NOT NULL,
+        max_goats           INT NOT NULL DEFAULT 10,
+        max_scans_per_day   INT DEFAULT 20,
+        ai_training_enabled BOOLEAN DEFAULT FALSE,
+        smart_scan_enabled  BOOLEAN DEFAULT TRUE,
+        price_cents         INT DEFAULT 0,
+        sort_order          INT DEFAULT 0,
+        created_at          TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await run('seed tiers', `
+      INSERT INTO subscription_tiers (id, name, max_goats, max_scans_per_day, ai_training_enabled, price_cents, sort_order)
+      VALUES
+        ('free',  'Free',  10, 20,  false, 0,    0),
+        ('basic', 'Basic', 50, 100, false, 999,  1),
+        ('pro',   'Pro',   -1, -1,  true,  2499, 2)
+      ON CONFLICT (id) DO NOTHING
+    `);
+
+    // ── 9a. Bootstrap admin from env var ──────────────────────────
+    const adminUsername = (process.env.ADMIN_USERNAME || '').trim().toLowerCase();
+    // Check if any admin exists already
+    const { rows: existingAdmins } = await pool.query(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`);
+    if (existingAdmins.length > 0) {
+      results.push(`✓ admin already exists — skipping bootstrap`);
+    } else if (adminUsername) {
+      const { rows: adminCheck } = await pool.query(
+        'SELECT id, username, role FROM users WHERE username = $1',
+        [adminUsername]
+      );
+      if (adminCheck.length > 0) {
+        await pool.query(`UPDATE users SET role = 'admin' WHERE id = $1`, [adminCheck[0].id]);
+        results.push(`✓ promoted "${adminUsername}" to admin`);
+      } else {
+        // Username not found — promote first user as fallback
+        const { rows: firstU } = await pool.query('SELECT id, username FROM users ORDER BY id LIMIT 1');
+        if (firstU.length > 0) {
+          await pool.query(`UPDATE users SET role = 'admin' WHERE id = $1`, [firstU[0].id]);
+          results.push(`⚠ "${adminUsername}" not found — promoted first user "${firstU[0].username}" to admin instead`);
+        }
+      }
+    } else {
+      // No ADMIN_USERNAME set — promote first user
+      const { rows: firstU } = await pool.query('SELECT id, username FROM users ORDER BY id LIMIT 1');
+      if (firstU.length > 0) {
+        await pool.query(`UPDATE users SET role = 'admin' WHERE id = $1`, [firstU[0].id]);
+        results.push(`✓ promoted first user "${firstU[0].username}" to admin (no ADMIN_USERNAME set)`);
+      }
+    }
+
+    // ── 10. Hash any plaintext passwords ─────────────────────────
     const { rows: users } = await pool.query('SELECT id, password FROM users');
     let hashed = 0;
     for (const u of users) {

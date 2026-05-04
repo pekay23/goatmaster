@@ -43,8 +43,8 @@ export async function POST(request) {
       [username, hash]
     );
 
-    const token = await signToken({ userId: rows[0].id, username: rows[0].username });
-    const response = NextResponse.json({ username: rows[0].username });
+    const token = await signToken({ userId: rows[0].id, username: rows[0].username, role: 'user', tier: 'free' });
+    const response = NextResponse.json({ username: rows[0].username, role: 'user', tier: 'free' });
     return setAuthCookie(response, token);
   } catch (err) {
     console.error('[signup]', err.message);

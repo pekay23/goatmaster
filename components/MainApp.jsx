@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles, BookOpen, ChevronRight, Cpu, Merge, Loader2 } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles, BookOpen, ChevronRight, Cpu, Merge, Loader2, Shield } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
@@ -603,7 +603,14 @@ export default function MainApp() {
                   </div>
                   <div>
                     <div style={{ fontSize: 11, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>Logged in as</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-main)' }}>{user.username}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-main)' }}>{user.username}</span>
+                      <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                        background: user.tier === 'pro' ? '#fff3cd' : user.tier === 'basic' ? '#d4edff' : '#e8e8e8',
+                        color: user.tier === 'pro' ? '#856404' : user.tier === 'basic' ? '#0066cc' : '#555' }}>
+                        {user.tier || 'free'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -648,6 +655,12 @@ export default function MainApp() {
 
                 {/* Account actions */}
                 <h3 style={{ color: 'var(--text-main)', margin: '8px 0 0', fontSize: 16 }}>Account</h3>
+                {user.role === 'admin' && (
+                  <a href="/admin"
+                    style={{ padding: 15, background: 'var(--primary-bg)', borderRadius: 14, border: '1px solid var(--primary)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 15, fontFamily: 'inherit', width: '100%', textDecoration: 'none' }}>
+                    <Shield size={20} /> Admin Panel
+                  </a>
+                )}
                 <button onClick={() => confirmAction('Log Out?', 'Are you sure you want to sign out?', 'Yes, Log Out', 'Cancel', handleLogout)}
                   style={{ padding: 15, background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border-color)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 600, fontSize: 15, fontFamily: 'inherit', width: '100%' }}>
                   <LogOut size={20} /> Log Out

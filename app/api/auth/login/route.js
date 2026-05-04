@@ -32,7 +32,7 @@ export async function POST(request) {
     const password = body.password;
 
     const { rows } = await pool.query(
-      'SELECT id, username, password FROM users WHERE username = $1',
+      'SELECT id, username, password, role, is_active, subscription_tier FROM users WHERE username = $1',
       [username]
     );
 
@@ -45,8 +45,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
 
-    const token = await signToken({ userId: rows[0].id, username: rows[0].username });
-    const response = NextResponse.json({ username: rows[0].username });
+    if (rows[0].is_active === false) {
+      return NextResponse.json({ error: 'Account deactivated. Contact support.' }, { status: 403 });
+    }
+
+    const role = rows[0].role || 'user';
+    const tier = rows[0].subscription_tier || 'free';
+    const token = await signToken({ userId: rows[0].id, username: rows[0].username, role, tier });
+    const response = NextResponse.json({ username: rows[0].username, role, tier });
     return setAuthCookie(response, token);
   } catch (err) {
     console.error('[login]', err.message);

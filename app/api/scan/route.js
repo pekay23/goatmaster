@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { checkScanLimit } from '@/lib/tierLimits';
 
 export async function POST(request) {
   const { user, error } = await requireAuth(request);
   if (error) return error;
 
   try {
+    const { allowed, current, max } = await checkScanLimit(user.userId);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `Daily scan limit reached (${current}/${max}). Upgrade your plan.`, upgrade: true },
+        { status: 403 }
+      );
+    }
+
     const { embedding, image, earTag, qrCode } = await request.json();
 
     // 1. Primary Signal: QR or Ear Tag (100% confidence)
