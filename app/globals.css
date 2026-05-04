@@ -83,12 +83,12 @@ html, body {
 .app-header {
   position: sticky;
   top: 10px;
-  z-index: 100;
+  z-index: 1000; /* Increased to stay above everything */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 20px;
-  margin: 0 10px 20px;
+  padding: 12px 20px; /* Slightly tighter padding */
+  margin: 10px 10px 20px; /* Added margin-top to match top:10px offset */
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -102,7 +102,7 @@ html, body {
 }
 
 .app-title {
-  font-size: 18px;
+  font-size: 17px; /* Slightly smaller */
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.3px;
@@ -114,7 +114,7 @@ html, body {
 .main-content {
   flex: 1;
   width: 100%;
-  padding: 16px 16px 100px; /* Increased top padding for better separation */
+  padding: 0 16px 100px;
   display: flex;
   flex-direction: column;
 }
@@ -389,12 +389,12 @@ html, body {
 .form-input,
 .form-select {
   width: 100%;
-  padding: 13px 14px;
+  padding: 11px 14px; /* More compact */
   border: 1.5px solid var(--border-color);
   background: rgba(255, 255, 255, 0.5);
   color: var(--text-main);
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 15px; /* Sleeker font size */
   box-sizing: border-box;
   font-family: inherit;
   transition: border-color 0.2s;

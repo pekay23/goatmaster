@@ -100,14 +100,14 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Goat</label>
-              <select name="goat_id" className="form-select" value={formData.goat_id} onChange={handleChange} required style={{ height: 50 }}>
+              <select name="goat_id" className="form-select" value={formData.goat_id} onChange={handleChange} required>
                 <option value="">{isLoading ? '⏳…' : '— Select —'}</option>
                 {goats.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Date</label>
-              <input type="date" name="event_date" className="form-input" value={formData.event_date} onChange={handleChange} required style={{ height: 50 }} />
+              <input type="date" name="event_date" className="form-input" value={formData.event_date} onChange={handleChange} required />
             </div>
           </div>
 
@@ -115,7 +115,7 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
             <label className="form-label">Treatment / Procedure</label>
             <div style={{ position: 'relative' }}>
               <Syringe size={18} style={{ position: 'absolute', left: 14, top: 15, color: '#f57c00', opacity: 0.8 }} />
-              <input type="text" name="treatment" className="form-input" placeholder="What was done?" value={formData.treatment} onChange={handleChange} required style={{ paddingLeft: 44, height: 50 }} />
+              <input type="text" name="treatment" className="form-input" placeholder="What was done?" value={formData.treatment} onChange={handleChange} required style={{ paddingLeft: 42 }} />
             </div>
           </div>
 
@@ -130,7 +130,7 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
               <Calendar size={16} /> Remind me on (optional)
             </label>
             <input type="date" name="next_due_date" className="form-input" value={formData.next_due_date} onChange={handleChange}
-              style={{ marginBottom: 0, height: 50 }} />
+              style={{ marginBottom: 0 }} />
           </div>
 
           <button type="submit" className="btn-primary" disabled={isSubmitting || isLoading}

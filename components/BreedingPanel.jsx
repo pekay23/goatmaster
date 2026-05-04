@@ -86,7 +86,7 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
           <div className="breeding-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Dam (Doe)</label>
-              <select name="dam_id" className="form-select" value={formData.dam_id} onChange={handleChange} required style={{ height: 50 }}>
+              <select name="dam_id" className="form-select" value={formData.dam_id} onChange={handleChange} required>
                 <option value="">{isLoading ? '⏳…' : '— Select —'}</option>
                 {dams.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
@@ -96,7 +96,7 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Sire (Buck)</label>
-              <select name="sire_id" className="form-select" value={formData.sire_id} onChange={handleChange} style={{ height: 50 }}>
+              <select name="sire_id" className="form-select" value={formData.sire_id} onChange={handleChange}>
                 <option value="">— Optional —</option>
                 {sires.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
@@ -107,7 +107,7 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
             <label className="form-label">Date Bred</label>
             <div style={{ position: 'relative' }}>
               <Calendar size={18} style={{ position: 'absolute', left: 14, top: 15, color: '#e91e63', opacity: 0.8, pointerEvents: 'none' }} />
-              <input type="date" name="date_bred" className="form-input" value={formData.date_bred} onChange={handleChange} required style={{ paddingLeft: 44, height: 50 }} />
+              <input type="date" name="date_bred" className="form-input" value={formData.date_bred} onChange={handleChange} required style={{ paddingLeft: 42 }} />
             </div>
           </div>
 
