@@ -388,7 +388,10 @@ html, body {
 
 .form-input,
 .form-select {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 11px 14px; /* More compact */
   border: 1.5px solid var(--border-color);
   background: rgba(255, 255, 255, 0.5);

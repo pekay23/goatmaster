@@ -97,7 +97,7 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
 
       {view === 'add' && (
         <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Goat</label>
               <select name="goat_id" className="form-select" value={formData.goat_id} onChange={handleChange} required>

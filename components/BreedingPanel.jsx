@@ -83,7 +83,7 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
 
       {view === 'add' && (
         <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <div className="breeding-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
+          <div className="breeding-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Dam (Doe)</label>
               <select name="dam_id" className="form-select" value={formData.dam_id} onChange={handleChange} required>
