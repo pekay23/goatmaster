@@ -114,7 +114,9 @@ html, body {
 .main-content {
   flex: 1;
   width: 100%;
-  padding: 0 16px 100px;
+  padding: 16px 16px 100px; /* Increased top padding for better separation */
+  display: flex;
+  flex-direction: column;
 }
 
 /* --- BOTTOM NAVIGATION (Mobile & Tablet) --- */
@@ -217,7 +219,7 @@ html, body {
 
   /* Main content — wider with max cap */
   .main-content {
-    padding: 0 24px 40px;
+    padding: 20px 24px 40px; /* Increased top padding for desktop */
     max-width: var(--content-max);
     width: 100%;
   }

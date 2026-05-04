@@ -96,46 +96,46 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
       </div>
 
       {view === 'add' && (
-        <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Goat</label>
-              <select name="goat_id" className="form-select" value={formData.goat_id} onChange={handleChange} required>
+              <select name="goat_id" className="form-select" value={formData.goat_id} onChange={handleChange} required style={{ height: 50 }}>
                 <option value="">{isLoading ? '⏳…' : '— Select —'}</option>
                 {goats.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Date</label>
-              <input type="date" name="event_date" className="form-input" value={formData.event_date} onChange={handleChange} required />
+              <input type="date" name="event_date" className="form-input" value={formData.event_date} onChange={handleChange} required style={{ height: 50 }} />
             </div>
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Treatment / Procedure</label>
             <div style={{ position: 'relative' }}>
-              <Syringe size={16} style={{ position: 'absolute', left: 14, top: 14, color: '#f57c00', opacity: 0.7 }} />
-              <input type="text" name="treatment" className="form-input" placeholder="What was done?" value={formData.treatment} onChange={handleChange} required style={{ paddingLeft: 42 }} />
+              <Syringe size={18} style={{ position: 'absolute', left: 14, top: 15, color: '#f57c00', opacity: 0.8 }} />
+              <input type="text" name="treatment" className="form-input" placeholder="What was done?" value={formData.treatment} onChange={handleChange} required style={{ paddingLeft: 44, height: 50 }} />
             </div>
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Notes</label>
             <textarea ref={textareaRef} name="notes" className="form-input" placeholder="Optional details…" value={formData.notes} onChange={handleChange}
-              style={{ minHeight: 80, maxHeight: 240, resize: 'none', overflowY: 'auto', lineHeight: 1.5 }} />
+              style={{ minHeight: 100, maxHeight: 240, resize: 'none', overflowY: 'auto', lineHeight: 1.6, padding: '12px 14px' }} />
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0, background: 'rgba(255, 152, 0, 0.06)', padding: 14, borderRadius: 12, border: '1px dashed rgba(255, 152, 0, 0.3)' }}>
-            <label className="form-label" style={{ color: '#e65100', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Calendar size={14} /> Remind me on (optional)
+          <div className="form-group" style={{ marginBottom: 0, background: 'rgba(245, 124, 0, 0.05)', padding: 16, borderRadius: 14, border: '1px dashed rgba(245, 124, 0, 0.25)' }}>
+            <label className="form-label" style={{ color: '#f57c00', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <Calendar size={16} /> Remind me on (optional)
             </label>
             <input type="date" name="next_due_date" className="form-input" value={formData.next_due_date} onChange={handleChange}
-              style={{ marginBottom: 0 }} />
+              style={{ marginBottom: 0, height: 50 }} />
           </div>
 
           <button type="submit" className="btn-primary" disabled={isSubmitting || isLoading}
-            style={{ width: '100%', justifyContent: 'center', background: '#f57c00', padding: 14, fontSize: 15 }}>
-            <CheckCircle size={16} />
+            style={{ width: '100%', justifyContent: 'center', background: '#f57c00', padding: 16, fontSize: 16, borderRadius: 14, boxShadow: '0 4px 12px rgba(245,124,0,0.3)' }}>
+            <CheckCircle size={18} />
             {isSubmitting ? 'Saving…' : 'Save Health Record'}
           </button>
         </form>
@@ -154,28 +154,46 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
               <p>Logged treatments and vaccines will appear here.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {history.map(h => {
                 const eventDate = h.event_date?.split('T')[0];
                 const dueDate = h.next_due_date?.split('T')[0];
                 const overdue = dueDate && new Date(dueDate) < new Date();
+                
                 return (
-                  <div key={h.id} className="glass-panel" style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                  <div key={h.id} className="glass-panel" style={{ padding: '16px 20px', borderLeft: dueDate ? (overdue ? '4px solid #ef4444' : '4px solid #f59e0b') : '4px solid var(--primary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 11, color: '#f57c00', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{eventDate}</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-main)', margin: '4px 0' }}>{h.treatment}</div>
-                        <div style={{ fontSize: 13, color: 'var(--text-sub)' }}>🐐 {goatNameById(h.goat_id)}</div>
-                        {h.notes && <div style={{ fontSize: 13, color: 'var(--text-sub)', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-color)' }}>{h.notes}</div>}
-                      </div>
-                      {dueDate && (
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 10, color: overdue ? '#dc2626' : '#f59e0b', fontWeight: 800, textTransform: 'uppercase' }}>
-                            {overdue ? 'OVERDUE' : 'DUE'}
-                          </div>
-                          <div style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 2 }}>{dueDate}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, fontWeight: 800, background: 'var(--bg-app)', color: 'var(--text-sub)' }}>
+                            {eventDate}
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: '#f57c00' }}>
+                            🐐 {goatNameById(h.goat_id)}
+                          </span>
                         </div>
-                      )}
+                        
+                        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-main)', marginBottom: 4 }}>
+                          {h.treatment}
+                        </div>
+                        
+                        {h.notes && (
+                          <div style={{ fontSize: 13, color: 'var(--text-sub)', lineHeight: 1.5, background: 'rgba(0,0,0,0.02)', padding: '10px 12px', borderRadius: 10, marginTop: 10 }}>
+                            {h.notes}
+                          </div>
+                        )}
+                        
+                        {dueDate && (
+                          <div style={{ fontSize: 12, color: overdue ? '#dc2626' : '#f57c00', fontWeight: 600, marginTop: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Calendar size={14} />
+                            <span>Next Due: {new Date(dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                            {overdue && <span style={{ fontSize: 9, background: '#fee2e2', color: '#dc2626', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>OVERDUE</span>}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ background: 'var(--bg-app)', width: 42, height: 42, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <FileText size={20} color="var(--text-sub)" />
+                      </div>
                     </div>
                   </div>
                 );
