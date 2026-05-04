@@ -105,9 +105,9 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
             </select>
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
-            <label className="form-label">Date</label>
-            <input type="date" name="event_date" className="form-input" value={formData.event_date} onChange={handleChange} required style={{ width: '100%', boxSizing: 'border-box' }} />
+          <div className="form-group" style={{ marginBottom: 0, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <label className="form-label" style={{ alignSelf: 'flex-start' }}>Date</label>
+            <input type="date" name="event_date" className="form-input" value={formData.event_date} onChange={handleChange} required style={{ width: '92%', boxSizing: 'border-box' }} />
           </div>
 
           <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
@@ -124,12 +124,12 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
               style={{ minHeight: 80, maxHeight: 200, resize: 'none', overflowY: 'auto', lineHeight: 1.5, width: '100%', boxSizing: 'border-box' }} />
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0, background: 'rgba(245, 124, 0, 0.05)', padding: '14px 16px', borderRadius: 14, border: '1px dashed rgba(245, 124, 0, 0.25)', width: '100%', boxSizing: 'border-box' }}>
-            <label className="form-label" style={{ color: '#f57c00', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <div className="form-group" style={{ marginBottom: 0, background: 'rgba(245, 124, 0, 0.05)', padding: '14px 16px', borderRadius: 14, border: '1px dashed rgba(245, 124, 0, 0.25)', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <label className="form-label" style={{ color: '#f57c00', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, alignSelf: 'flex-start' }}>
               <Calendar size={16} /> Remind me on (optional)
             </label>
             <input type="date" name="next_due_date" className="form-input" value={formData.next_due_date} onChange={handleChange}
-              style={{ marginBottom: 0, width: '100%', boxSizing: 'border-box' }} />
+              style={{ marginBottom: 0, width: '92%', boxSizing: 'border-box' }} />
           </div>
 
           <button type="submit" className="btn-primary" disabled={isSubmitting || isLoading}

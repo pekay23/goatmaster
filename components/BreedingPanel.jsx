@@ -101,9 +101,9 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
 
           <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
             <label className="form-label">Date Bred</label>
-            <div style={{ position: 'relative', width: '100%' }}>
-              <Calendar size={18} style={{ position: 'absolute', left: 14, top: 11, color: '#e91e63', opacity: 0.8, pointerEvents: 'none' }} />
-              <input type="date" name="date_bred" className="form-input" value={formData.date_bred} onChange={handleChange} required style={{ paddingLeft: 42, width: '100%', boxSizing: 'border-box' }} />
+            <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <Calendar size={18} style={{ position: 'absolute', left: '6%', top: 11, color: '#e91e63', opacity: 0.8, pointerEvents: 'none', zIndex: 10 }} />
+              <input type="date" name="date_bred" className="form-input" value={formData.date_bred} onChange={handleChange} required style={{ paddingLeft: 42, width: '92%', boxSizing: 'border-box' }} />
             </div>
           </div>
 
