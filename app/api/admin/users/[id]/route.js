@@ -69,12 +69,24 @@ export async function PATCH(request, { params }) {
 
 async function applyUpdate(targetId, body) {
   const allowed = ['role', 'subscription_tier', 'is_active'];
+  const VALID_ROLES = ['user', 'admin'];
+  const VALID_TIERS = ['free', 'basic', 'pro'];
   const sets = [];
   const values = [];
   let i = 1;
 
   for (const key of allowed) {
     if (body[key] !== undefined) {
+      // Validate enum-like fields
+      if (key === 'role' && !VALID_ROLES.includes(body[key])) {
+        return NextResponse.json({ error: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}` }, { status: 400 });
+      }
+      if (key === 'subscription_tier' && !VALID_TIERS.includes(body[key])) {
+        return NextResponse.json({ error: `Invalid tier. Must be one of: ${VALID_TIERS.join(', ')}` }, { status: 400 });
+      }
+      if (key === 'is_active' && typeof body[key] !== 'boolean') {
+        return NextResponse.json({ error: 'is_active must be a boolean' }, { status: 400 });
+      }
       sets.push(`${key} = $${i++}`);
       values.push(body[key]);
     }

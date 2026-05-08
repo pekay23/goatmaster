@@ -20,13 +20,19 @@ export async function POST(request) {
 
     // 1. Primary Signal: QR or Ear Tag (100% confidence)
     if (qrCode || earTag) {
-      const col = qrCode ? 'qr_code' : 'ear_tag';
+      const ALLOWED_COLS = { qr_code: 'qr_code', ear_tag: 'ear_tag' };
+      const col = qrCode ? ALLOWED_COLS.qr_code : ALLOWED_COLS.ear_tag;
       const val = qrCode || earTag;
       const { rows } = await pool.query(
         `SELECT * FROM goats WHERE ${col}=$1 AND user_id=$2 LIMIT 1`,
         [val, user.userId]
       );
       if (rows.length > 0) {
+        await pool.query(
+          `INSERT INTO scan_logs (matched_goat_id, user_id, confidence, scan_method)
+           VALUES ($1,$2,$3,$4)`,
+          [rows[0].id, user.userId, 1.0, col]
+        );
         return NextResponse.json({ goat: rows[0], confidence: 1.0, method: col });
       }
     }

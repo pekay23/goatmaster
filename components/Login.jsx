@@ -62,7 +62,7 @@ export default function Login({ onLogin }) {
                 style={inputStyle}
                 onFocus={e => e.target.style.borderColor = '#28a745'}
                 onBlur={e => e.target.style.borderColor = 'var(--border-color)'}
-                required minLength={name === 'password' ? 6 : 3}
+                required minLength={name === 'password' ? 8 : 3}
               />
             </div>
           ))}

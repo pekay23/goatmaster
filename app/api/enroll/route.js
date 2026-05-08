@@ -79,6 +79,7 @@ export async function GET(request) {
     );
     return NextResponse.json({ count: parseInt(rows[0].count) });
   } catch (err) {
+    console.error('[enroll GET]', err.message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

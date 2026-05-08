@@ -1,13 +1,13 @@
 {
   "name": "goatmaster",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "bunx --bun next dev",
+    "build": "bunx --bun next build",
+    "start": "bunx --bun next start",
+    "lint": "bunx --bun next lint"
   },
   "dependencies": {
     "@tensorflow-models/coco-ssd": "^2.2.3",

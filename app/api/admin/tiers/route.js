@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
+import { invalidateTierCache } from '@/lib/tierLimits';
 
 export async function GET(request) {
   const { user, error } = await requireAdmin(request);
@@ -49,6 +50,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Tier not found' }, { status: 404 });
     }
 
+    invalidateTierCache();
     return NextResponse.json(rows[0]);
   } catch (err) {
     console.error('[admin/tiers PUT]', err);

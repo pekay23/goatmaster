@@ -17,6 +17,7 @@ export async function GET(request) {
     );
     return NextResponse.json(rows);
   } catch (err) {
+    console.error('[breeding GET]', err.message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -38,6 +39,13 @@ export async function POST(request) {
     );
     if (!check.length) return NextResponse.json({ error: 'Doe not found' }, { status: 404 });
 
+    if (sireId) {
+      const { rows: sireCheck } = await pool.query(
+        'SELECT id FROM goats WHERE id=$1 AND user_id=$2', [sireId, user.userId]
+      );
+      if (!sireCheck.length) return NextResponse.json({ error: 'Sire not found' }, { status: 404 });
+    }
+
     const breedDate = new Date(body.date_bred);
     const dueDate   = new Date(breedDate);
     dueDate.setDate(dueDate.getDate() + 150);
@@ -50,6 +58,7 @@ export async function POST(request) {
     );
     return NextResponse.json(rows[0]);
   } catch (err) {
+    console.error('[breeding POST]', err.message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

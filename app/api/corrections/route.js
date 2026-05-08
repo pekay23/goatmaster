@@ -40,6 +40,17 @@ export async function POST(request) {
       try {
         await client.query('BEGIN');
 
+        // Verify both goats belong to this user
+        const { rows: owned } = await client.query(
+          'SELECT id FROM goats WHERE id IN ($1, $2) AND user_id = $3',
+          [source_goat_id, target_goat_id, user.userId]
+        );
+        if (owned.length < 2) {
+          await client.query('ROLLBACK');
+          client.release();
+          return NextResponse.json({ error: 'One or both goats not found' }, { status: 404 });
+        }
+
         // Move all embeddings from source to target
         await client.query(
           `UPDATE goat_embeddings SET goat_id = $1, source = 'correction-merge'
@@ -100,6 +111,7 @@ export async function GET(request) {
     );
     return NextResponse.json({ corrections: rows });
   } catch (err) {
+    console.error('[corrections GET]', err.message);
     return NextResponse.json({ error: 'Failed to fetch corrections' }, { status: 500 });
   }
 }

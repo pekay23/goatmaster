@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from PIL import Image
 from ultralytics import YOLO
 from torchvision import models, transforms
+from torchvision.models import ResNet50_Weights
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -61,7 +62,7 @@ else:
 print(f"Detection mode: {DETECTION_MODE}")
 
 print("Loading ResNet50...")
-base_resnet = models.resnet50(pretrained=True)
+base_resnet = models.resnet50(weights=ResNet50_Weights.DEFAULT)
 # We keep up to the global average pool and add a projection to 1024
 resnet = torch.nn.Sequential(
     *(list(base_resnet.children())[:-1]),
@@ -246,7 +247,6 @@ async def enroll_goat(request: EnrollRequest):
             img_data = base64.b64decode(img_b64.split(",")[-1])
             img = Image.open(io.BytesIO(img_data)).convert("RGB")
             
-            # 2. Detect & Crop
             # 2. Detect & Crop
             crop, _ = detect_goat_box(img)
 

@@ -341,7 +341,18 @@ export default function MainApp() {
   const [theme, setTheme]               = useState('system');
 
   // Splash
-  useEffect(() => { const t = setTimeout(() => setLoadingSplash(false), 3600); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const minSplash = new Promise(resolve => setTimeout(resolve, 1500));
+    const maxSplash = new Promise(resolve => setTimeout(resolve, 5000));
+    const appReady = new Promise(resolve => {
+      // Splash clears when user session is checked
+      const saved = localStorage.getItem('goat_user');
+      if (saved) resolve();
+      else setTimeout(resolve, 800);
+    });
+    Promise.all([minSplash, appReady]).then(() => setLoadingSplash(false));
+    maxSplash.then(() => setLoadingSplash(false)); // hard cap
+  }, []);
 
   // Theme
   useEffect(() => { const saved = localStorage.getItem('goat_theme'); if (saved) setTheme(saved); }, []);
@@ -398,7 +409,7 @@ export default function MainApp() {
       await tx.objectStore('embeddings').clear();
       await tx.done;
     } catch (e) { console.warn('Failed to clear local cache on logout', e); }
-  }, [syncLocalCache]);
+  }, []);
 
   // Goats
   const fetchGoats = useCallback(async () => {

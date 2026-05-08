@@ -30,5 +30,5 @@ COPY . .
 # Expose the port HF Spaces expects
 EXPOSE 7860
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Run the application — port is configurable via $PORT env var
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}"]

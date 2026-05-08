@@ -6,9 +6,17 @@ import { sanitiseString, requireFields } from '@/lib/validate';
 
 // Rate limit: 10 attempts per IP per 15 minutes
 const attempts = new Map();
+let _rlCleanupCounter = 0;
 function rateLimit(ip) {
   const now = Date.now();
   const window = 15 * 60 * 1000;
+  // Prune expired entries every 100 calls to prevent memory leak
+  if (++_rlCleanupCounter >= 100) {
+    _rlCleanupCounter = 0;
+    for (const [key, entry] of attempts) {
+      if (now - entry.start > window) attempts.delete(key);
+    }
+  }
   const entry = attempts.get(ip) || { count: 0, start: now };
   if (now - entry.start > window) { attempts.set(ip, { count: 1, start: now }); return false; }
   if (entry.count >= 10) return true;

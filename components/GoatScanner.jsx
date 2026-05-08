@@ -211,6 +211,7 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
           embedding,
           image: canvasEl.toDataURL('image/jpeg', 0.8) 
         }),
+        credentials: 'include',
       });
       const data = await res.json();
 
@@ -336,6 +337,7 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ earTag: text }),
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.goat) setResult(data);

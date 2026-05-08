@@ -53,7 +53,7 @@ export async function POST(request) {
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     console.error('[bulk-enroll]', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   } finally {
     client.release();
   }

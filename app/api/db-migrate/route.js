@@ -131,7 +131,7 @@ export async function POST(request) {
     await run('idx health.goat_id',   `CREATE INDEX IF NOT EXISTS idx_health_logs_goat_id ON health_logs(goat_id)`);
     await run('idx breeding.dam_id',  `CREATE INDEX IF NOT EXISTS idx_breeding_logs_dam_id ON breeding_logs(dam_id)`);
 
-    // ── 7a. ID corrections log (feedback loop for re-training) ──
+    // ── 8. ID corrections log (feedback loop for re-training) ──
     await run('create id_corrections', `
       CREATE TABLE IF NOT EXISTS id_corrections (
         id              BIGSERIAL PRIMARY KEY,
@@ -146,14 +146,14 @@ export async function POST(request) {
     `);
     await run('idx corrections.user_id', `CREATE INDEX IF NOT EXISTS idx_corrections_user_id ON id_corrections(user_id)`);
 
-    // ── 8. User management columns ─────────────────────────────
+    // ── 9. User management columns ─────────────────────────────
     await run('users.role',              `ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
     await run('users.subscription_tier', `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT 'free'`);
     await run('users.is_active',         `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE`);
     await run('users.created_at',        `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()`);
     await run('idx users.role',          `CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)`);
 
-    // ── 9. Subscription tiers config ──────────────────────────────
+    // ── 10. Subscription tiers config ──────────────────────────────
     await run('create subscription_tiers', `
       CREATE TABLE IF NOT EXISTS subscription_tiers (
         id                  VARCHAR(20) PRIMARY KEY,
@@ -176,7 +176,7 @@ export async function POST(request) {
       ON CONFLICT (id) DO NOTHING
     `);
 
-    // ── 9a. Bootstrap admin from env var ──────────────────────────
+    // ── 10a. Bootstrap admin from env var ──────────────────────────
     const adminUsername = (process.env.ADMIN_USERNAME || '').trim().toLowerCase();
     // Check if any admin exists already
     const { rows: existingAdmins } = await pool.query(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`);
@@ -207,7 +207,7 @@ export async function POST(request) {
       }
     }
 
-    // ── 10. Hash any plaintext passwords ─────────────────────────
+    // ── 11. Hash any plaintext passwords ─────────────────────────
     const { rows: users } = await pool.query('SELECT id, password FROM users');
     let hashed = 0;
     for (const u of users) {
@@ -219,11 +219,11 @@ export async function POST(request) {
     }
     results.push(`✓ ${hashed} password(s) hashed`);
 
-    // ── 7.5 Normalize usernames to lowercase ─────────────────────
+    // ── 12. Normalize usernames to lowercase ─────────────────────
     const { rowCount: updatedUsernames } = await pool.query('UPDATE users SET username = LOWER(username) WHERE username != LOWER(username)');
     results.push(`✓ ${updatedUsernames} username(s) normalized to lowercase`);
 
-    // ── 8. Assign orphaned goats to first user ───────────────────
+    // ── 13. Assign orphaned goats to first user ───────────────────
     const { rows: firstUser } = await pool.query('SELECT id FROM users ORDER BY id LIMIT 1');
     if (firstUser.length > 0) {
       const { rowCount } = await pool.query(

@@ -19,6 +19,7 @@ export async function GET(request) {
     );
     return NextResponse.json(rows);
   } catch (err) {
+    console.error('[goats GET]', err.message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -54,6 +55,7 @@ export async function POST(request) {
     );
     return NextResponse.json(rows[0]);
   } catch (err) {
+    console.error('[goats POST]', err.message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

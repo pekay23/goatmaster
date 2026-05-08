@@ -29,6 +29,7 @@ export async function GET(request) {
     const { rows } = await pool.query(query, params);
     return NextResponse.json(rows);
   } catch (err) {
+    console.error('[reports]', err.message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
