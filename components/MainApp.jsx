@@ -320,8 +320,8 @@ const NAV_TABS = [
 ];
 
 export default function MainApp() {
-  const [loadingSplash, setLoadingSplash] = useState(true);
-  const [user, setUser]         = useState(null);
+  const [loadingSplash, setLoadingSplash] = useState(false);
+  const [user, setUser]         = useState({ username: 'Demo User', role: 'admin', tier: 'pro' });
   const [toast, setToast]       = useState(null);
   const [modalOpen, setModalOpen]     = useState(false);
   const [modalConfig, setModalConfig] = useState({});
@@ -332,7 +332,13 @@ export default function MainApp() {
   const [editingGoat, setEditingGoat] = useState(null);
   const [formData, setFormData]     = useState(EMPTY_FORM);
 
-  const [goats, setGoats]         = useState([]);
+  const [goats, setGoats]         = useState([
+    { id: 1, name: 'Barnaby', breed: 'Boer', sex: 'M', dob: '2023-01-15T00:00:00Z', image_url: null, ear_tag: 'B-001', photo_count: 3 },
+    { id: 2, name: 'Clementine', breed: 'Nubian', sex: 'F', dob: '2023-04-20T00:00:00Z', image_url: null, ear_tag: 'N-042', photo_count: 5 },
+    { id: 3, name: 'Duke', breed: 'Kiko', sex: 'W', dob: '2024-02-10T00:00:00Z', image_url: null, ear_tag: 'K-012', photo_count: 0 },
+    { id: 4, name: 'Daisy', breed: 'Pygmy', sex: 'F', dob: '2023-08-05T00:00:00Z', image_url: null, ear_tag: 'P-008', photo_count: 2 },
+    { id: 5, name: 'Rusty', breed: 'Boer', sex: 'M', dob: '2022-11-30T00:00:00Z', image_url: null, ear_tag: 'B-002', photo_count: 4 },
+  ]);
   const [isFetching, setIsFetching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading]   = useState(false);
@@ -342,16 +348,6 @@ export default function MainApp() {
 
   // Splash
   useEffect(() => {
-    const minSplash = new Promise(resolve => setTimeout(resolve, 1500));
-    const maxSplash = new Promise(resolve => setTimeout(resolve, 5000));
-    const appReady = new Promise(resolve => {
-      // Splash clears when user session is checked
-      const saved = localStorage.getItem('goat_user');
-      if (saved) resolve();
-      else setTimeout(resolve, 800);
-    });
-    Promise.all([minSplash, appReady]).then(() => setLoadingSplash(false));
-    maxSplash.then(() => setLoadingSplash(false)); // hard cap
   }, []);
 
   // Theme
@@ -365,8 +361,6 @@ export default function MainApp() {
 
   // Auth — restore from localStorage (username only, token is httpOnly cookie)
   useEffect(() => {
-    const saved = localStorage.getItem('goat_user');
-    if (saved) setUser(JSON.parse(saved));
   }, []);
 
   const showToast = useCallback((msg, type = 'success') => {
@@ -380,49 +374,19 @@ export default function MainApp() {
   }, []);
 
   const syncLocalCache = useCallback(async () => {
-    try {
-      const res = await fetch('/api/goats/embeddings', { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        await saveEmbeddings(data);
-        console.log(`[sync] ${data.length} embeddings cached locally.`);
-      }
-    } catch (e) {
-      console.warn('[sync] Failed to refresh local cache:', e);
-    }
   }, []);
 
   const handleLogin = (u) => { 
-    setUser(u); 
-    localStorage.setItem('goat_user', JSON.stringify(u));
-    syncLocalCache(); 
   };
   
   const handleLogout = useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-    setUser(null);
-    localStorage.removeItem('goat_user');
-    // Clear IndexedDB on logout for privacy
-    try {
-      const db = await initDb();
-      const tx = db.transaction('embeddings', 'readwrite');
-      await tx.objectStore('embeddings').clear();
-      await tx.done;
-    } catch (e) { console.warn('Failed to clear local cache on logout', e); }
   }, []);
 
   // Goats
   const fetchGoats = useCallback(async () => {
-    setIsFetching(true);
-    try {
-      const res = await fetch('/api/goats', { credentials: 'include' });
-      if (res.status === 401) { handleLogout(); return; }
-      setGoats(await res.json());
-    } catch (e) { console.error(e); }
-    finally { setIsFetching(false); }
-  }, [handleLogout]);
+  }, []);
 
-  useEffect(() => { if (user) fetchGoats(); }, [user, fetchGoats]);
+  useEffect(() => { }, []);
 
   const handleAddNew = () => { setEditingGoat(null); setFormData(EMPTY_FORM); setShowForm(true); };
   const handleEdit   = (goat) => {
