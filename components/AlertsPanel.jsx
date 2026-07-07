@@ -1,18 +1,26 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-const AlertsPanel = () => {
-  const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(true);
+import { initDb } from '@/lib/localDb';
+import { queueSyncAction } from '@/lib/sync';
+import { X } from 'lucide-react';
 
-  useEffect(() => {
-    fetch('/api/alerts', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => { setAlerts(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
+const AlertsPanel = ({ alerts = [], onUpdate, showToast }) => {
+  const activeAlerts = alerts.filter(a => !a.is_read);
 
-  if (loading || alerts.length === 0) return null;
+  if (activeAlerts.length === 0) return null;
+
+  const handleDismiss = async (alert) => {
+    try {
+      const updated = { ...alert, is_read: true };
+      const db = await initDb();
+      await db.put('alerts', updated);
+      await queueSyncAction('alerts', 'UPDATE', updated);
+      if (onUpdate) onUpdate();
+    } catch {
+      showToast?.('Error dismissing alert', 'error');
+    }
+  };
 
   const isOverdue = (dateString) => {
     const today = new Date(); today.setHours(0,0,0,0);
@@ -24,29 +32,21 @@ const AlertsPanel = () => {
       <div style={{ backgroundColor: '#d32f2f', color: 'white', padding: '12px 16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
         <span>⚠️ Action Required</span>
         <span style={{ background: 'white', color: '#d32f2f', borderRadius: '50%', width: 22, height: 22, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 12, fontWeight: 800 }}>
-          {alerts.length}
+          {activeAlerts.length}
         </span>
       </div>
       <div style={{ backgroundColor: '#fff5f5', padding: '10px 12px' }}>
-        {alerts.map((alert) => {
-          const overdue = isOverdue(alert.next_due_date);
-          return (
-            <div key={alert.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', marginBottom: 8, backgroundColor: 'white', borderLeft: `5px solid ${overdue ? '#d32f2f' : '#ff9800'}`, borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>{alert.name}</div>
-                <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>{alert.treatment}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, color: overdue ? '#d32f2f' : '#ff9800', fontSize: 12 }}>
-                  {overdue ? 'PAST DUE' : 'UPCOMING'}
-                </div>
-                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
-                  {new Date(alert.next_due_date).toLocaleDateString()}
-                </div>
-              </div>
+        {activeAlerts.map((alert) => (
+          <div key={alert.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', marginBottom: 8, backgroundColor: 'white', borderLeft: `5px solid ${alert.type === 'error' || alert.type === 'urgent' ? '#d32f2f' : '#ff9800'}`, borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            <div style={{ flex: 1, paddingRight: 10 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-main)' }}>{alert.title}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 4 }}>{alert.message}</div>
             </div>
-          );
-        })}
+            <button onClick={() => handleDismiss(alert)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
+              <X size={18} />
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Calendar, Calculator, Dna, CheckCircle } from 'lucide-react';
 
-export default function BreedingPanel({ goats, isLoading, showToast }) {
+import { initDb, generateUUID } from '@/lib/localDb';
+import { queueSyncAction } from '@/lib/sync';
+
+export default function BreedingPanel({ goats, breedingRecords = [], isLoading, showToast, onUpdate }) {
   const [view, setView]   = useState('add');
-  const [history, setHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const [formData, setFormData] = useState({ dam_id: '', sire_id: '', date_bred: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,16 +15,7 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
   const dams  = goats.filter(g => g.sex === 'F');
   const sires = goats.filter(g => g.sex === 'M');
 
-  const fetchHistory = async () => {
-    setLoadingHistory(true);
-    try {
-      const res = await fetch('/api/breeding', { credentials: 'include' });
-      if (res.ok) setHistory(await res.json());
-    } catch { /* ignored */ }
-    finally { setLoadingHistory(false); }
-  };
-
-  useEffect(() => { if (view === 'history') fetchHistory(); }, [view]);
+  // History comes from props, no need to fetch
 
   const handleChange = e => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -35,23 +27,29 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
     }
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/breeding', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
-        const result = await res.json();
-        const damName = goats.find(g => g.id.toString() === formData.dam_id)?.name || 'Doe';
-        setLatestSuccess({ damName, kiddingDate: result.estimated_kidding_date?.split('T')[0] });
-        setFormData({ dam_id: '', sire_id: '', date_bred: '' });
-        showToast?.(`Breeding logged for ${damName}`);
-      } else {
-        const d = await res.json().catch(() => ({}));
-        showToast?.(d.error || 'Failed to save', 'error');
-      }
-    } catch {
+      const matingDate = new Date(formData.date_bred);
+      const kiddingDate = new Date(matingDate.getTime() + 150 * 24 * 60 * 60 * 1000); // +150 days
+
+      const payload = {
+        id: generateUUID(),
+        dam_id: formData.dam_id,
+        sire_id: formData.sire_id ? formData.sire_id : null,
+        mating_date: matingDate.toISOString(),
+        expected_kidding_date: kiddingDate.toISOString(),
+        status: 'planned'
+      };
+
+      const db = await initDb();
+      await db.put('breeding_records', payload);
+      await queueSyncAction('breeding_records', 'CREATE', payload);
+
+      const damName = goats.find(g => g.id.toString() === formData.dam_id)?.name || 'Doe';
+      setLatestSuccess({ damName, kiddingDate: kiddingDate.toISOString().split('T')[0] });
+      setFormData({ dam_id: '', sire_id: '', date_bred: '' });
+      showToast?.(`Breeding logged for ${damName}`);
+      if (onUpdate) onUpdate();
+    } catch (err) {
+      console.error(err);
       showToast?.('Connection error', 'error');
     } finally {
       setIsSubmitting(false);
@@ -133,11 +131,11 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
 
       {view === 'history' && (
         <>
-          {loadingHistory ? (
+          {isLoading ? (
             <div className="glass-panel" style={{ padding: 30, textAlign: 'center', color: 'var(--text-sub)' }}>
               Loading kidding schedule…
             </div>
-          ) : history.length === 0 ? (
+          ) : breedingRecords.length === 0 ? (
             <div className="empty-state" style={{ padding: 40 }}>
               <div className="empty-state-icon">🤰</div>
               <h3>No breeding records yet</h3>
@@ -145,8 +143,8 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {history.map(b => {
-                const kidDate  = b.estimated_kidding_date?.split('T')[0];
+              {breedingRecords.map(b => {
+                const kidDate  = b.expected_kidding_date?.split('T')[0] || b.estimated_kidding_date?.split('T')[0];
                 const daysToGo = kidDate ? Math.ceil((new Date(kidDate) - new Date()) / (1000 * 60 * 60 * 24)) : null;
                 const overdue  = daysToGo !== null && daysToGo < 0;
                 const soon     = daysToGo !== null && daysToGo >= 0 && daysToGo <= 14;
@@ -159,14 +157,14 @@ export default function BreedingPanel({ goats, isLoading, showToast }) {
                            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, fontWeight: 800, background: overdue ? '#fee2e2' : soon ? '#fff3cd' : '#fce4ec', color: overdue ? '#dc2626' : soon ? '#856404' : '#e91e63' }}>
                             {overdue ? 'OVERDUE' : soon ? 'DUE SOON' : 'EXPECTED'}
                           </span>
-                          <span style={{ fontSize: 11, color: 'var(--text-sub)', fontWeight: 600 }}>Bred: {b.date_bred?.split('T')[0]}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-sub)', fontWeight: 600 }}>Bred: {b.mating_date?.split('T')[0] || b.date_bred?.split('T')[0]}</span>
                         </div>
                         <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-main)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {b.dam_name || `Goat #${b.dam_id}`}
+                          {goats.find(g => g.id === b.dam_id)?.name || `Goat #${b.dam_id}`}
                         </div>
-                        {b.sire_name && (
+                        {b.sire_id && (
                           <div style={{ fontSize: 13, color: 'var(--text-sub)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Dna size={12} /> <span>Sire: {b.sire_name}</span>
+                            <Dna size={12} /> <span>Sire: {goats.find(g => g.id === b.sire_id)?.name || `Goat #${b.sire_id}`}</span>
                           </div>
                         )}
                         <div style={{ fontSize: 13, color: 'var(--text-main)', fontWeight: 600, marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>

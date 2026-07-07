@@ -2,10 +2,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Activity, Calendar, Syringe, FileText, CheckCircle, ChevronRight } from 'lucide-react';
 
-export default function HealthPanel({ goats, isLoading, showToast }) {
+import { initDb, generateUUID } from '@/lib/localDb';
+import { queueSyncAction } from '@/lib/sync';
+
+export default function HealthPanel({ goats, healthRecords = [], isLoading, showToast, onUpdate }) {
   const [view, setView]       = useState('add');     // 'add' | 'history'
-  const [history, setHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const [formData, setFormData] = useState({
     goat_id: '',
@@ -24,17 +25,7 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
   };
   useEffect(() => adjustHeight(), [formData.notes]);
 
-  // Fetch history
-  const fetchHistory = async () => {
-    setLoadingHistory(true);
-    try {
-      const res = await fetch('/api/health', { credentials: 'include' });
-      if (res.ok) setHistory(await res.json());
-    } catch { /* ignored */ }
-    finally { setLoadingHistory(false); }
-  };
-
-  useEffect(() => { if (view === 'history') fetchHistory(); }, [view]);
+  // History comes from props, no need to fetch here
 
   const handleChange = (e) => {
     setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -48,20 +39,25 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
     }
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/health', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
-        showToast?.('Health record saved!');
-        setFormData(p => ({ ...p, treatment: '', notes: '', next_due_date: '' }));
-      } else {
-        const d = await res.json().catch(() => ({}));
-        showToast?.(d.error || 'Failed to save record', 'error');
-      }
-    } catch {
+      const payload = {
+        id: generateUUID(),
+        goat_id: formData.goat_id,
+        record_date: formData.event_date,
+        treatment: formData.treatment,
+        notes: formData.notes,
+        next_due_date: formData.next_due_date || null,
+        type: 'Treatment'
+      };
+      
+      const db = await initDb();
+      await db.put('health_records', payload);
+      await queueSyncAction('health_records', 'CREATE', payload);
+
+      showToast?.('Health record saved!');
+      setFormData(p => ({ ...p, treatment: '', notes: '', next_due_date: '' }));
+      if (onUpdate) onUpdate();
+    } catch (err) {
+      console.error(err);
       showToast?.('Connection error', 'error');
     } finally {
       setIsSubmitting(false);
@@ -142,11 +138,11 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
 
       {view === 'history' && (
         <>
-          {loadingHistory ? (
+          {isLoading ? (
             <div className="glass-panel" style={{ padding: 30, textAlign: 'center', color: 'var(--text-sub)' }}>
               Loading history…
             </div>
-          ) : history.length === 0 ? (
+          ) : healthRecords.length === 0 ? (
             <div className="empty-state" style={{ padding: 40 }}>
               <div className="empty-state-icon">📋</div>
               <h3>No health records yet</h3>
@@ -154,8 +150,8 @@ export default function HealthPanel({ goats, isLoading, showToast }) {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {history.map(h => {
-                const eventDate = h.event_date?.split('T')[0];
+              {healthRecords.map(h => {
+                const eventDate = h.record_date?.split('T')[0] || h.event_date?.split('T')[0];
                 const dueDate = h.next_due_date?.split('T')[0];
                 const overdue = dueDate && new Date(dueDate) < new Date();
                 

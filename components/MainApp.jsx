@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles, BookOpen, ChevronRight, Cpu, Merge, Loader2, Shield } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles, BookOpen, ChevronRight, Cpu, Merge, Loader2, Shield, Package, TrendingUp, BarChart3, Wallet } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import Reports from './Reports';
@@ -13,7 +13,12 @@ import BreedReference from './BreedReference';
 import MaturationHelper from './MaturationHelper';
 import ErrorBoundary from './ErrorBoundary';
 import { BREEDS } from '@/lib/breeds';
-import { saveEmbeddings, initDb } from '@/lib/localDb';
+import { saveEmbeddings, initDb, generateUUID } from '@/lib/localDb';
+import { syncStoreFromRemote, triggerSync, queueSyncAction } from '@/lib/sync';
+import InventoryPanel from './InventoryPanel';
+import SalesPanel from './SalesPanel';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import ExpenditurePanel from './ExpenditurePanel';
 
 // ── SPLASH ──────────────────────────────────────────────────────
 const SplashScreen = () => (
@@ -242,8 +247,8 @@ const MergePanel = ({ goats, showToast, onMerged }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           correction_type: 'merge',
-          source_goat_id: parseInt(sourceId, 10),
-          target_goat_id: parseInt(targetId, 10),
+          source_goat_id: sourceId,
+          target_goat_id: targetId,
           notes: 'Manual merge from settings',
         }),
       });
@@ -310,7 +315,11 @@ const MergePanel = ({ goats, showToast, onMerged }) => {
 // ── MAIN APP ─────────────────────────────────────────────────────
 const EMPTY_FORM = { name: '', breed: '', sex: 'F', dob: '', image_url: '', ear_tag: '' };
 const NAV_TABS = [
+  { id: 'analytics',label: 'Analytics', icon: BarChart3 },
   { id: 'profiles', label: 'Profiles', icon: LayoutGrid },
+  { id: 'inventory', label: 'Inventory', icon: Package },
+  { id: 'finance',  label: 'Finance',  icon: Wallet },
+  { id: 'sales', label: 'Sales', icon: TrendingUp },
   { id: 'scan',     label: 'Scan',     icon: ScanLine },
   { id: 'smart',    label: 'Smart',    icon: Sparkles },
   { id: 'lineage',  label: 'Lineage',  icon: Dna },
@@ -327,18 +336,22 @@ export default function MainApp() {
   const [modalConfig, setModalConfig] = useState({});
   const [showBreedRef, setShowBreedRef] = useState(false);
 
-  const [activeTab, setActiveTab]   = useState('profiles');
+  const [activeTab, setActiveTab]   = useState('analytics');
   const [showForm, setShowForm]     = useState(false);
   const [editingGoat, setEditingGoat] = useState(null);
   const [formData, setFormData]     = useState(EMPTY_FORM);
 
-  const [goats, setGoats]         = useState([
-    { id: 1, name: 'Barnaby', breed: 'Boer', sex: 'M', dob: '2023-01-15T00:00:00Z', image_url: null, ear_tag: 'B-001', photo_count: 3 },
-    { id: 2, name: 'Clementine', breed: 'Nubian', sex: 'F', dob: '2023-04-20T00:00:00Z', image_url: null, ear_tag: 'N-042', photo_count: 5 },
-    { id: 3, name: 'Duke', breed: 'Kiko', sex: 'W', dob: '2024-02-10T00:00:00Z', image_url: null, ear_tag: 'K-012', photo_count: 0 },
-    { id: 4, name: 'Daisy', breed: 'Pygmy', sex: 'F', dob: '2023-08-05T00:00:00Z', image_url: null, ear_tag: 'P-008', photo_count: 2 },
-    { id: 5, name: 'Rusty', breed: 'Boer', sex: 'M', dob: '2022-11-30T00:00:00Z', image_url: null, ear_tag: 'B-002', photo_count: 4 },
-  ]);
+  const [goats, setGoats]                   = useState([]);
+  const [inventory, setInventory]           = useState([]);
+  const [sales, setSales]                   = useState([]);
+  const [healthRecords, setHealthRecords]   = useState([]);
+  const [breedingRecords, setBreedingRecords] = useState([]);
+  const [alerts, setAlerts]                 = useState([]);
+  const [expenditures, setExpenditures]     = useState([]);
+  const [usageLogs, setUsageLogs]           = useState([]);
+  const [currency, setCurrency]             = useState('GH₵');
+
+
   const [isFetching, setIsFetching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading]   = useState(false);
@@ -373,20 +386,108 @@ export default function MainApp() {
     setModalOpen(true);
   }, []);
 
-  const syncLocalCache = useCallback(async () => {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedCurrency = localStorage.getItem('currency');
+      if (savedCurrency) setCurrency(savedCurrency);
+    }
   }, []);
 
-  const handleLogin = (u) => { 
-  };
-  
-  const handleLogout = useCallback(async () => {
-  }, []);
+  const fetchData = useCallback(async (tabToLoad = null) => {
+    try {
+      setIsFetching(true);
+      const db = await initDb();
+      
+      const tab = tabToLoad || activeTab;
 
-  // Goats
-  const fetchGoats = useCallback(async () => {
-  }, []);
+      // 1. First load only what the ACTIVE tab needs to unblock render
+      const loadPromises = [];
+      
+      if (tab === 'analytics') {
+        loadPromises.push(
+          db.getAll('goats').then(d => setGoats(d || [])),
+          db.getAll('inventory').then(d => setInventory(d || [])),
+          db.getAll('sales').then(d => setSales(d || [])),
+          db.getAll('health_records').then(d => setHealthRecords(d || [])),
+          db.getAll('breeding_records').then(d => setBreedingRecords(d || [])),
+          db.getAll('alerts').then(d => setAlerts(d || [])),
+          db.getAll('expenditures').then(d => setExpenditures(d || [])),
+          db.getAll('usage_logs').then(d => setUsageLogs(d || []))
+        );
+      } else {
+        if (['profiles', 'scan', 'smart', 'lineage', 'health', 'settings'].includes(tab)) {
+          loadPromises.push(db.getAll('goats').then(d => setGoats(d || [])));
+        }
+        if (['inventory', 'finance', 'sales'].includes(tab)) {
+          loadPromises.push(db.getAll('inventory').then(d => setInventory(d || [])));
+        }
+        if (tab === 'sales') {
+          loadPromises.push(db.getAll('sales').then(d => setSales(d || [])));
+        }
+        if (tab === 'finance') {
+          loadPromises.push(db.getAll('expenditures').then(d => setExpenditures(d || [])));
+        }
+        if (tab === 'health') {
+          loadPromises.push(db.getAll('health_records').then(d => setHealthRecords(d || [])));
+          loadPromises.push(db.getAll('alerts').then(d => setAlerts(d || [])));
+        }
+        if (tab === 'lineage') {
+          loadPromises.push(db.getAll('breeding_records').then(d => setBreedingRecords(d || [])));
+        }
+      }
 
-  useEffect(() => { }, []);
+      await Promise.all(loadPromises);
+      setIsFetching(false);
+
+      // 2. Background task to load the rest of the local stores
+      if (tab !== 'analytics') {
+        Promise.all([
+          db.getAll('goats').then(d => setGoats(d || [])),
+          db.getAll('inventory').then(d => setInventory(d || [])),
+          db.getAll('sales').then(d => setSales(d || [])),
+          db.getAll('health_records').then(d => setHealthRecords(d || [])),
+          db.getAll('breeding_records').then(d => setBreedingRecords(d || [])),
+          db.getAll('alerts').then(d => setAlerts(d || [])),
+          db.getAll('expenditures').then(d => setExpenditures(d || [])),
+          db.getAll('usage_logs').then(d => setUsageLogs(d || []))
+        ]).catch(console.error);
+      }
+
+      // 3. Online sync
+      if (navigator.onLine) {
+        const queueEmpty = await triggerSync();
+
+        if (queueEmpty) {
+          await Promise.all([
+            syncStoreFromRemote('goats'),
+            syncStoreFromRemote('inventory'),
+            syncStoreFromRemote('sales'),
+            syncStoreFromRemote('health_records'),
+            syncStoreFromRemote('breeding_records'),
+            syncStoreFromRemote('alerts'),
+            syncStoreFromRemote('expenditures'),
+            syncStoreFromRemote('usage_logs')
+          ]);
+          
+          setGoats(await db.getAll('goats') || []);
+          setInventory(await db.getAll('inventory') || []);
+          setSales(await db.getAll('sales') || []);
+          setHealthRecords(await db.getAll('health_records') || []);
+          setBreedingRecords(await db.getAll('breeding_records') || []);
+          setAlerts(await db.getAll('alerts') || []);
+          setExpenditures(await db.getAll('expenditures') || []);
+          setUsageLogs(await db.getAll('usage_logs') || []);
+        }
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+      setIsFetching(false);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchData();
+  }, [activeTab]); // Now runs when activeTab changes as well
 
   const handleAddNew = () => { setEditingGoat(null); setFormData(EMPTY_FORM); setShowForm(true); };
   const handleEdit   = (goat) => {
@@ -440,13 +541,22 @@ export default function MainApp() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const url    = editingGoat ? `/api/goats/${editingGoat.id}` : '/api/goats';
-      const method = editingGoat ? 'PUT' : 'POST';
-      const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData), credentials: 'include' });
-      if (res.ok) { showToast(editingGoat ? 'Goat updated!' : 'Goat added!'); fetchGoats(); setShowForm(false); }
-      else { const d = await res.json(); showToast(d.error || 'Failed to save', 'error'); }
-    } catch { showToast('Network error', 'error'); }
-    finally { setIsSubmitting(false); }
+      const action = editingGoat ? 'UPDATE' : 'CREATE';
+      const payload = { ...formData, id: editingGoat ? editingGoat.id : generateUUID(), owner_id: user.username };
+      
+      const db = await initDb();
+      await db.put('goats', payload);
+      await queueSyncAction('goats', action, payload);
+      
+      showToast(editingGoat ? 'Goat updated!' : 'Goat added!'); 
+      fetchData(); 
+      setShowForm(false);
+    } catch (err) {
+      console.error(err);
+      showToast('Error saving goat locally', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteGoat = () => {
@@ -454,10 +564,19 @@ export default function MainApp() {
     confirmAction('Delete Goat?', `Permanently remove ${editingGoat.name} and all their records?`, 'Yes, Delete', 'Cancel', async () => {
       setIsSubmitting(true);
       try {
-        const res = await fetch(`/api/goats/${editingGoat.id}`, { method: 'DELETE', credentials: 'include' });
-        if (res.ok) { showToast('Goat deleted'); fetchGoats(); setShowForm(false); }
-        else showToast('Failed to delete', 'error');
-      } finally { setIsSubmitting(false); }
+        const db = await initDb();
+        await db.delete('goats', editingGoat.id);
+        await queueSyncAction('goats', 'DELETE', { id: editingGoat.id });
+        
+        showToast('Goat deleted'); 
+        fetchData(); 
+        setShowForm(false);
+      } catch (err) {
+        console.error(err);
+        showToast('Error deleting goat', 'error');
+      } finally { 
+        setIsSubmitting(false); 
+      }
     });
   };
 
@@ -505,6 +624,9 @@ export default function MainApp() {
             onCancel={() => setShowForm(false)} isEditing={!!editingGoat} onDelete={handleDeleteGoat} />
         ) : (
           <>
+            {/* ANALYTICS */}
+            {activeTab === 'analytics' && <AnalyticsDashboard goats={goats} inventory={inventory} sales={sales} alerts={alerts} healthRecords={healthRecords} breedingRecords={breedingRecords} expenditures={expenditures} usageLogs={usageLogs} currency={currency} />}
+
             {/* PROFILES */}
             {activeTab === 'profiles' && (
               <>
@@ -548,7 +670,16 @@ export default function MainApp() {
               </>
             )}
 
-            {/* SCAN */}
+            {/* INVENTORY */}
+            {activeTab === 'inventory' && <InventoryPanel inventory={inventory} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} confirmAction={confirmAction} currency={currency} />}
+
+            {/* FINANCE / EXPENDITURES */}
+            {activeTab === 'finance' && <ExpenditurePanel expenditures={expenditures} inventory={inventory} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} confirmAction={confirmAction} currency={currency} />}
+
+            {/* SALES */}
+            {activeTab === 'sales' && <SalesPanel sales={sales} inventory={inventory} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} confirmAction={confirmAction} currency={currency} />}
+
+            {/* SCAN / ML */}
             {activeTab === 'scan' && (
               <ErrorBoundary>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

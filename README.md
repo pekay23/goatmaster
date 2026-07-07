@@ -1,6 +1,16 @@
 # 🐐 Goat Master
 
-A hybrid ML-based goat identification system using Next.js, TensorFlow.js, and pgvector.
+A comprehensive, hybrid ML-based goat herd management system built with Next.js, TensorFlow.js, and PostgreSQL (pgvector).
+
+## ✨ Features
+
+- **Offline-First Architecture**: View and edit data without internet access using IndexedDB local storage. Changes are queued and automatically synced to the server in the background when connectivity is restored.
+- **Comprehensive Herd Management**: Dedicated modules for Profiles, Inventory, Sales (with PDF receipts), Lineage/Breeding, Health records, and automated Alerts.
+- **Smart ML Recognition**:
+  - **On-device**: TF.js (MobileNetV3 + custom re-ID) for instant local matching.
+  - **Server-side**: FastAPI + YOLOv8 + ResNet50 for high-accuracy verification.
+  - **Vector Search**: PostgreSQL `pgvector` with `<=>` cosine distance operator.
+- **Secure Authentication**: Built-in JWT authentication with secure HTTP-only cookies and bcrypt password hashing.
 
 ## 🚀 Getting Started
 
@@ -16,7 +26,7 @@ bun install
 ```
 
 ### Environment Setup
-Create a `.env` file based on your credentials:
+Create a `.env.local` file based on your credentials:
 ```env
 DATABASE_URL="postgres://user:pass@localhost:5432/goatmaster"
 JWT_SECRET="your-secret-min-32-chars"
@@ -33,7 +43,7 @@ NEXT_PUBLIC_CLOUDINARY_PRESET="your-preset"
 ```
 
 ### Database Migration
-Initialize the schema and enable pgvector:
+Initialize the schema, tables, and enable pgvector:
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   -d '{"secret": "your-migration-key"}' \
@@ -45,9 +55,5 @@ curl -X POST -H "Content-Type: application/json" \
 bun dev
 ```
 
-## 🧠 ML Architecture
-- **On-device**: TF.js (MobileNetV3 + custom re-ID) for instant local matching.
-- **Server-side**: FastAPI + YOLOv8 + ResNet50 for high-accuracy verification.
-- **Vector Search**: PostgreSQL `pgvector` with `<=>` cosine distance operator.
+## 🧠 ML Architecture Details
 - **Training**: The re-ID model is fine-tuned on all enrolled goat embeddings (shared model across users) using triplet loss.
-
