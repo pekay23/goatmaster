@@ -15,6 +15,8 @@ async function migrate() {
       dob TIMESTAMP,
       image_url TEXT,
       ear_tag VARCHAR(100),
+      dam_id UUID REFERENCES goats(id) ON DELETE SET NULL,
+      sire_id UUID REFERENCES goats(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -66,6 +68,7 @@ async function migrate() {
       treatment TEXT,
       cost NUMERIC(10, 2) DEFAULT 0,
       record_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      next_due_date TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -134,6 +137,36 @@ async function migrate() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS milk_records (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      goat_id UUID REFERENCES goats(id) ON DELETE CASCADE,
+      owner_id VARCHAR(255) DEFAULT 'demo',
+      record_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      morning_yield NUMERIC(10, 2) DEFAULT 0,
+      evening_yield NUMERIC(10, 2) DEFAULT 0,
+      somatic_cell_count INTEGER,
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS weight_records (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      goat_id UUID REFERENCES goats(id) ON DELETE CASCADE,
+      owner_id VARCHAR(255) DEFAULT 'demo',
+      record_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      weight_kg NUMERIC(10, 2) NOT NULL,
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await query(`
+    ALTER TABLE health_records ADD COLUMN IF NOT EXISTS next_due_date TIMESTAMP;
+    ALTER TABLE goats ADD COLUMN IF NOT EXISTS dam_id UUID REFERENCES goats(id) ON DELETE SET NULL;
+    ALTER TABLE goats ADD COLUMN IF NOT EXISTS sire_id UUID REFERENCES goats(id) ON DELETE SET NULL;
   `);
 
   console.log('Migrations complete.');

@@ -5,7 +5,7 @@ import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
 import { Download, FileText, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 
-const Reports = ({ goats = [], inventory = [], sales = [] }) => {
+const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], breedingRecords = [], currency = 'GH₵' }) => {
   const [reportType, setReportType] = useState('herd');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,14 +42,26 @@ const Reports = ({ goats = [], inventory = [], sales = [] }) => {
         Customer: s.customer, Date: s.sale_date, Amount: `${currency}${s.amount}`, Items: s.items_data?.length || 0
       }));
     } else if (reportType === 'health') {
-      reportData = [{ status: 'Healthy', notes: 'No active issues', date: new Date().toISOString() }];
+      reportData = healthRecords.map(h => ({
+        Goat: goats.find(g => g.id === h.goat_id)?.name || h.goat_id || '',
+        Treatment: h.treatment || h.type || '',
+        Date: h.record_date,
+        NextDue: h.next_due_date || '',
+        Notes: h.notes || ''
+      }));
     } else if (reportType === 'breeding') {
-      reportData = [];
+      reportData = breedingRecords.map(b => ({
+        Dam: goats.find(g => g.id === b.dam_id)?.name || b.dam_id || '',
+        Sire: goats.find(g => g.id === b.sire_id)?.name || b.sire_id || '',
+        Bred: b.mating_date,
+        ExpectedKidding: b.expected_kidding_date,
+        Status: b.status || ''
+      }));
     }
 
     setData(cleanData(reportData));
     setLoading(false);
-  }, [reportType, goats, inventory, sales, currency]);
+  }, [reportType, goats, inventory, sales, healthRecords, breedingRecords, currency]);
 
   const handleSort = (key) => {
     setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));

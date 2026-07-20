@@ -30,7 +30,7 @@ export async function POST(request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const data = await request.json();
-    const { id, name, breed, sex, dob, image_url, ear_tag } = data;
+    const { id, name, breed, sex, dob, image_url, ear_tag, dam_id, sire_id } = data;
     
     if (!id || !UUID_REGEX.test(id)) {
       return NextResponse.json({ error: 'Valid UUID is required for id' }, { status: 400 });
@@ -42,14 +42,32 @@ export async function POST(request) {
     
     const owner_id = user.sub;
 
+    if (dam_id && !UUID_REGEX.test(dam_id)) {
+      return NextResponse.json({ error: 'Valid UUID is required for dam_id' }, { status: 400 });
+    }
+
+    if (sire_id && !UUID_REGEX.test(sire_id)) {
+      return NextResponse.json({ error: 'Valid UUID is required for sire_id' }, { status: 400 });
+    }
+
+    if (dam_id && dam_id === id) {
+      return NextResponse.json({ error: 'A goat cannot be its own dam' }, { status: 400 });
+    }
+
+    if (sire_id && sire_id === id) {
+      return NextResponse.json({ error: 'A goat cannot be its own sire' }, { status: 400 });
+    }
+
     const { rows } = await query(
-      `INSERT INTO goats (id, name, breed, sex, dob, image_url, ear_tag, owner_id) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      `INSERT INTO goats (id, name, breed, sex, dob, image_url, ear_tag, dam_id, sire_id, owner_id) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
        ON CONFLICT (id) DO UPDATE SET
        name = EXCLUDED.name, breed = EXCLUDED.breed, sex = EXCLUDED.sex, dob = EXCLUDED.dob,
-       image_url = EXCLUDED.image_url, ear_tag = EXCLUDED.ear_tag, updated_at = CURRENT_TIMESTAMP
+       image_url = EXCLUDED.image_url, ear_tag = EXCLUDED.ear_tag,
+       dam_id = EXCLUDED.dam_id, sire_id = EXCLUDED.sire_id,
+       updated_at = CURRENT_TIMESTAMP
        RETURNING *`,
-      [id || null, name, breed, sex, dob || null, image_url || null, ear_tag || null, owner_id]
+      [id || null, name, breed, sex, dob || null, image_url || null, ear_tag || null, dam_id || null, sire_id || null, owner_id]
     );
     
     return NextResponse.json(rows[0]);

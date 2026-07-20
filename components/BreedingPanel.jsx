@@ -1,9 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { Heart, Calendar, Calculator, Dna, CheckCircle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Heart, Calendar, Dna, AlertTriangle } from 'lucide-react';
 
 import { initDb, generateUUID } from '@/lib/localDb';
 import { queueSyncAction } from '@/lib/sync';
+import PedigreePanel from './PedigreePanel';
 
 export default function BreedingPanel({ goats, breedingRecords = [], isLoading, showToast, onUpdate }) {
   const [view, setView]   = useState('add');
@@ -15,7 +16,69 @@ export default function BreedingPanel({ goats, breedingRecords = [], isLoading, 
   const dams  = goats.filter(g => g.sex === 'F');
   const sires = goats.filter(g => g.sex === 'M');
 
-  // History comes from props, no need to fetch
+  const goatById = useMemo(() => new Map(goats.map(goat => [String(goat.id), goat])), [goats]);
+
+  const relationshipRisk = useMemo(() => {
+    if (!formData.dam_id || !formData.sire_id) return null;
+
+    const collectAncestors = (goatId, maxDepth = 4) => {
+      const ancestors = new Map();
+
+      const walk = (id, depth, path) => {
+        if (!id || depth > maxDepth || path.has(String(id))) return;
+        const goat = goatById.get(String(id));
+        if (!goat) return;
+
+        const key = String(goat.id);
+        const existing = ancestors.get(key);
+        if (!existing || depth < existing.depth) {
+          ancestors.set(key, { goat, depth });
+        }
+
+        const nextPath = new Set(path);
+        nextPath.add(key);
+        walk(goat.dam_id, depth + 1, nextPath);
+        walk(goat.sire_id, depth + 1, nextPath);
+      };
+
+      const goat = goatById.get(String(goatId));
+      if (!goat) return ancestors;
+      walk(goat.dam_id, 1, new Set([String(goatId)]));
+      walk(goat.sire_id, 1, new Set([String(goatId)]));
+      return ancestors;
+    };
+
+    const damAncestors = collectAncestors(formData.dam_id);
+    const sireAncestors = collectAncestors(formData.sire_id);
+    const commonAncestors = [];
+    let estimatedCoi = 0;
+
+    if (damAncestors.has(String(formData.sire_id))) {
+      const sireAsAncestor = damAncestors.get(String(formData.sire_id));
+      commonAncestors.push({ name: sireAsAncestor.goat.name, damDepth: sireAsAncestor.depth, sireDepth: 0, direct: true });
+    }
+    if (sireAncestors.has(String(formData.dam_id))) {
+      const damAsAncestor = sireAncestors.get(String(formData.dam_id));
+      commonAncestors.push({ name: damAsAncestor.goat.name, damDepth: 0, sireDepth: damAsAncestor.depth, direct: true });
+    }
+
+    for (const [ancestorId, damSide] of damAncestors.entries()) {
+      const sireSide = sireAncestors.get(ancestorId);
+      if (!sireSide) continue;
+      const contribution = Math.pow(0.5, damSide.depth + sireSide.depth + 1);
+      estimatedCoi += contribution;
+      commonAncestors.push({
+        name: damSide.goat.name,
+        damDepth: damSide.depth,
+        sireDepth: sireSide.depth,
+        contribution,
+      });
+    }
+
+    if (commonAncestors.length === 0) return null;
+    commonAncestors.sort((a, b) => (a.damDepth + a.sireDepth) - (b.damDepth + b.sireDepth));
+    return { commonAncestors, estimatedCoi };
+  }, [formData.dam_id, formData.sire_id, goatById]);
 
   const handleChange = e => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -77,6 +140,9 @@ export default function BreedingPanel({ goats, breedingRecords = [], isLoading, 
         <button onClick={() => setView('history')} className={`btn-filter ${view === 'history' ? 'active' : ''}`} style={{ flex: 1, padding: '11px 0', fontSize: 14 }}>
           Kidding Schedule
         </button>
+        <button onClick={() => setView('pedigree')} className={`btn-filter ${view === 'pedigree' ? 'active' : ''}`} style={{ flex: 1, padding: '11px 0', fontSize: 14 }}>
+          Pedigree
+        </button>
       </div>
 
       {view === 'add' && (
@@ -96,6 +162,19 @@ export default function BreedingPanel({ goats, breedingRecords = [], isLoading, 
               {sires.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           </div>
+
+          {relationshipRisk && (
+            <div style={{ padding: 14, background: '#fff3cd', border: '1px solid #f59e0b', borderRadius: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <AlertTriangle size={20} color="#b45309" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#92400e' }}>Related mating warning</div>
+                <div style={{ fontSize: 13, color: '#92400e', lineHeight: 1.45, marginTop: 4 }}>
+                  Common ancestor: {relationshipRisk.commonAncestors[0].name}
+                  {relationshipRisk.estimatedCoi > 0 && ` · estimated COI ${(relationshipRisk.estimatedCoi * 100).toFixed(1)}%`}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
             <label className="form-label">Date Bred</label>
@@ -186,6 +265,8 @@ export default function BreedingPanel({ goats, breedingRecords = [], isLoading, 
           )}
         </>
       )}
+
+      {view === 'pedigree' && <PedigreePanel goats={goats} />}
     </div>
   );
 }
