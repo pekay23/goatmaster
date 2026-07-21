@@ -12,3 +12,5 @@ services:
         sync: false
       - key: PYTHON_VERSION
         value: 3.12.0
+      - key: PIP_INDEX_URL
+        value: https://pypi.org/simple/
