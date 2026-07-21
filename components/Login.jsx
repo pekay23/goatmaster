@@ -12,20 +12,24 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setError(''); setSuccessMsg(''); setIsLoading(true);
     const endpoint = isRegistering ? '/api/auth/signup' : '/api/auth/login';
+    const payload = isRegistering
+      ? { username: creds.username, email: creds.username, password: creds.password }
+      : { email: creds.username, password: creds.password };
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(creds),
+        body: JSON.stringify(payload),
         credentials: 'include',
       });
       const data = await res.json();
       if (res.ok) {
+        const userData = data?.data || data;
         if (isRegistering) {
           setSuccessMsg('Account created! Logging you in…');
-          setTimeout(() => onLogin(data), 800);
+          setTimeout(() => onLogin(userData), 800);
         } else {
-          onLogin(data);
+          onLogin(userData);
         }
       } else {
         setError(data.error || 'Authentication failed');
@@ -54,7 +58,7 @@ export default function Login({ onLogin }) {
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
-          {[['username','text','Username'],['password','password','Password']].map(([name, type, label]) => (
+          {[['username','text','Email'],['password','password','Password']].map(([name, type, label]) => (
             <div key={name}>
               <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</label>
               <input type={type} placeholder={`Enter ${label.toLowerCase()}`} value={creds[name]}

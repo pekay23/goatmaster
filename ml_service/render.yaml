@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: goatmaster-ml
+    env: python
+    buildCommand: pip install -r ml_service/requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ML_SERVICE_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.12.0

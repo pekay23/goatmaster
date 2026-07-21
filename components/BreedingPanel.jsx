@@ -1,283 +1,114 @@
 'use client';
-import React, { useMemo, useState } from 'react';
-import { Heart, Calendar, Dna, AlertTriangle } from 'lucide-react';
-
+import React, { useState, useMemo } from 'react';
+import { Dna, Plus, History } from 'lucide-react';
 import { initDb, generateUUID } from '@/lib/localDb';
 import { queueSyncAction } from '@/lib/sync';
-import PedigreePanel from './PedigreePanel';
+import BreedingForm from './breeding/BreedingForm';
 
-export default function BreedingPanel({ goats, breedingRecords = [], isLoading, showToast, onUpdate }) {
-  const [view, setView]   = useState('add');
-
-  const [formData, setFormData] = useState({ dam_id: '', sire_id: '', date_bred: '' });
+export default function BreedingPanel({ goats = [], breedingRecords = [], isLoading = false, onUpdate, showToast }) {
+  const [view, setView] = useState('add');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [latestSuccess, setLatestSuccess] = useState(null);
 
-  const dams  = goats.filter(g => g.sex === 'F');
-  const sires = goats.filter(g => g.sex === 'M');
+  const goatById = useMemo(() => {
+    const map = new Map(); goats.forEach(g => map.set(g.id, g)); return map;
+  }, [goats]);
 
-  const goatById = useMemo(() => new Map(goats.map(goat => [String(goat.id), goat])), [goats]);
-
-  const relationshipRisk = useMemo(() => {
-    if (!formData.dam_id || !formData.sire_id) return null;
-
-    const collectAncestors = (goatId, maxDepth = 4) => {
-      const ancestors = new Map();
-
-      const walk = (id, depth, path) => {
-        if (!id || depth > maxDepth || path.has(String(id))) return;
-        const goat = goatById.get(String(id));
-        if (!goat) return;
-
-        const key = String(goat.id);
-        const existing = ancestors.get(key);
-        if (!existing || depth < existing.depth) {
-          ancestors.set(key, { goat, depth });
-        }
-
-        const nextPath = new Set(path);
-        nextPath.add(key);
-        walk(goat.dam_id, depth + 1, nextPath);
-        walk(goat.sire_id, depth + 1, nextPath);
-      };
-
-      const goat = goatById.get(String(goatId));
-      if (!goat) return ancestors;
-      walk(goat.dam_id, 1, new Set([String(goatId)]));
-      walk(goat.sire_id, 1, new Set([String(goatId)]));
-      return ancestors;
-    };
-
-    const damAncestors = collectAncestors(formData.dam_id);
-    const sireAncestors = collectAncestors(formData.sire_id);
-    const commonAncestors = [];
-    let estimatedCoi = 0;
-
-    if (damAncestors.has(String(formData.sire_id))) {
-      const sireAsAncestor = damAncestors.get(String(formData.sire_id));
-      commonAncestors.push({ name: sireAsAncestor.goat.name, damDepth: sireAsAncestor.depth, sireDepth: 0, direct: true });
-    }
-    if (sireAncestors.has(String(formData.dam_id))) {
-      const damAsAncestor = sireAncestors.get(String(formData.dam_id));
-      commonAncestors.push({ name: damAsAncestor.goat.name, damDepth: 0, sireDepth: damAsAncestor.depth, direct: true });
-    }
-
-    for (const [ancestorId, damSide] of damAncestors.entries()) {
-      const sireSide = sireAncestors.get(ancestorId);
-      if (!sireSide) continue;
-      const contribution = Math.pow(0.5, damSide.depth + sireSide.depth + 1);
-      estimatedCoi += contribution;
-      commonAncestors.push({
-        name: damSide.goat.name,
-        damDepth: damSide.depth,
-        sireDepth: sireSide.depth,
-        contribution,
-      });
-    }
-
-    if (commonAncestors.length === 0) return null;
-    commonAncestors.sort((a, b) => (a.damDepth + a.sireDepth) - (b.damDepth + b.sireDepth));
-    return { commonAncestors, estimatedCoi };
-  }, [formData.dam_id, formData.sire_id, goatById]);
-
-  const handleChange = e => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.dam_id || !formData.date_bred) {
-      showToast?.('Doe and breeding date are required', 'error');
-      return;
-    }
+  const handleSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      const matingDate = new Date(formData.date_bred);
-      const kiddingDate = new Date(matingDate.getTime() + 150 * 24 * 60 * 60 * 1000); // +150 days
-
+      const kiddingDate = new Date(data.mating_date);
+      kiddingDate.setDate(kiddingDate.getDate() + 150);
       const payload = {
         id: generateUUID(),
-        dam_id: formData.dam_id,
-        sire_id: formData.sire_id ? formData.sire_id : null,
-        mating_date: matingDate.toISOString(),
-        expected_kidding_date: kiddingDate.toISOString(),
-        status: 'planned'
+        dam_id: data.dam_id,
+        sire_id: data.sire_id,
+        mating_date: data.mating_date,
+        expected_kidding_date: kiddingDate.toISOString().split('T')[0],
+        status: 'bred',
       };
-
       const db = await initDb();
       await db.put('breeding_records', payload);
       await queueSyncAction('breeding_records', 'CREATE', payload);
-
-      const damName = goats.find(g => g.id.toString() === formData.dam_id)?.name || 'Doe';
-      setLatestSuccess({ damName, kiddingDate: kiddingDate.toISOString().split('T')[0] });
-      setFormData({ dam_id: '', sire_id: '', date_bred: '' });
-      showToast?.(`Breeding logged for ${damName}`);
+      const dam = goatById.get(data.dam_id);
+      setLatestSuccess({ damName: dam?.name || 'Unknown', kiddingDate: kiddingDate.toISOString().split('T')[0] });
+      showToast?.('Breeding record saved!');
       if (onUpdate) onUpdate();
-    } catch (err) {
-      console.error(err);
-      showToast?.('Connection error', 'error');
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch (err) { console.error(err); showToast?.('Error saving record', 'error'); }
+    finally { setIsSubmitting(false); }
   };
 
+  const sortedRecords = useMemo(() => {
+    return [...breedingRecords].sort((a, b) => new Date(b.mating_date || 0) - new Date(a.mating_date || 0));
+  }, [breedingRecords]);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div className="glass-panel" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ background: '#fce4ec', padding: 10, borderRadius: 12 }}>
-          <Dna size={24} color="#e91e63" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="glass-panel" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ background: 'rgba(236, 72, 153, 0.12)', padding: 10, borderRadius: 12 }}>
+          <Dna size={24} color="#ec4899" />
         </div>
         <div style={{ flex: 1 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Breeding & Lineage</h2>
-          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--text-sub)' }}>
-            Auto-estimates kidding date (150 days)
-          </p>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-main)' }}>Breeding & Lineage</h2>
+          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--text-sub)' }}>Track matings, expected kidding dates, and pedigree</p>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-        <button onClick={() => setView('add')} className={`btn-filter ${view === 'add' ? 'active' : ''}`} style={{ padding: '11px 16px', fontSize: 14, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          Log Breeding
-        </button>
-        <button onClick={() => setView('history')} className={`btn-filter ${view === 'history' ? 'active' : ''}`} style={{ padding: '11px 16px', fontSize: 14, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          Kidding Schedule
-        </button>
-        <button onClick={() => setView('pedigree')} className={`btn-filter ${view === 'pedigree' ? 'active' : ''}`} style={{ padding: '11px 16px', fontSize: 14, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          Pedigree
-        </button>
+      <div style={{ display: 'flex', gap: 10 }}>
+        {[
+          { id: 'add', label: 'New Breeding', icon: Plus },
+          { id: 'history', label: `History (${breedingRecords.length})`, icon: History },
+        ].map(tab => (
+          <button key={tab.id}
+            onClick={() => setView(tab.id)}
+            className={`btn-filter ${view === tab.id ? 'active' : ''}`}
+            style={{ flex: 1, padding: '11px 8px', fontSize: 14, justifyContent: 'center' }}>
+            <tab.icon size={16} /> {tab.label}
+          </button>
+        ))}
       </div>
 
+      {latestSuccess && (
+        <div style={{ padding: '12px 16px', background: '#dcfce7', borderRadius: 12, border: '1px solid #86efac', color: '#166534', fontSize: 14 }}>
+          ✅ {latestSuccess.damName} bred! Expected kidding: <strong>{latestSuccess.kiddingDate}</strong>
+        </div>
+      )}
+
       {view === 'add' && (
-        <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 16, width: '100%', boxSizing: 'border-box' }}>
-          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
-            <label className="form-label">Dam (Doe)</label>
-            <select name="dam_id" className="form-select" value={formData.dam_id} onChange={handleChange} required style={{ width: '100%' }}>
-              <option value="">{isLoading ? '⏳…' : '— Select —'}</option>
-              {dams.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
-            <label className="form-label">Sire (Buck)</label>
-            <select name="sire_id" className="form-select" value={formData.sire_id} onChange={handleChange} style={{ width: '100%' }}>
-              <option value="">— Optional —</option>
-              {sires.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-          </div>
-
-          {relationshipRisk && (
-            <div style={{ padding: 14, background: '#fff3cd', border: '1px solid #f59e0b', borderRadius: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-              <AlertTriangle size={20} color="#b45309" style={{ flexShrink: 0, marginTop: 2 }} />
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#92400e' }}>Related mating warning</div>
-                <div style={{ fontSize: 13, color: '#92400e', lineHeight: 1.45, marginTop: 4 }}>
-                  Common ancestor: {relationshipRisk.commonAncestors[0].name}
-                  {relationshipRisk.estimatedCoi > 0 && ` · estimated COI ${(relationshipRisk.estimatedCoi * 100).toFixed(1)}%`}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
-            <label className="form-label">Date Bred</label>
-            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
-              <Calendar size={18} style={{ position: 'absolute', left: 14, color: '#e91e63', opacity: 0.8, pointerEvents: 'none', zIndex: 10 }} />
-              <input 
-                type={formData.date_bred ? "date" : "text"} 
-                onFocus={(e) => e.target.type = "date"} 
-                onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }} 
-                placeholder="Select date…" 
-                name="date_bred" 
-                className="form-input" 
-                value={formData.date_bred} 
-                onChange={handleChange} 
-                required 
-                style={{ paddingLeft: 42, width: '100%', boxSizing: 'border-box' }} 
-              />
-            </div>
-          </div>
-
-          <button type="submit" className="btn-primary" disabled={isSubmitting || isLoading}
-            style={{ width: '100%', justifyContent: 'center', padding: 15, fontSize: 16, borderRadius: 16, marginTop: 4, boxShadow: '0 4px 12px rgba(233,30,99,0.2)' }}>
-            <Calendar size={18} />
-            {isSubmitting ? 'Saving…' : 'Save & Estimate Kidding Date'}
-          </button>
-
-          {latestSuccess && (
-            <div style={{ padding: 16, background: 'rgba(233, 30, 99, 0.05)', border: '1px solid rgba(233, 30, 99, 0.2)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, animation: 'fadeInUp 0.4s ease-out' }}>
-              <div>
-                <div style={{ fontSize: 11, color: '#e91e63', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  {latestSuccess.damName} — Expected Kidding
-                </div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-main)', marginTop: 4 }}>
-                  {new Date(latestSuccess.kiddingDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                </div>
-              </div>
-              <div style={{ background: 'white', width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-                <Heart size={24} color="#e91e63" fill="#e91e63" style={{ opacity: 0.9 }} />
-              </div>
-            </div>
-          )}
-        </form>
+        <BreedingForm goats={goats} onSubmit={handleSubmit} onCancel={() => {}} isSubmitting={isSubmitting} />
       )}
 
       {view === 'history' && (
-        <>
-          {isLoading ? (
-            <div className="glass-panel" style={{ padding: 30, textAlign: 'center', color: 'var(--text-sub)' }}>
-              Loading kidding schedule…
-            </div>
-          ) : breedingRecords.length === 0 ? (
-            <div className="empty-state" style={{ padding: 40 }}>
-              <div className="empty-state-icon">🤰</div>
-              <h3>No breeding records yet</h3>
-              <p>Logged breedings and expected kidding dates will appear here.</p>
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {sortedRecords.length === 0 ? (
+            <div className="glass-panel" style={{ padding: 20, textAlign: 'center', color: 'var(--text-sub)', fontSize: 13 }}>No breeding records yet.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {breedingRecords.map(b => {
-                const kidDate  = b.expected_kidding_date?.split('T')[0] || b.estimated_kidding_date?.split('T')[0];
-                const daysToGo = kidDate ? Math.ceil((new Date(kidDate) - new Date()) / (1000 * 60 * 60 * 24)) : null;
-                const overdue  = daysToGo !== null && daysToGo < 0;
-                const soon     = daysToGo !== null && daysToGo >= 0 && daysToGo <= 14;
-                
-                return (
-                  <div key={b.id} className="glass-panel" style={{ padding: '16px 20px', borderLeft: overdue ? '4px solid #ef4444' : soon ? '4px solid #f59e0b' : '4px solid #e91e63' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                           <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, fontWeight: 800, background: overdue ? '#fee2e2' : soon ? '#fff3cd' : '#fce4ec', color: overdue ? '#dc2626' : soon ? '#856404' : '#e91e63' }}>
-                            {overdue ? 'OVERDUE' : soon ? 'DUE SOON' : 'EXPECTED'}
-                          </span>
-                          <span style={{ fontSize: 11, color: 'var(--text-sub)', fontWeight: 600 }}>Bred: {b.mating_date?.split('T')[0] || b.date_bred?.split('T')[0]}</span>
-                        </div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-main)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {goats.find(g => g.id === b.dam_id)?.name || `Goat #${b.dam_id}`}
-                        </div>
-                        {b.sire_id && (
-                          <div style={{ fontSize: 13, color: 'var(--text-sub)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Dna size={12} /> <span>Sire: {goats.find(g => g.id === b.sire_id)?.name || `Goat #${b.sire_id}`}</span>
-                          </div>
-                        )}
-                        <div style={{ fontSize: 13, color: 'var(--text-main)', fontWeight: 600, marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Calendar size={14} color="#e91e63" />
-                          <span>{new Date(kidDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right', background: 'var(--bg-app)', padding: '10px 14px', borderRadius: 16, minWidth: 80 }}>
-                        <div style={{ fontSize: 10, color: 'var(--text-sub)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>Countdown</div>
-                        <div style={{ fontSize: 20, color: overdue ? '#dc2626' : 'var(--text-main)', fontWeight: 800 }}>
-                          {daysToGo === null ? '—' : daysToGo < 0 ? `${Math.abs(daysToGo)}d late` : `${daysToGo}d`}
-                        </div>
-                      </div>
-                    </div>
+            sortedRecords.map(r => {
+              const dam = goatById.get(r.dam_id);
+              const sire = goatById.get(r.sire_id);
+              const now = new Date();
+              const kidding = r.expected_kidding_date ? new Date(r.expected_kidding_date) : null;
+              const daysUntil = kidding ? Math.ceil((kidding - now) / (1000 * 60 * 60 * 24)) : null;
+              return (
+                <div key={r.id} className="glass-panel" style={{ padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                    <strong style={{ fontSize: 15, color: 'var(--text-main)' }}>{dam?.name || 'Unknown'}</strong>
+                    <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>×</span>
+                    <strong style={{ fontSize: 15, color: 'var(--text-main)' }}>{sire?.name || 'Unknown'}</strong>
+                    <span style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, background: 'var(--bg-app)', color: 'var(--text-sub)' }}>{r.mating_date?.split('T')[0]}</span>
                   </div>
-                );
-              })}
-            </div>
+                  {kidding && (
+                    <div style={{ fontSize: 13, color: daysUntil !== null && daysUntil < 0 ? '#dc2626' : '#6366f1', fontWeight: 600 }}>
+                      Kidding: {r.expected_kidding_date?.split('T')[0]} {daysUntil !== null ? (daysUntil < 0 ? `(${Math.abs(daysUntil)}d ago)` : `(in ${daysUntil}d)`) : ''}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 2 }}>Status: {r.status || 'bred'}</div>
+                </div>
+              );
+            })
           )}
-        </>
+        </div>
       )}
-
-      {view === 'pedigree' && <PedigreePanel goats={goats} />}
     </div>
   );
 }
