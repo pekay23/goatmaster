@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles, BookOpen, ChevronRight, Cpu, Merge, Loader2, Shield, Package, TrendingUp, BarChart3, Wallet, Droplets, Wheat } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, Camera, LogOut, X, AlertTriangle, ScanLine, Sparkles, BookOpen, ChevronRight, Cpu, Merge, Loader2, Shield, Package, TrendingUp, BarChart3, Wallet, Droplets, Wheat, CalendarDays } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
+import EventsPanel from './EventsPanel';
 import Reports from './Reports';
 import AlertsPanel from './AlertsPanel';
 import SettingsFooter from './SettingsFooter';
@@ -70,84 +71,127 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, title, message, confirmText, 
 };
 
 // ── ADD / EDIT FORM ──────────────────────────────────────────────
-const AddGoatView = ({ formData, setFormData, goats, isSubmitting, isUploading, handleSubmit, handleImageChange, onCancel, isEditing, onDelete }) => (
-  <div className="add-goat-view">
-    <div style={{ textAlign: 'center', padding: 24, border: '2px dashed var(--border-color)', borderRadius: 16, cursor: 'pointer', marginBottom: 20 }}>
-      <label style={{ cursor: 'pointer' }}>
-        <input type="file" hidden onChange={handleImageChange} accept="image/*" />
-        {formData.image_url
-          ? <img src={formData.image_url} style={{ height: 140, borderRadius: 12, objectFit: 'cover' }} alt="" />
-          : <div><Camera size={32} style={{ color: 'var(--text-sub)' }} /><p style={{ color: 'var(--text-sub)', margin: '8px 0 0', fontSize: 14 }}>{isEditing ? 'Change Photo' : 'Add Photo'}</p></div>}
-      </label>
+const AddGoatView = ({ formData, setFormData, goats, isSubmitting, isUploading, handleSubmit, handleImageChange, onCancel, isEditing, onDelete, farmEvents = [], navigateToEvents }) => {
+  const goatEvents = isEditing ? farmEvents.filter(e => e.goat_ids?.includes(formData.id)).sort((a,b) => new Date(b.event_date) - new Date(a.event_date)) : [];
+  
+  return (
+    <div className="add-goat-view">
+      <div style={{ textAlign: 'center', padding: 24, border: '2px dashed var(--border-color)', borderRadius: 16, cursor: 'pointer', marginBottom: 20 }}>
+        <label style={{ cursor: 'pointer' }}>
+          <input type="file" hidden onChange={handleImageChange} accept="image/*" />
+          {formData.image_url
+            ? <img src={formData.image_url} style={{ height: 140, borderRadius: 12, objectFit: 'cover' }} alt="" />
+            : <div><Camera size={32} style={{ color: 'var(--text-sub)' }} /><p style={{ color: 'var(--text-sub)', margin: '8px 0 0', fontSize: 14 }}>{isEditing ? 'Change Photo' : 'Add Photo'}</p></div>}
+        </label>
+      </div>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="form-label">Name</label>
+          <input className="form-input" name="name" value={formData.name}
+            onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} required />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Breed</label>
+          <input className="form-input" name="breed" list="breed-options" value={formData.breed}
+            onChange={e => setFormData(p => ({ ...p, breed: e.target.value }))}
+            placeholder="Type or pick from list…" />
+          <datalist id="breed-options">
+            {BREEDS.filter(b => b.id !== 'mixed').map(b => (
+              <option key={b.id} value={b.name}>{b.origin} · {b.type}</option>
+            ))}
+          </datalist>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Sex</label>
+          <select className="form-select" name="sex" value={formData.sex} onChange={e => setFormData(p => ({ ...p, sex: e.target.value }))}>
+            <option value="F">Doe (Female)</option>
+            <option value="M">Buck (Male)</option>
+            <option value="W">Wether (Castrated)</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Date of Birth</label>
+          <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e => setFormData(p => ({ ...p, dob: e.target.value }))} onInvalid={e => e.preventDefault()} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Ear Tag #</label>
+          <input className="form-input" name="ear_tag" value={formData.ear_tag} onChange={e => setFormData(p => ({ ...p, ear_tag: e.target.value }))} placeholder="e.g. T-0042" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+          <div className="form-group">
+            <label className="form-label">Dam</label>
+            <select className="form-select" name="dam_id" value={formData.dam_id || ''} onChange={e => setFormData(p => ({ ...p, dam_id: e.target.value }))}>
+              <option value="">Unknown</option>
+              {goats
+                .filter(g => g.sex === 'F' && g.id !== formData.id)
+                .map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Sire</label>
+            <select className="form-select" name="sire_id" value={formData.sire_id || ''} onChange={e => setFormData(p => ({ ...p, sire_id: e.target.value }))}>
+              <option value="">Unknown</option>
+              {goats
+                .filter(g => g.sex === 'M' && g.id !== formData.id)
+                .map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+          <button type="button" onClick={onCancel} style={{ flex: 1, padding: 13, border: '1.5px solid var(--border-color)', background: 'transparent', borderRadius: 12, cursor: 'pointer', color: 'var(--text-main)', fontWeight: 600, fontFamily: 'inherit' }}>Cancel</button>
+          {isEditing && <button type="button" onClick={onDelete} style={{ flex: 1, padding: 13, border: '1px solid #fecaca', background: '#fee2e2', borderRadius: 12, cursor: 'pointer', color: '#dc2626', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>}
+          <button type="submit" className="btn-primary" style={{ flex: 1, justifyContent: 'center' }} disabled={isSubmitting || isUploading}>
+            {isUploading ? 'Uploading…' : isEditing ? 'Update' : 'Create'}
+          </button>
+        </div>
+      </form>
+
+      {isEditing && (
+        <div style={{ marginTop: 40, borderTop: '1px solid var(--border-color)', paddingTop: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+            <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-main)' }}>Recent Activity</h3>
+            <button 
+              type="button"
+              onClick={() => navigateToEvents && navigateToEvents(formData.id)}
+              className="btn-primary" 
+              style={{ padding: '6px 12px', fontSize: 12 }}
+            >
+              <CalendarDays size={14} /> Log Event
+            </button>
+          </div>
+          
+          {goatEvents.length === 0 ? (
+            <p style={{ color: 'var(--text-sub)', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>No events logged for {formData.name} yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {goatEvents.slice(0, 5).map(e => (
+                <div key={e.id} style={{ padding: 12, background: 'var(--bg-app)', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <strong style={{ fontSize: 14, color: 'var(--text-main)' }}>{e.subject}</strong>
+                    <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>{new Date(e.event_date).toLocaleDateString()}</span>
+                  </div>
+                  <span style={{ display: 'inline-block', padding: '2px 8px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 4, fontSize: 11, fontWeight: 600, color: 'var(--text-sub)' }}>
+                    {e.category}
+                  </span>
+                </div>
+              ))}
+              {goatEvents.length > 5 && (
+                <button type="button" onClick={() => navigateToEvents && navigateToEvents(formData.id)} style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', fontSize: 13, padding: '10px 0' }}>
+                  View all {goatEvents.length} events →
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
-    <form onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label className="form-label">Name</label>
-        <input className="form-input" name="name" value={formData.name}
-          onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} required />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Breed</label>
-        <input className="form-input" name="breed" list="breed-options" value={formData.breed}
-          onChange={e => setFormData(p => ({ ...p, breed: e.target.value }))}
-          placeholder="Type or pick from list…" />
-        <datalist id="breed-options">
-          {BREEDS.filter(b => b.id !== 'mixed').map(b => (
-            <option key={b.id} value={b.name}>{b.origin} · {b.type}</option>
-          ))}
-        </datalist>
-      </div>
-      <div className="form-group">
-        <label className="form-label">Sex</label>
-        <select className="form-select" name="sex" value={formData.sex} onChange={e => setFormData(p => ({ ...p, sex: e.target.value }))}>
-          <option value="F">Doe (Female)</option>
-          <option value="M">Buck (Male)</option>
-          <option value="W">Wether (Castrated)</option>
-        </select>
-      </div>
-      <div className="form-group">
-        <label className="form-label">Date of Birth</label>
-        <input className="form-input" type="date" name="dob" value={formData.dob} onChange={e => setFormData(p => ({ ...p, dob: e.target.value }))} onInvalid={e => e.preventDefault()} />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Ear Tag #</label>
-        <input className="form-input" name="ear_tag" value={formData.ear_tag} onChange={e => setFormData(p => ({ ...p, ear_tag: e.target.value }))} placeholder="e.g. T-0042" />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-        <div className="form-group">
-          <label className="form-label">Dam</label>
-          <select className="form-select" name="dam_id" value={formData.dam_id || ''} onChange={e => setFormData(p => ({ ...p, dam_id: e.target.value }))}>
-            <option value="">Unknown</option>
-            {goats
-              .filter(g => g.sex === 'F' && g.id !== formData.id)
-              .map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-          </select>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Sire</label>
-          <select className="form-select" name="sire_id" value={formData.sire_id || ''} onChange={e => setFormData(p => ({ ...p, sire_id: e.target.value }))}>
-            <option value="">Unknown</option>
-            {goats
-              .filter(g => g.sex === 'M' && g.id !== formData.id)
-              .map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-          </select>
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-        <button type="button" onClick={onCancel} style={{ flex: 1, padding: 13, border: '1.5px solid var(--border-color)', background: 'transparent', borderRadius: 12, cursor: 'pointer', color: 'var(--text-main)', fontWeight: 600, fontFamily: 'inherit' }}>Cancel</button>
-        {isEditing && <button type="button" onClick={onDelete} style={{ flex: 1, padding: 13, border: '1px solid #fecaca', background: '#fee2e2', borderRadius: 12, cursor: 'pointer', color: '#dc2626', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>}
-        <button type="submit" className="btn-primary" style={{ flex: 1, justifyContent: 'center' }} disabled={isSubmitting || isUploading}>
-          {isUploading ? 'Uploading…' : isEditing ? 'Update' : 'Create'}
-        </button>
-      </div>
-    </form>
-  </div>
-);
+  );
+};
 
 // ── GOAT CARD ────────────────────────────────────────────────────
 const GoatCard = ({ goat, onEdit }) => (
-  <div className="goat-card">
-    <button className="edit-btn" onClick={() => onEdit(goat)} aria-label="Edit">
+  <div className="goat-card" onClick={() => onEdit(goat)}>
+    <button className="edit-btn" onClick={(e) => { e.stopPropagation(); onEdit(goat); }} aria-label="Edit">
       <img src="/editlogo.png" alt="Edit" style={{ width: 16, height: 16, opacity: 0.8 }} />
     </button>
     {goat.image_url
@@ -348,23 +392,31 @@ const NAV_TABS = [
   { id: 'smart',    label: 'Smart',    icon: Sparkles },
   { id: 'lineage',  label: 'Lineage',  icon: Dna },
   { id: 'health',   label: 'Health',   icon: Activity },
+  { id: 'events',   label: 'Events',   icon: CalendarDays },
   { id: 'reports',  label: 'Reports',  icon: FileText },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 export default function MainApp() {
-  const [loadingSplash, setLoadingSplash] = useState(false);
-  const [user, setUser]         = useState({ username: 'Demo User', role: 'admin', tier: 'pro' });
+  const [loadingSplash, setLoadingSplash] = useState(true);
+  const [user, setUser]         = useState(null);
   const [toast, setToast]       = useState(null);
   const [modalOpen, setModalOpen]     = useState(false);
   const [modalConfig, setModalConfig] = useState({});
   const [showBreedRef, setShowBreedRef] = useState(false);
 
-  const [activeTab, setActiveTab]   = useState(() => {
-    if (typeof window === 'undefined') return 'analytics';
+  const [activeTab, setActiveTab]   = useState('analytics');
+
+  useEffect(() => {
     const savedTab = window.localStorage.getItem('goat_active_tab');
-    return NAV_TABS.some(tab => tab.id === savedTab) ? savedTab : 'analytics';
-  });
+    if (savedTab && NAV_TABS.some(tab => tab.id === savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem('goat_active_tab', activeTab);
+  }, [activeTab]);
   const [showForm, setShowForm]     = useState(false);
   const [editingGoat, setEditingGoat] = useState(null);
   const [formData, setFormData]     = useState(EMPTY_FORM);
@@ -379,7 +431,9 @@ export default function MainApp() {
   const [usageLogs, setUsageLogs]           = useState([]);
   const [milkRecords, setMilkRecords]       = useState([]);
   const [weightRecords, setWeightRecords]   = useState([]);
+  const [farmEvents, setFarmEvents]         = useState([]);
   const [currency, setCurrency]             = useState('GH₵');
+  const [initialEventGoatId, setInitialEventGoatId] = useState(null);
 
 
   const [isFetching, setIsFetching] = useState(false);
@@ -404,6 +458,15 @@ export default function MainApp() {
 
   // Auth — restore from localStorage (username only, token is httpOnly cookie)
   useEffect(() => {
+    const savedUser = localStorage.getItem('goat_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        setUser(null);
+      }
+    }
+    setLoadingSplash(false);
   }, []);
 
   useEffect(() => {
@@ -450,10 +513,11 @@ export default function MainApp() {
           db.getAll('expenditures').then(d => setExpenditures(d || [])),
           db.getAll('usage_logs').then(d => setUsageLogs(d || [])),
           db.getAll('milk_records').then(d => setMilkRecords(d || [])),
-          db.getAll('weight_records').then(d => setWeightRecords(d || []))
+          db.getAll('weight_records').then(d => setWeightRecords(d || [])),
+          db.getAll('farm_events').then(d => setFarmEvents(d || []))
         );
       } else {
-        if (['profiles', 'scan', 'smart', 'lineage', 'health', 'dairy', 'reports', 'settings'].includes(tab)) {
+        if (['profiles', 'scan', 'smart', 'lineage', 'health', 'dairy', 'reports', 'settings', 'events'].includes(tab)) {
           loadPromises.push(db.getAll('goats').then(d => setGoats(d || [])));
         }
         if (['inventory', 'finance', 'sales', 'reports'].includes(tab)) {
@@ -465,6 +529,9 @@ export default function MainApp() {
         if (tab === 'finance') {
           loadPromises.push(db.getAll('expenditures').then(d => setExpenditures(d || [])));
         }
+        if (tab === 'events') {
+          loadPromises.push(db.getAll('farm_events').then(d => setFarmEvents(d || [])));
+        }
         if (tab === 'health') {
           loadPromises.push(db.getAll('health_records').then(d => setHealthRecords(d || [])));
           loadPromises.push(db.getAll('weight_records').then(d => setWeightRecords(d || [])));
@@ -473,6 +540,7 @@ export default function MainApp() {
         if (tab === 'reports') {
           loadPromises.push(db.getAll('health_records').then(d => setHealthRecords(d || [])));
           loadPromises.push(db.getAll('breeding_records').then(d => setBreedingRecords(d || [])));
+          loadPromises.push(db.getAll('farm_events').then(d => setFarmEvents(d || [])));
         }
         if (tab === 'dairy') {
           loadPromises.push(db.getAll('milk_records').then(d => setMilkRecords(d || [])));
@@ -497,7 +565,8 @@ export default function MainApp() {
           db.getAll('expenditures').then(d => setExpenditures(d || [])),
           db.getAll('usage_logs').then(d => setUsageLogs(d || [])),
           db.getAll('milk_records').then(d => setMilkRecords(d || [])),
-          db.getAll('weight_records').then(d => setWeightRecords(d || []))
+          db.getAll('weight_records').then(d => setWeightRecords(d || [])),
+          db.getAll('farm_events').then(d => setFarmEvents(d || []))
         ]).catch(console.error);
       }
 
@@ -519,7 +588,8 @@ export default function MainApp() {
             syncStoreFromRemote('expenditures'),
             syncStoreFromRemote('usage_logs'),
             syncStoreFromRemote('milk_records'),
-            syncStoreFromRemote('weight_records')
+            syncStoreFromRemote('weight_records'),
+            syncStoreFromRemote('farm_events')
           ]);
           
           setGoats(await db.getAll('goats') || []);
@@ -532,6 +602,7 @@ export default function MainApp() {
           setUsageLogs(await db.getAll('usage_logs') || []);
           setMilkRecords(await db.getAll('milk_records') || []);
           setWeightRecords(await db.getAll('weight_records') || []);
+          setFarmEvents(await db.getAll('farm_events') || []);
         }
       }
     } catch (error) {
@@ -549,7 +620,9 @@ export default function MainApp() {
   }, [fetchData]);
 
   const handleLogin = useCallback((nextUser) => {
-    setUser(nextUser || { username: 'Demo User', role: 'admin', tier: 'pro' });
+    const userObj = nextUser || { username: 'Demo User', role: 'admin', tier: 'pro' };
+    setUser(userObj);
+    localStorage.setItem('goat_user', JSON.stringify(userObj));
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -559,11 +632,19 @@ export default function MainApp() {
       // Demo/offline mode can still clear local UI state.
     }
     setUser(null);
+    localStorage.removeItem('goat_user');
     setActiveTab('analytics');
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('goat_active_tab', 'analytics');
     }
   }, []);
+
+  // Delete function (moved up if needed, but we can just define navigateToEvents here)
+  const navigateToEvents = (goatId) => {
+    setInitialEventGoatId(goatId);
+    setActiveTab('events');
+    setShowForm(false);
+  };
 
   const handleAddNew = () => { setEditingGoat(null); setFormData(EMPTY_FORM); setShowForm(true); };
   const handleEdit   = (goat) => {
@@ -703,11 +784,12 @@ export default function MainApp() {
         {showForm ? (
           <AddGoatView formData={formData} setFormData={setFormData} goats={goats} isSubmitting={isSubmitting}
             isUploading={isUploading} handleSubmit={handleSubmit} handleImageChange={handleImageChange}
-            onCancel={() => setShowForm(false)} isEditing={!!editingGoat} onDelete={handleDeleteGoat} />
+            onCancel={() => setShowForm(false)} isEditing={!!editingGoat} onDelete={handleDeleteGoat}
+            farmEvents={farmEvents} navigateToEvents={navigateToEvents} />
         ) : (
           <>
             {/* ANALYTICS */}
-            {activeTab === 'analytics' && <AnalyticsDashboard goats={goats} inventory={inventory} sales={sales} alerts={alerts} healthRecords={healthRecords} breedingRecords={breedingRecords} expenditures={expenditures} usageLogs={usageLogs} currency={currency} />}
+            {activeTab === 'analytics' && <AnalyticsDashboard goats={goats} inventory={inventory} sales={sales} alerts={alerts} healthRecords={healthRecords} breedingRecords={breedingRecords} expenditures={expenditures} usageLogs={usageLogs} farmEvents={farmEvents} currency={currency} />}
 
             {/* PROFILES */}
             {activeTab === 'profiles' && (
@@ -788,12 +870,14 @@ export default function MainApp() {
 
             {/* LINEAGE */}
             {activeTab === 'lineage' && <BreedingPanel goats={goats} breedingRecords={breedingRecords} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} />}
-
             {/* HEALTH */}
             {activeTab === 'health' && <><AlertsPanel alerts={alerts} onUpdate={fetchData} showToast={showToast} /><HealthPanel goats={goats} healthRecords={healthRecords} weightRecords={weightRecords} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} confirmAction={confirmAction} /></>}
 
+            {/* EVENTS */}
+            {activeTab === 'events' && <EventsPanel goats={goats} farmEvents={farmEvents} inventory={inventory} initialEventGoatId={initialEventGoatId} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} confirmAction={confirmAction} />}
+
             {/* REPORTS */}
-            {activeTab === 'reports' && <Reports goats={goats} inventory={inventory} sales={sales} healthRecords={healthRecords} breedingRecords={breedingRecords} currency={currency} />}
+            {activeTab === 'reports' && <Reports goats={goats} inventory={inventory} sales={sales} healthRecords={healthRecords} breedingRecords={breedingRecords} farmEvents={farmEvents} currency={currency} />}
 
             {/* SETTINGS */}
             {activeTab === 'settings' && (

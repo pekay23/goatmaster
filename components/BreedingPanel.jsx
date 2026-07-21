@@ -133,14 +133,14 @@ export default function BreedingPanel({ goats, breedingRecords = [], isLoading, 
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={() => setView('add')} className={`btn-filter ${view === 'add' ? 'active' : ''}`} style={{ flex: 1, padding: '11px 0', fontSize: 14 }}>
+      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        <button onClick={() => setView('add')} className={`btn-filter ${view === 'add' ? 'active' : ''}`} style={{ padding: '11px 16px', fontSize: 14, whiteSpace: 'nowrap', flexShrink: 0 }}>
           Log Breeding
         </button>
-        <button onClick={() => setView('history')} className={`btn-filter ${view === 'history' ? 'active' : ''}`} style={{ flex: 1, padding: '11px 0', fontSize: 14 }}>
+        <button onClick={() => setView('history')} className={`btn-filter ${view === 'history' ? 'active' : ''}`} style={{ padding: '11px 16px', fontSize: 14, whiteSpace: 'nowrap', flexShrink: 0 }}>
           Kidding Schedule
         </button>
-        <button onClick={() => setView('pedigree')} className={`btn-filter ${view === 'pedigree' ? 'active' : ''}`} style={{ flex: 1, padding: '11px 0', fontSize: 14 }}>
+        <button onClick={() => setView('pedigree')} className={`btn-filter ${view === 'pedigree' ? 'active' : ''}`} style={{ padding: '11px 16px', fontSize: 14, whiteSpace: 'nowrap', flexShrink: 0 }}>
           Pedigree
         </button>
       </div>
@@ -178,9 +178,20 @@ export default function BreedingPanel({ goats, breedingRecords = [], isLoading, 
 
           <div className="form-group" style={{ marginBottom: 0, width: '100%' }}>
             <label className="form-label">Date Bred</label>
-            <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <Calendar size={18} style={{ position: 'absolute', left: '6%', top: 11, color: '#e91e63', opacity: 0.8, pointerEvents: 'none', zIndex: 10 }} />
-              <input type="date" name="date_bred" className="form-input" value={formData.date_bred} onChange={handleChange} required style={{ paddingLeft: 42, width: '92%', boxSizing: 'border-box' }} />
+            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+              <Calendar size={18} style={{ position: 'absolute', left: 14, color: '#e91e63', opacity: 0.8, pointerEvents: 'none', zIndex: 10 }} />
+              <input 
+                type={formData.date_bred ? "date" : "text"} 
+                onFocus={(e) => e.target.type = "date"} 
+                onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }} 
+                placeholder="Select date…" 
+                name="date_bred" 
+                className="form-input" 
+                value={formData.date_bred} 
+                onChange={handleChange} 
+                required 
+                style={{ paddingLeft: 42, width: '100%', boxSizing: 'border-box' }} 
+              />
             </div>
           </div>
 

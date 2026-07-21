@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { TrendingUp, Package, Activity, Users, AlertTriangle, CheckCircle, BarChart3, ActivitySquare, ShieldAlert } from 'lucide-react';
+import { TrendingUp, Package, Activity, Users, AlertTriangle, CheckCircle, BarChart3, ActivitySquare, ShieldAlert, CalendarDays } from 'lucide-react';
 
-export default function AnalyticsDashboard({ goats = [], inventory = [], sales = [], alerts = [], healthRecords = [], breedingRecords = [], expenditures = [], usageLogs = [], currency = 'GH₵' }) {
+export default function AnalyticsDashboard({ goats = [], inventory = [], sales = [], alerts = [], healthRecords = [], breedingRecords = [], expenditures = [], usageLogs = [], farmEvents = [], currency = 'GH₵' }) {
   
   // -- Herd Metrics --
   const herdStats = useMemo(() => {
@@ -176,6 +176,14 @@ export default function AnalyticsDashboard({ goats = [], inventory = [], sales =
               <span style={{ color: '#334155', fontWeight: 600, fontSize: 14 }}>Total Feed Consumed</span>
             </div>
             <span style={{ fontWeight: 800, color: '#475569' }}>{financeStats.feedConsumed.toFixed(1)} kg</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'rgba(99, 102, 241, 0.08)', borderRadius: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <CalendarDays size={20} color="#6366f1"/>
+              <span style={{ color: '#4338ca', fontWeight: 600, fontSize: 14 }}>Farm Activity Logs</span>
+            </div>
+            <span style={{ fontWeight: 800, color: '#6366f1' }}>{farmEvents.length} Events</span>
           </div>
         </div>
 

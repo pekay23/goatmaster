@@ -5,7 +5,7 @@ import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
 import { Download, FileText, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 
-const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], breedingRecords = [], currency = 'GH₵' }) => {
+const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], breedingRecords = [], farmEvents = [], currency = 'GH₵' }) => {
   const [reportType, setReportType] = useState('herd');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -57,11 +57,26 @@ const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], b
         ExpectedKidding: b.expected_kidding_date,
         Status: b.status || ''
       }));
+    } else if (reportType === 'events') {
+      reportData = farmEvents.map(e => {
+        const taggedGoats = Array.isArray(e.goat_ids)
+          ? e.goat_ids.map(gid => goats.find(g => g.id === gid)?.name || gid).join(', ')
+          : 'Farm-wide';
+        const keywordsStr = Array.isArray(e.keywords) ? e.keywords.join(', ') : '';
+        return {
+          Subject: e.subject || '',
+          Category: e.category || 'General',
+          Date: e.event_date || '',
+          Goats: taggedGoats || 'Farm-wide',
+          Keywords: keywordsStr,
+          Details: e.details || ''
+        };
+      });
     }
 
     setData(cleanData(reportData));
     setLoading(false);
-  }, [reportType, goats, inventory, sales, healthRecords, breedingRecords, currency]);
+  }, [reportType, goats, inventory, sales, healthRecords, breedingRecords, farmEvents, currency]);
 
   const handleSort = (key) => {
     setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
@@ -94,10 +109,19 @@ const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], b
     doc.save(`${reportType}_report.pdf`);
   };
 
+  const escapeCSVCell = (val) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
   const exportToCSV = () => {
     if (!processedData.length) return;
-    const headers = Object.keys(processedData[0]).join(',');
-    const rows = processedData.map(row => Object.values(row).join(',')).join('\n');
+    const headers = Object.keys(processedData[0]).map(escapeCSVCell).join(',');
+    const rows = processedData.map(row => Object.values(row).map(escapeCSVCell).join(',')).join('\n');
     saveAs(new Blob([headers + '\n' + rows], { type: 'text/csv;charset=utf-8;' }), `${reportType}.csv`);
   };
 
@@ -114,9 +138,9 @@ const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], b
       </div>
 
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-        {['herd', 'health', 'breeding', 'inventory', 'sales'].map(type => (
+        {['herd', 'health', 'breeding', 'inventory', 'sales', 'events'].map(type => (
           <button key={type} onClick={() => setReportType(type)} className={`btn-filter ${reportType === type ? 'active' : ''}`}>
-            {type === 'herd' ? 'Herd Census' : type === 'health' ? 'Health Issues' : type === 'breeding' ? 'Kidding Schedule' : type === 'inventory' ? 'Inventory' : 'Sales'}
+            {type === 'herd' ? 'Herd Census' : type === 'health' ? 'Health Issues' : type === 'breeding' ? 'Kidding Schedule' : type === 'inventory' ? 'Inventory' : type === 'sales' ? 'Sales' : 'Farm Events'}
           </button>
         ))}
       </div>

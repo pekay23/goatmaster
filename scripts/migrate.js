@@ -161,12 +161,42 @@ async function migrate() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS farm_events (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      owner_id VARCHAR(255) DEFAULT 'demo',
+      subject TEXT NOT NULL,
+      details TEXT DEFAULT '',
+      event_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      category VARCHAR(100) DEFAULT 'General',
+      keywords JSONB DEFAULT '[]'::jsonb,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS farm_event_goats (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      event_id UUID REFERENCES farm_events(id) ON DELETE CASCADE,
+      goat_id UUID REFERENCES goats(id) ON DELETE CASCADE,
+      owner_id VARCHAR(255) DEFAULT 'demo',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(event_id, goat_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_farm_events_owner ON farm_events(owner_id);
+    CREATE INDEX IF NOT EXISTS idx_farm_events_date ON farm_events(event_date);
+    CREATE INDEX IF NOT EXISTS idx_farm_events_keywords ON farm_events USING GIN(keywords);
+    CREATE INDEX IF NOT EXISTS idx_farm_event_goats_event ON farm_event_goats(event_id);
+    CREATE INDEX IF NOT EXISTS idx_farm_event_goats_goat ON farm_event_goats(goat_id);
   `);
 
   await query(`
     ALTER TABLE health_records ADD COLUMN IF NOT EXISTS next_due_date TIMESTAMP;
     ALTER TABLE goats ADD COLUMN IF NOT EXISTS dam_id UUID REFERENCES goats(id) ON DELETE SET NULL;
     ALTER TABLE goats ADD COLUMN IF NOT EXISTS sire_id UUID REFERENCES goats(id) ON DELETE SET NULL;
+    ALTER TABLE farm_events ADD COLUMN IF NOT EXISTS image_url TEXT;
+    ALTER TABLE farm_events ADD COLUMN IF NOT EXISTS inventory_item_id UUID REFERENCES inventory(id) ON DELETE SET NULL;
+    ALTER TABLE farm_events ADD COLUMN IF NOT EXISTS quantity_used NUMERIC(10, 2);
   `);
 
   console.log('Migrations complete.');
