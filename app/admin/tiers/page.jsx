@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Layers, Edit3, X } from 'lucide-react';
 
 export default function AdminTiers() {
   const [tiers, setTiers] = useState([]);
@@ -35,25 +35,39 @@ export default function AdminTiers() {
 
   if (loading) {
     return (
-      <div className="admin-empty">
-        <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
-      </div>
+      <>
+        <div className="admin-page-title">
+          <div className="admin-page-title-icon"><Layers size={20} /></div>
+          <h2>Tiers</h2>
+        </div>
+        <div className="admin-empty">
+          <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="tier-grid">
-      {tiers.map(tier => (
-        <TierCard
-          key={tier.id}
-          tier={tier}
-          isEditing={editing === tier.id}
-          saving={saving}
-          onEdit={() => setEditing(editing === tier.id ? null : tier.id)}
-          onSave={saveTier}
-        />
-      ))}
-    </div>
+    <>
+      {/* Page Title */}
+      <div className="admin-page-title">
+        <div className="admin-page-title-icon"><Layers size={20} /></div>
+        <h2>Tiers</h2>
+      </div>
+
+      <div className="tier-grid">
+        {tiers.map(tier => (
+          <TierCard
+            key={tier.id}
+            tier={tier}
+            isEditing={editing === tier.id}
+            saving={saving}
+            onEdit={() => setEditing(editing === tier.id ? null : tier.id)}
+            onSave={saveTier}
+          />
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -71,7 +85,7 @@ function TierCard({ tier, isEditing, saving, onEdit, onSave }) {
   }
 
   return (
-    <div className="tier-card">
+    <div className="tier-card" data-tier={tier.id}>
       <h3>
         {tier.name}
         <span className={`badge badge-${tier.id}`}>{tier.user_count} users</span>
@@ -80,53 +94,60 @@ function TierCard({ tier, isEditing, saving, onEdit, onSave }) {
 
       {isEditing ? (
         <>
-          <div className="tier-details" style={{ marginBottom: 12 }}>
-            <span className="tier-detail-label">Max Goats</span>
-            <input
-              type="number"
-              value={form.max_goats}
-              onChange={e => handleChange('max_goats', parseInt(e.target.value) || 0)}
-              style={{ textAlign: 'right' }}
-            />
-
-            <span className="tier-detail-label">Scans/Day</span>
-            <input
-              type="number"
-              value={form.max_scans_per_day}
-              onChange={e => handleChange('max_scans_per_day', parseInt(e.target.value) || 0)}
-              style={{ textAlign: 'right' }}
-            />
-
-            <span className="tier-detail-label">Price (cents)</span>
-            <input
-              type="number"
-              value={form.price_cents}
-              onChange={e => handleChange('price_cents', parseInt(e.target.value) || 0)}
-              style={{ textAlign: 'right' }}
-            />
-
-            <span className="tier-detail-label">AI Training</span>
-            <div className="toggle" style={{ justifySelf: 'end' }}>
+          <div className="tier-details" style={{ marginBottom: 4 }}>
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">Max Goats</span>
               <input
-                type="checkbox"
-                checked={form.ai_training_enabled}
-                onChange={e => handleChange('ai_training_enabled', e.target.checked)}
+                type="number"
+                value={form.max_goats}
+                onChange={e => handleChange('max_goats', parseInt(e.target.value) || 0)}
               />
-              <span className="toggle-slider" />
             </div>
 
-            <span className="tier-detail-label">Smart Scan</span>
-            <div className="toggle" style={{ justifySelf: 'end' }}>
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">Scans/Day</span>
               <input
-                type="checkbox"
-                checked={form.smart_scan_enabled}
-                onChange={e => handleChange('smart_scan_enabled', e.target.checked)}
+                type="number"
+                value={form.max_scans_per_day}
+                onChange={e => handleChange('max_scans_per_day', parseInt(e.target.value) || 0)}
               />
-              <span className="toggle-slider" />
+            </div>
+
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">Price (cents)</span>
+              <input
+                type="number"
+                value={form.price_cents}
+                onChange={e => handleChange('price_cents', parseInt(e.target.value) || 0)}
+              />
+            </div>
+
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">AI Training</span>
+              <div className="toggle" style={{ justifySelf: 'end', marginTop: 4 }}>
+                <input
+                  type="checkbox"
+                  checked={form.ai_training_enabled}
+                  onChange={e => handleChange('ai_training_enabled', e.target.checked)}
+                />
+                <span className="toggle-slider" />
+              </div>
+            </div>
+
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">Smart Scan</span>
+              <div className="toggle" style={{ justifySelf: 'end', marginTop: 4 }}>
+                <input
+                  type="checkbox"
+                  checked={form.smart_scan_enabled}
+                  onChange={e => handleChange('smart_scan_enabled', e.target.checked)}
+                />
+                <span className="toggle-slider" />
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="tier-edit-actions">
             <button
               className="admin-btn admin-btn-primary"
               disabled={saving}
@@ -136,36 +157,44 @@ function TierCard({ tier, isEditing, saving, onEdit, onSave }) {
               <Save size={14} /> Save
             </button>
             <button
-              className="admin-btn"
-              style={{ flex: 1, background: 'var(--bg-app)', color: 'var(--text-main)' }}
+              className="admin-btn admin-btn-ghost"
+              style={{ flex: 1 }}
               onClick={onEdit}
             >
-              Cancel
+              <X size={14} /> Cancel
             </button>
           </div>
         </>
       ) : (
         <>
           <div className="tier-details">
-            <span className="tier-detail-label">Max Goats</span>
-            <span className="tier-detail-value">{tier.max_goats === -1 ? 'Unlimited' : tier.max_goats}</span>
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">Max Goats</span>
+              <span className="tier-detail-value">{tier.max_goats === -1 ? 'Unlimited' : tier.max_goats}</span>
+            </div>
 
-            <span className="tier-detail-label">Scans/Day</span>
-            <span className="tier-detail-value">{tier.max_scans_per_day === -1 ? 'Unlimited' : tier.max_scans_per_day}</span>
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">Scans/Day</span>
+              <span className="tier-detail-value">{tier.max_scans_per_day === -1 ? 'Unlimited' : tier.max_scans_per_day}</span>
+            </div>
 
-            <span className="tier-detail-label">AI Training</span>
-            <span className="tier-detail-value">{tier.ai_training_enabled ? 'Yes' : 'No'}</span>
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">AI Training</span>
+              <span className="tier-detail-value">{tier.ai_training_enabled ? 'Yes' : 'No'}</span>
+            </div>
 
-            <span className="tier-detail-label">Smart Scan</span>
-            <span className="tier-detail-value">{tier.smart_scan_enabled ? 'Yes' : 'No'}</span>
+            <div className="tier-detail-row">
+              <span className="tier-detail-label">Smart Scan</span>
+              <span className="tier-detail-value">{tier.smart_scan_enabled ? 'Yes' : 'No'}</span>
+            </div>
           </div>
 
           <button
-            className="admin-btn"
-            style={{ marginTop: 12, width: '100%', background: 'var(--bg-app)', color: 'var(--text-main)' }}
+            className="admin-btn admin-btn-ghost"
+            style={{ marginTop: 16, width: '100%' }}
             onClick={onEdit}
           >
-            Edit
+            <Edit3 size={14} /> Edit
           </button>
         </>
       )}

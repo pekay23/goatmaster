@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, Users, Layers, ArrowLeft } from 'lucide-react';
+import { BarChart3, Users, Layers, ArrowLeft, Shield } from 'lucide-react';
 import './admin.css';
 
 const NAV_ITEMS = [
@@ -25,11 +25,18 @@ export default function AdminLayout({ children }) {
   return (
     <div className="admin-layout">
       <header className="admin-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="admin-header-left">
           <a href="/" className="admin-back"><ArrowLeft size={16} /> App</a>
-          <h1>Admin</h1>
+          <h1><Shield size={18} /> Admin</h1>
         </div>
-        {user && <span className="admin-user">{user.username}</span>}
+        {user && (
+          <span className="admin-user">
+            <span className="admin-user-avatar">
+              {(user.username || 'A')[0].toUpperCase()}
+            </span>
+            {user.username}
+          </span>
+        )}
       </header>
 
       <main className="admin-content">

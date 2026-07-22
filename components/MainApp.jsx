@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, LogOut, Shield, Package, TrendingUp, BarChart3, Wallet, Droplets, Wheat, CalendarDays, BookOpen, ChevronRight, ScanLine, Sparkles } from 'lucide-react';
+import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, LogOut, Shield, Package, TrendingUp, BarChart3, Wallet, Droplets, Wheat, CalendarDays, BookOpen, ChevronRight, ScanLine, Sparkles, Beef, Milk, DollarSign, LineChart, HeartPulse, UserCog } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
 import EventsPanel from './EventsPanel';
@@ -29,25 +29,44 @@ import AnalyticsDashboard from './AnalyticsDashboard';
 import ExpenditurePanel from './ExpenditurePanel';
 import DairyPanel from './DairyPanel';
 import RationCalculator from './RationCalculator';
+import PedigreePanel from './PedigreePanel';
 
-// ── MAIN APP ─────────────────────────────────────────────────────
-const EMPTY_FORM = { id: '', name: '', breed: '', sex: 'F', dob: '', image_url: '', ear_tag: '', dam_id: '', sire_id: '' };
-const NAV_TABS = [
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'profiles',  label: 'Profiles',  icon: LayoutGrid },
-  { id: 'inventory', label: 'Inventory', icon: Package },
-  { id: 'finance',   label: 'Finance',   icon: Wallet },
-  { id: 'sales',     label: 'Sales',     icon: TrendingUp },
-  { id: 'dairy',     label: 'Dairy',     icon: Droplets },
-  { id: 'nutrition', label: 'Nutrition', icon: Wheat },
-  { id: 'scan',      label: 'Scan',      icon: ScanLine },
-  { id: 'smart',     label: 'Smart',     icon: Sparkles },
-  { id: 'lineage',   label: 'Lineage',   icon: Dna },
-  { id: 'health',    label: 'Health',    icon: Activity },
-  { id: 'events',    label: 'Events',    icon: CalendarDays },
-  { id: 'reports',   label: 'Reports',   icon: FileText },
-  { id: 'settings',  label: 'Settings',  icon: Settings },
+// ── CONSOLIDATED NAV GROUPS ──
+const NAV_GROUPS = [
+  {
+    id: 'herd', label: 'Herd', icon: Beef,
+    subs: [
+      { id: 'profiles', label: 'Profiles' },
+      { id: 'health',   label: 'Health' },
+      { id: 'events',   label: 'Events' },
+      { id: 'lineage',  label: 'Lineage' },
+    ],
+  },
+  {
+    id: 'ops', label: 'Ops', icon: Package,
+    subs: [
+      { id: 'inventory', label: 'Inventory' },
+      { id: 'finance',   label: 'Finance' },
+      { id: 'sales',     label: 'Sales' },
+      { id: 'dairy',     label: 'Dairy' },
+      { id: 'nutrition', label: 'Nutrition' },
+    ],
+  },
+  {
+    id: 'intel', label: 'Intel', icon: LineChart,
+    subs: [
+      { id: 'analytics', label: 'Analytics' },
+      { id: 'scan',      label: 'Scan' },
+    ],
+  },
+  {
+    id: 'settings', label: 'Settings', icon: UserCog,
+    subs: [],
+  },
 ];
+
+// ── MAIN APP ──
+const EMPTY_FORM = { id: '', name: '', breed: '', sex: 'F', dob: '', image_url: '', ear_tag: '', dam_id: '', sire_id: '' };
 
 export default function MainApp() {
   const [loadingSplash, setLoadingSplash] = useState(true);
@@ -56,7 +75,8 @@ export default function MainApp() {
   const [modalOpen, setModalOpen]     = useState(false);
   const [modalConfig, setModalConfig] = useState({});
   const [showBreedRef, setShowBreedRef] = useState(false);
-  const [activeTab, setActiveTab]   = useState('analytics');
+  const [activeGroup, setActiveGroup] = useState('herd');
+  const [activeTab, setActiveTab]   = useState('profiles');
   const [showForm, setShowForm]     = useState(false);
   const [editingGoat, setEditingGoat] = useState(null);
   const [formData, setFormData]     = useState(EMPTY_FORM);
@@ -81,12 +101,19 @@ export default function MainApp() {
   const [searchTerm, setSearchTerm]     = useState('');
   const [filterSex, setFilterSex]       = useState('All');
   const [theme, setTheme]               = useState('system');
+  const [scanMode, setScanMode]         = useState('identify');
 
   // Restore saved tab
   useEffect(() => {
     const savedTab = window.localStorage.getItem('goat_active_tab');
-    if (savedTab && NAV_TABS.some(tab => tab.id === savedTab)) {
+    if (savedTab) {
       setActiveTab(savedTab);
+      for (const g of NAV_GROUPS) {
+        if (g.subs?.some(s => s.id === savedTab) || g.id === savedTab) {
+          setActiveGroup(g.id);
+          break;
+        }
+      }
     }
   }, []);
 
@@ -103,16 +130,13 @@ export default function MainApp() {
     localStorage.setItem('goat_theme', theme);
   }, [theme]);
 
-  // Auth — restore from localStorage
+  // Auth
   useEffect(() => {
     const savedUser = localStorage.getItem('goat_user');
-    if (savedUser) {
-      try { setUser(JSON.parse(savedUser)); } catch { setUser(null); }
-    }
+    if (savedUser) { try { setUser(JSON.parse(savedUser)); } catch { setUser(null); } }
     setLoadingSplash(false);
   }, []);
 
-  // Currency
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedCurrency = localStorage.getItem('currency');
@@ -152,13 +176,13 @@ export default function MainApp() {
           db.getAll('farm_events').then(d => setFarmEvents(d || []))
         );
       } else {
-        if (['profiles', 'scan', 'smart', 'lineage', 'health', 'dairy', 'reports', 'settings', 'events'].includes(tab)) {
+        if (['profiles', 'scan', 'lineage', 'health', 'dairy', 'settings', 'events'].includes(tab)) {
           loadPromises.push(db.getAll('goats').then(d => setGoats(d || [])));
         }
-        if (['inventory', 'finance', 'sales', 'reports'].includes(tab)) {
+        if (['inventory', 'finance', 'sales'].includes(tab)) {
           loadPromises.push(db.getAll('inventory').then(d => setInventory(d || [])));
         }
-        if (['sales', 'reports'].includes(tab)) {
+        if (['sales'].includes(tab)) {
           loadPromises.push(db.getAll('sales').then(d => setSales(d || [])));
         }
         if (tab === 'finance') {
@@ -172,11 +196,6 @@ export default function MainApp() {
           loadPromises.push(db.getAll('weight_records').then(d => setWeightRecords(d || [])));
           loadPromises.push(db.getAll('alerts').then(d => setAlerts(d || [])));
         }
-        if (tab === 'reports') {
-          loadPromises.push(db.getAll('health_records').then(d => setHealthRecords(d || [])));
-          loadPromises.push(db.getAll('breeding_records').then(d => setBreedingRecords(d || [])));
-          loadPromises.push(db.getAll('farm_events').then(d => setFarmEvents(d || [])));
-        }
         if (tab === 'dairy') {
           loadPromises.push(db.getAll('milk_records').then(d => setMilkRecords(d || [])));
         }
@@ -188,7 +207,6 @@ export default function MainApp() {
       await Promise.all(loadPromises);
       setIsFetching(false);
 
-      // Background: load remaining stores
       if (tab !== 'analytics') {
         Promise.all([
           db.getAll('goats').then(d => setGoats(d || [])),
@@ -205,24 +223,16 @@ export default function MainApp() {
         ]).catch(console.error);
       }
 
-      // Online sync
       if (navigator.onLine) {
         const remoteSession = await hasRemoteSession();
         if (!remoteSession) return;
         const queueEmpty = await triggerSync();
         if (queueEmpty) {
           await Promise.all([
-            syncStoreFromRemote('goats'),
-            syncStoreFromRemote('inventory'),
-            syncStoreFromRemote('sales'),
-            syncStoreFromRemote('health_records'),
-            syncStoreFromRemote('breeding_records'),
-            syncStoreFromRemote('alerts'),
-            syncStoreFromRemote('expenditures'),
-            syncStoreFromRemote('usage_logs'),
-            syncStoreFromRemote('milk_records'),
-            syncStoreFromRemote('weight_records'),
-            syncStoreFromRemote('farm_events')
+            syncStoreFromRemote('goats'), syncStoreFromRemote('inventory'), syncStoreFromRemote('sales'),
+            syncStoreFromRemote('health_records'), syncStoreFromRemote('breeding_records'), syncStoreFromRemote('alerts'),
+            syncStoreFromRemote('expenditures'), syncStoreFromRemote('usage_logs'), syncStoreFromRemote('milk_records'),
+            syncStoreFromRemote('weight_records'), syncStoreFromRemote('farm_events')
           ]);
           setGoats(await db.getAll('goats') || []);
           setInventory(await db.getAll('inventory') || []);
@@ -254,98 +264,68 @@ export default function MainApp() {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch { /* offline */ }
+    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
     setUser(null);
     localStorage.removeItem('goat_user');
-    setActiveTab('analytics');
-    window.localStorage.setItem('goat_active_tab', 'analytics');
+    setActiveGroup('herd'); setActiveTab('profiles');
+    window.localStorage.setItem('goat_active_tab', 'profiles');
   }, []);
 
   const navigateToEvents = (goatId) => {
     setInitialEventGoatId(goatId);
-    setActiveTab('events');
+    setActiveGroup('herd'); setActiveTab('events');
     setShowForm(false);
   };
 
   const handleAddNew = () => { setEditingGoat(null); setFormData(EMPTY_FORM); setShowForm(true); };
   const handleEdit = (goat) => {
     setEditingGoat(goat);
-    setFormData({
-      id: goat.id, name: goat.name, breed: goat.breed || '', sex: goat.sex,
-      dob: goat.dob ? goat.dob.split('T')[0] : '', image_url: goat.image_url || '',
-      ear_tag: goat.ear_tag || '', dam_id: goat.dam_id || '', sire_id: goat.sire_id || ''
-    });
+    setFormData({ id: goat.id, name: goat.name, breed: goat.breed || '', sex: goat.sex, dob: goat.dob ? goat.dob.split('T')[0] : '', image_url: goat.image_url || '', ear_tag: goat.ear_tag || '', dam_id: goat.dam_id || '', sire_id: goat.sire_id || '' });
     setShowForm(true);
   };
 
   const handleImageChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]; if (!file) return;
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_NAME;
     const preset = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET;
-    if (!cloudName || !preset) { showToast('Photo upload not configured. Contact support.', 'error'); return; }
+    if (!cloudName || !preset) { showToast('Photo upload not configured.', 'error'); return; }
     if (file.size > 5 * 1024 * 1024) { showToast('Image too large (max 5 MB).', 'error'); return; }
     if (!file.type.startsWith('image/')) { showToast('Please select an image file.', 'error'); return; }
     setIsUploading(true);
-    const data = new FormData();
-    data.append('file', file);
-    data.append('upload_preset', preset);
+    const data = new FormData(); data.append('file', file); data.append('upload_preset', preset);
     try {
       const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: data });
       if (!res.ok) throw new Error('upload failed');
       const json = await res.json();
       if (json.secure_url) setFormData(p => ({ ...p, image_url: json.secure_url }));
-      else throw new Error('no url in response');
-    } catch { showToast('Image upload failed. Please try again.', 'error'); }
+      else throw new Error('no url');
+    } catch { showToast('Image upload failed.', 'error'); }
     finally { setIsUploading(false); }
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault(); setIsSubmitting(true);
     try {
       const action = editingGoat ? 'UPDATE' : 'CREATE';
-      const payload = {
-        ...formData,
-        id: editingGoat ? editingGoat.id : generateUUID(),
-        dam_id: formData.dam_id || null,
-        sire_id: formData.sire_id || null,
-        owner_id: user.username
-      };
+      const payload = { ...formData, id: editingGoat ? editingGoat.id : generateUUID(), dam_id: formData.dam_id || null, sire_id: formData.sire_id || null, owner_id: user.username };
       const db = await initDb();
-      await db.put('goats', payload);
-      await queueSyncAction('goats', action, payload);
-      showToast(editingGoat ? 'Goat updated!' : 'Goat added!');
-      fetchData();
-      setShowForm(false);
-    } catch (err) {
-      console.error(err);
-      showToast('Error saving goat locally', 'error');
-    } finally { setIsSubmitting(false); }
+      await db.put('goats', payload); await queueSyncAction('goats', action, payload);
+      showToast(editingGoat ? 'Goat updated!' : 'Goat added!'); fetchData(); setShowForm(false);
+    } catch (err) { console.error(err); showToast('Error saving goat locally', 'error'); }
+    finally { setIsSubmitting(false); }
   };
 
   const handleDeleteGoat = () => {
     if (!editingGoat) return;
     confirmAction('Delete Goat?', `Permanently remove ${editingGoat.name} and all their records?`, 'Yes, Delete', 'Cancel', async () => {
       setIsSubmitting(true);
-      try {
-        const db = await initDb();
-        await db.delete('goats', editingGoat.id);
-        await queueSyncAction('goats', 'DELETE', { id: editingGoat.id });
-        showToast('Goat deleted');
-        fetchData();
-        setShowForm(false);
-      } catch (err) {
-        console.error(err);
-        showToast('Error deleting goat', 'error');
-      } finally { setIsSubmitting(false); }
+      try { const db = await initDb(); await db.delete('goats', editingGoat.id); await queueSyncAction('goats', 'DELETE', { id: editingGoat.id }); showToast('Goat deleted'); fetchData(); setShowForm(false); }
+      catch (err) { console.error(err); showToast('Error deleting goat', 'error'); }
+      finally { setIsSubmitting(false); }
     });
   };
 
-  const filtered = goats.filter(g =>
-    g.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (filterSex === 'All' || g.sex === filterSex)
-  );
+  const filtered = goats.filter(g => g.name.toLowerCase().includes(searchTerm.toLowerCase()) && (filterSex === 'All' || g.sex === filterSex));
 
   if (loadingSplash) return <SplashScreen />;
   if (!user) return <Login onLogin={handleLogin} />;
@@ -366,14 +346,33 @@ export default function MainApp() {
         title={modalConfig.title} message={modalConfig.message} confirmText={modalConfig.confirmText} cancelText={modalConfig.cancelText} />
       {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* ── HEADER ── */}
-      <header className="app-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* ── HEADER with sub-tab pills ── */}
+      <header className="app-header" style={{ flexDirection: 'column', gap: 0, padding: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', width: '100%', boxSizing: 'border-box' }}>
           <img src="/icon-192.png" style={{ width: 28, height: 28, borderRadius: 6 }} alt="" />
-          <h1 className="app-title">{showForm ? (editingGoat ? 'Edit Goat' : 'New Goat') : NAV_TABS.find(t => t.id === activeTab)?.label}</h1>
+          <h1 className="app-title" style={{ flex: 1, fontSize: 17 }}>
+            {showForm ? (editingGoat ? 'Edit Goat' : 'New Goat') : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+          </h1>
+          {!showForm && activeTab === 'profiles' && (
+            <button className="btn-primary" onClick={handleAddNew} style={{ padding: '6px 12px', fontSize: 12 }}><Plus size={14} /><span>Add</span></button>
+          )}
         </div>
-        {!showForm && activeTab === 'profiles' && (
-          <button className="btn-primary" onClick={handleAddNew}><Plus size={16} /><span>Add Goat</span></button>
+        {/* Sub-tab pills (only for groups with sub-tabs) */}
+        {!showForm && NAV_GROUPS.find(g => g.id === activeGroup)?.subs?.length > 0 && (
+          <div style={{ display: 'flex', gap: 4, padding: '0 16px 10px', overflowX: 'auto', width: '100%', boxSizing: 'border-box' }}>
+            {NAV_GROUPS.find(g => g.id === activeGroup).subs.map(sub => (
+              <button key={sub.id}
+                onClick={() => { setActiveTab(sub.id); setShowForm(false); }}
+                style={{
+                  padding: '5px 12px', borderRadius: 16, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit',
+                  background: activeTab === sub.id ? 'var(--primary)' : 'var(--bg-app)',
+                  color: activeTab === sub.id ? 'white' : 'var(--text-sub)',
+                  transition: 'all 0.15s',
+                }}>
+                {sub.label}
+              </button>
+            ))}
+          </div>
         )}
       </header>
 
@@ -404,10 +403,7 @@ export default function MainApp() {
                     {[1,2,3,4].map(i => (
                       <div key={i} className="skeleton skeleton-card" style={{ display: 'flex', gap: 14, padding: 14, alignItems: 'center' }}>
                         <div className="skeleton" style={{ width: 52, height: 52, borderRadius: '50%', flexShrink: 0 }} />
-                        <div style={{ flex: 1 }}>
-                          <div className="skeleton skeleton-line medium" />
-                          <div className="skeleton skeleton-line short" />
-                        </div>
+                        <div style={{ flex: 1 }}><div className="skeleton skeleton-line medium" /><div className="skeleton skeleton-line short" /></div>
                       </div>
                     ))}
                   </div>
@@ -418,7 +414,7 @@ export default function MainApp() {
                       <div style={{ gridColumn: '1/-1' }} className="empty-state">
                         <div className="empty-state-icon">{searchTerm ? '🔍' : '🐐'}</div>
                         <h3>{searchTerm ? 'No matches found' : 'Your herd is empty'}</h3>
-                        <p>{searchTerm ? `No goats match "${searchTerm}". Try a different search.` : 'Tap "Add Goat" to add manually, or use the Smart tab to scan and discover your whole herd at once.'}</p>
+                        <p>{searchTerm ? `No goats match "${searchTerm}".` : 'Add goats manually or use Scan to auto-discover them.'}</p>
                       </div>
                     )}
                   </div>
@@ -435,23 +431,40 @@ export default function MainApp() {
             {activeTab === 'scan' && (
               <ErrorBoundary>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <MaturationHelper goats={goats} onSelectGoat={(g) => showToast(`Tap "Save as Training Photo" on the next scan and pick ${g.name} to update them.`, 'success')} />
-                  <GoatScanner goats={goats} onScanComplete={(res) => { if (res?.goat) showToast(`Matched: ${res.goat.name} (${Math.round((res.confidence ?? 0) * 100)}%)`, 'success'); }} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setScanMode('identify')}
+                      style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: scanMode === 'identify' ? '#6366f1' : 'var(--bg-app)', color: scanMode === 'identify' ? 'white' : 'var(--text-sub)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}>
+                      <ScanLine size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Identify
+                    </button>
+                    <button onClick={() => setScanMode('bulk')}
+                      style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: scanMode === 'bulk' ? '#6366f1' : 'var(--bg-app)', color: scanMode === 'bulk' ? 'white' : 'var(--text-sub)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}>
+                      <Sparkles size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Bulk Discovery
+                    </button>
+                  </div>
+                  {scanMode === 'identify' ? (
+                    <>
+                      <MaturationHelper goats={goats} onSelectGoat={(g) => showToast(`Save as Training Photo: ${g.name}`, 'success')} />
+                      <GoatScanner goats={goats} onScanComplete={(res) => { if (res?.goat) showToast(`Matched: ${res.goat.name} (${Math.round((res.confidence ?? 0) * 100)}%)`, 'success'); }} />
+                    </>
+                  ) : (
+                    <SmartScanner goats={goats} showToast={showToast} onComplete={fetchGoats} />
+                  )}
                 </div>
               </ErrorBoundary>
             )}
 
-            {activeTab === 'smart' && (
-              <ErrorBoundary>
-                <SmartScanner goats={goats} showToast={showToast} onComplete={fetchGoats} />
-              </ErrorBoundary>
+            {activeTab === 'lineage' && (
+              <>
+                <BreedingPanel goats={goats} breedingRecords={breedingRecords} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} />
+                <div style={{ marginTop: 16 }}>
+                  <PedigreePanel goats={goats} />
+                </div>
+              </>
             )}
-
-            {activeTab === 'lineage' && <BreedingPanel goats={goats} breedingRecords={breedingRecords} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} />}
             {activeTab === 'health' && <><AlertsPanel alerts={alerts} onUpdate={fetchData} showToast={showToast} /><HealthPanel goats={goats} healthRecords={healthRecords} weightRecords={weightRecords} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} confirmAction={confirmAction} /></>}
             {activeTab === 'events' && <EventsPanel goats={goats} farmEvents={farmEvents} inventory={inventory} initialEventGoatId={initialEventGoatId} isLoading={isFetching} onUpdate={fetchData} showToast={showToast} confirmAction={confirmAction} />}
-            {activeTab === 'reports' && <Reports goats={goats} inventory={inventory} sales={sales} healthRecords={healthRecords} breedingRecords={breedingRecords} farmEvents={farmEvents} currency={currency} />}
 
+            {/* SETTINGS (includes admin panel for admin users) */}
             {activeTab === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 15, maxWidth: 600 }}>
                 <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 20, borderRadius: 18 }}>
@@ -468,11 +481,7 @@ export default function MainApp() {
                         {user.tier || 'free'}
                       </span>
                     </div>
-                    {user.email && (
-                      <div style={{ fontSize: 13, color: 'var(--text-sub)', marginTop: 4 }}>
-                        {user.email}
-                      </div>
-                    )}
+                    {user.email && <div style={{ fontSize: 13, color: 'var(--text-sub)', marginTop: 4 }}>{user.email}</div>}
                   </div>
                 </div>
 
@@ -517,10 +526,9 @@ export default function MainApp() {
                   style={{ padding: 15, background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border-color)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 600, fontSize: 15, fontFamily: 'inherit', width: '100%' }}>
                   <LogOut size={20} /> Log Out
                 </button>
-                <button onClick={() => confirmAction('Delete Account?', 'This permanently deletes your account and all goat records. Cannot be undone.', 'Yes, Delete Everything', 'Cancel', async () => {
+                <button onClick={() => confirmAction('Delete Account?', 'This permanently deletes your account.', 'Yes, Delete', 'Cancel', async () => {
                   const res = await fetch('/api/auth/delete', { method: 'DELETE', credentials: 'include' });
-                  if (res.ok) handleLogout();
-                  else showToast('Failed to delete account', 'error');
+                  if (res.ok) handleLogout(); else showToast('Failed to delete account', 'error');
                 })} style={{ padding: 15, background: '#fee2e2', borderRadius: 14, border: '1px solid #fecaca', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', color: '#dc2626', fontWeight: 600, fontSize: 15, fontFamily: 'inherit', width: '100%' }}>
                   <LogOut size={20} /> Delete Account
                 </button>
@@ -531,11 +539,17 @@ export default function MainApp() {
         )}
       </main>
 
-      {/* ── BOTTOM NAV ── */}
+      {/* ── BOTTOM NAV (4 groups) ── */}
       {!showForm && (
         <nav className="nav-bar">
-          {NAV_TABS.map(({ id, label, icon: Icon }) => (
-            <button key={id} className={`nav-item ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
+          {NAV_GROUPS.map(({ id, label, icon: Icon }) => (
+            <button key={id} className={`nav-item ${activeGroup === id ? 'active' : ''}`}
+              onClick={() => {
+                if (id === 'settings') { setActiveGroup('settings'); setActiveTab('settings'); return; }
+                setActiveGroup(id);
+                const firstSub = NAV_GROUPS.find(g => g.id === id)?.subs?.[0];
+                if (firstSub) setActiveTab(firstSub.id);
+              }}>
               <Icon size={20} /><span>{label}</span>
             </button>
           ))}

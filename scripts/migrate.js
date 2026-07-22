@@ -188,7 +188,31 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_farm_events_keywords ON farm_events USING GIN(keywords);
     CREATE INDEX IF NOT EXISTS idx_farm_event_goats_event ON farm_event_goats(event_id);
     CREATE INDEX IF NOT EXISTS idx_farm_event_goats_goat ON farm_event_goats(goat_id);
+
+    CREATE TABLE IF NOT EXISTS tiers (
+      id VARCHAR(50) PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      price_cents INTEGER DEFAULT 0,
+      max_goats INTEGER DEFAULT -1,
+      max_scans_per_day INTEGER DEFAULT -1,
+      ai_training_enabled BOOLEAN DEFAULT false,
+      smart_scan_enabled BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `);
+
+  // Seed default tiers if table is empty
+  const { rows: tierCount } = await query('SELECT COUNT(*) as count FROM tiers');
+  if (parseInt(tierCount[0].count) === 0) {
+    await query(`
+      INSERT INTO tiers (id, name, price_cents, max_goats, max_scans_per_day, ai_training_enabled, smart_scan_enabled) VALUES
+        ('free', 'Free', 0, 5, 10, false, false),
+        ('basic', 'Basic', 999, 25, 100, true, false),
+        ('pro', 'Pro', 2999, -1, -1, true, true)
+    `);
+    console.log('Default tiers seeded.');
+  }
 
   await query(`
     ALTER TABLE health_records ADD COLUMN IF NOT EXISTS next_due_date TIMESTAMP;

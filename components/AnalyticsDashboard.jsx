@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
-import { TrendingUp, Package, Activity, Users, AlertTriangle, CheckCircle, BarChart3, ActivitySquare, ShieldAlert, CalendarDays } from 'lucide-react';
+import { TrendingUp, Package, Activity, Users, AlertTriangle, CheckCircle, BarChart3, ActivitySquare, ShieldAlert, CalendarDays, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function AnalyticsDashboard({ goats = [], inventory = [], sales = [], alerts = [], healthRecords = [], breedingRecords = [], expenditures = [], usageLogs = [], farmEvents = [], currency = 'GH₵' }) {
   
@@ -69,16 +71,33 @@ export default function AnalyticsDashboard({ goats = [], inventory = [], sales =
     </div>
   );
 
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Goat Master - Analytics Report', 14, 20);
+    doc.setFontSize(11);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+    doc.text(`Herd: ${herdStats.total} goats (${herdStats.does} does, ${herdStats.bucks} bucks, ${herdStats.wethers} wethers)`, 14, 36);
+    doc.text(`Revenue: ${currency}${salesStats.totalRevenue.toFixed(2)} from ${salesStats.count} sales`, 14, 44);
+    doc.text(`Inventory: ${inventoryStats.totalItems} items worth ${currency}${inventoryStats.totalValue.toFixed(2)}`, 14, 52);
+    doc.text(`Expenses: ${currency}${financeStats.totalExpenditure.toFixed(2)}`, 14, 60);
+    doc.text(`Net Profit: ${currency}${financeStats.netProfit.toFixed(2)}`, 14, 68);
+    doc.save('goatmaster-report.pdf');
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
         <div style={{ background: 'var(--primary-bg)', padding: 12, borderRadius: 14 }}>
           <BarChart3 size={28} color="var(--primary)" />
         </div>
-        <div>
+        <div style={{ flex: 1 }}>
           <h2 style={{ margin: 0, fontSize: 22, color: 'var(--text-main)' }}>Analytics Overview</h2>
           <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--text-sub)' }}>Real-time insights across your entire operation</p>
         </div>
+        <button onClick={exportPDF} className="btn-primary" style={{ padding: '8px 14px', fontSize: 12, gap: 6 }}>
+          <Download size={14} /> Export PDF
+        </button>
       </div>
 
       {/* TOP KPI ROW */}
