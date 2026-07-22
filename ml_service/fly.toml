@@ -1,0 +1,21 @@
+# fly.toml for Goat Master ML Service
+# Generated for Fly.io deployment
+
+app = "goatmaster-ml"
+primary_region = "iad"  # US East (Virginia) — change to lhr/fra/sin for closer region
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 7860
+  force_https = true
+  auto_stop_machines = false  # Keep always-on (no cold starts)
+  auto_start_machines = true
+  min_machines_running = 1
+  max_machines_running = 1
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

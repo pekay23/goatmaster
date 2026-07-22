@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  ml-service:
+    build:
+      context: /home/ubuntu/ml_service
+      dockerfile: Dockerfile
+    image: goatmaster-ml:latest
+    container_name: goatmaster-ml
+    restart: unless-stopped
+    ports:
+      - "8000:7860"
+    env_file:
+      - /home/ubuntu/ml_service/.env
+    environment:
+      - PORT=7860
+    deploy:
+      resources:
+        limits:
+          cpus: "3.5"
+          memory: "20G"
+        reservations:
+          cpus: "1"
+          memory: "2G"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

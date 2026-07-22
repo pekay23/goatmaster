@@ -1,0 +1,52 @@
+# Koyeb App Configuration for Goat Master ML Service
+# Deploy: koyeb app init --file koyeb.yaml
+# Or use the web UI at https://app.koyeb.com
+
+name: goatmaster-ml
+region: was  # Washington DC (change to fra/par/sgp for closer region)
+
+docker:
+  image:
+    # Build from Dockerfile in this directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Or use a pre-built image:
+    # registry: ghcr.io/pekay23/goatmaster-ml:latest
+
+  args:
+    - uvicorn
+    - main:app
+    - --host
+    - 0.0.0.0
+    - --port
+    - "7860"
+
+  ports:
+    - port: 7860
+      protocol: http
+
+  env:
+    - key: PORT
+      value: "7860"
+    - key: PYTHONUNBUFFERED
+      value: "1"
+
+  # Secrets (set these in Koyeb dashboard → Settings → Environment variables)
+  # - DATABASE_URL
+  # - ML_SERVICE_KEY
+  # - ROBOFLOW_API_KEY (optional)
+  # - ROBOFLOW_MODEL_ID (optional)
+
+  health_check:
+    path: /health
+    initial_delay_seconds: 30
+    period_seconds: 10
+
+  scaling:
+    min: 1   # Always-on — no cold starts
+    max: 1   # Free tier limit
+
+  resources:
+    memory: 512  # MB
+    cpu: 1       # Shared vCPU
