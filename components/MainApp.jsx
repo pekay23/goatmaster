@@ -468,6 +468,11 @@ export default function MainApp() {
                         {user.tier || 'free'}
                       </span>
                     </div>
+                    {user.email && (
+                      <div style={{ fontSize: 13, color: 'var(--text-sub)', marginTop: 4 }}>
+                        {user.email}
+                      </div>
+                    )}
                   </div>
                 </div>
 

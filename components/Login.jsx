@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login({ onLogin }) {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -7,6 +8,7 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,18 +60,32 @@ export default function Login({ onLogin }) {
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
-          {[['username','text','Email'],['password','password','Password']].map(([name, type, label]) => (
-            <div key={name}>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</label>
-              <input type={type} placeholder={`Enter ${label.toLowerCase()}`} value={creds[name]}
-                onChange={e => setCreds({ ...creds, [name]: e.target.value })}
-                style={inputStyle}
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email</label>
+            <input type="text" placeholder="Enter email" value={creds.username}
+              onChange={e => setCreds({ ...creds, username: e.target.value })}
+              style={inputStyle}
+              onFocus={e => e.target.style.borderColor = '#28a745'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-color)'}
+              required minLength={3}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Password</label>
+            <div style={{ position: 'relative' }}>
+              <input type={showPassword ? 'text' : 'password'} placeholder="Enter password" value={creds.password}
+                onChange={e => setCreds({ ...creds, password: e.target.value })}
+                style={{ ...inputStyle, paddingRight: '44px' }}
                 onFocus={e => e.target.style.borderColor = '#28a745'}
                 onBlur={e => e.target.style.borderColor = 'var(--border-color)'}
-                required minLength={name === 'password' ? 8 : 3}
+                required minLength={8}
               />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-sub)', padding: 4, display: 'flex' }}>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
-          ))}
+          </div>
           <button type="submit" disabled={isLoading} style={{ padding: '14px', marginTop: '4px', backgroundColor: isRegistering ? '#007bff' : '#28a745', color: 'white', border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: 700, cursor: isLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: isLoading ? 0.7 : 1, transition: 'opacity 0.2s' }}>
             {isLoading ? 'Please wait…' : isRegistering ? 'Create Account' : 'Log In'}
           </button>
