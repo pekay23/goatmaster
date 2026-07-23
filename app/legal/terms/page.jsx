@@ -2,7 +2,27 @@ import LegalPage from '@/components/LegalPage';
 
 export const metadata = {
   title: 'Terms of Service — Goat Master',
-  description: 'Terms governing your use of Goat Master.',
+  description: 'Terms governing your use of Goat Master — the AI-powered goat herd management app.',
+  openGraph: {
+    title: 'Terms of Service — Goat Master',
+    description: 'Terms governing your use of Goat Master — the AI-powered goat herd management app.',
+    url: 'https://goatmaster-tau.vercel.app/legal/terms',
+    siteName: 'Goat Master',
+    locale: 'en_US',
+    type: 'website',
+    images: [{
+      url: 'https://goatmaster-tau.vercel.app/icon-512.png',
+      width: 512,
+      height: 512,
+      alt: 'Goat Master',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Service — Goat Master',
+    description: 'Terms governing your use of Goat Master — the AI-powered goat herd management app.',
+    images: ['https://goatmaster-tau.vercel.app/icon-512.png'],
+  },
 };
 
 export default function TermsOfService() {

@@ -1,0 +1,13 @@
+# Goat Master — Robots.txt
+# https://goatmaster-tau.vercel.app
+
+User-agent: *
+Allow: /
+
+# Block admin pages from indexing (private dashboard)
+Disallow: /admin/
+
+# Block API routes from indexing
+Disallow: /api/
+
+Sitemap: https://goatmaster-tau.vercel.app/sitemap.xml

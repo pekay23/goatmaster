@@ -3,6 +3,26 @@ import LegalPage from '@/components/LegalPage';
 export const metadata = {
   title: 'Privacy Policy — Goat Master',
   description: 'How Goat Master collects, uses, and protects your data.',
+  openGraph: {
+    title: 'Privacy Policy — Goat Master',
+    description: 'How Goat Master collects, uses, and protects your data.',
+    url: 'https://goatmaster-tau.vercel.app/legal/privacy',
+    siteName: 'Goat Master',
+    locale: 'en_US',
+    type: 'website',
+    images: [{
+      url: 'https://goatmaster-tau.vercel.app/icon-512.png',
+      width: 512,
+      height: 512,
+      alt: 'Goat Master',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Privacy Policy — Goat Master',
+    description: 'How Goat Master collects, uses, and protects your data.',
+    images: ['https://goatmaster-tau.vercel.app/icon-512.png'],
+  },
 };
 
 export default function PrivacyPolicy() {
