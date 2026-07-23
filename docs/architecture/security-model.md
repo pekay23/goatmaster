@@ -1,70 +1,55 @@
 # Security Model
 
-Goat Master is small but holds sensitive data (children's-petting-zoo or commercial farm records, photos, GPS). The security model is layered.
+## Authentication
 
-## 1. Authentication
+- **JWT-based** using `jose` library (HS256 algorithm)
+- Tokens stored in **httpOnly cookies** (`jwt`) — not accessible from JavaScript
+- Token expiry: 7 days
+- Passwords hashed with **bcrypt** (salt rounds: 10)
+- **Rate limiting** on login: 5 attempts per 15-minute window per email (via `lib/rate-limit.ts`)
 
-| Concern            | How                                                         |
-| ------------------ | ----------------------------------------------------------- |
-| Password storage   | `bcryptjs` (10 rounds), never returned in responses         |
-| Session token      | JWT (HS256, 7-day expiry) signed with `JWT_SECRET` (≥ 32 chars) |
-| Cookie attributes  | `httpOnly`, `secure`, `SameSite=Lax`                        |
-| Login rate-limit   | 5 attempts / 15 min per IP+email (sliding window)           |
-| Account deletion   | Hard-delete user + cascade goats / embeddings / sessions    |
-| Password reset     | Out of scope for v2.0 (single-factor only)                  |
+## Authorization
 
-JWT payload:
-```json
-{ "sub": 42, "username": "ada", "tier": "pro", "role": "user", "iat": 1717600000, "exp": 1718204800 }
-```
+### Standard routes
+API routes use `requireAuth()` from `lib/auth.js` which:
+1. Reads the `jwt` cookie
+2. Verifies the token signature
+3. Returns the user payload or null
 
-## 2. Authorization
+### Admin routes
+Admin endpoints check `role === 'admin'` before returning data.
 
-- Every API route reads the JWT from the cookie and loads the user.
-- All goat + embedding queries include `WHERE owner_id = $currentUser`.
-- Admin routes check `role === 'admin'` (see `app/admin/`).
-- `MIGRATE_SECRET` gates the one-shot `POST /api/db-migrate` endpoint.
-- `ML_SERVICE_KEY` gates the FastAPI side (server-to-server, not exposed).
+**Known limitation:** The admin portal currently uses `localStorage` (`goat_user`) for authentication, not the JWT cookie. This means:
+- Admin auth is XSS-vulnerable (localStorage is accessible to JS)
+- Admin sessions aren't tied to the JWT expiry
+- Future improvement: migrate admin auth to use the same JWT cookie pattern
 
-## 3. Input validation
+## Admin user
 
-- All `POST` / `PUT` bodies pass through hand-rolled validators (no Zod currently — kept lightweight).
-- Image uploads are size-capped (5 MB) and MIME-checked client-side; Cloudinary also enforces limits.
-- Strings are trimmed; numeric IDs are `parseInt`'d and re-validated before query.
+Created automatically on deploy via `scripts/create-admin.js` (runs in `postinstall`):
+- Email and password from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars
+- Idempotent: uses `ON CONFLICT (email) DO UPDATE`
+- Can also be created manually: `bun run db:seed:admin`
 
-## 4. Network
+## Multi-tenancy
 
-- All frontend traffic is HTTPS (Vercel auto-TLS).
-- ML service is reachable only via the `ML_SERVICE_KEY` bearer token.
-- CORS is locked to the production origin via `Access-Control-Allow-Origin` headers in `app/api/*`.
-- `Strict-Transport-Security` is set by Vercel's default headers.
+All data queries filter by `user_id` (or `owner_id`). Farm A cannot see Farm B's data. User deletion cascades: health_logs, breeding_logs, embeddings, goats, then user row.
 
-## 5. Data privacy
+## API key protection (ML service)
 
-- **Photos:** stored on Cloudinary under unsigned preset. The Cloudinary account is private; access is by URL only.
-- **Embeddings:** raw 1280-d float vectors. Not reversible to a photo, but still scoped per-user.
-- **Local cache:** IndexedDB embeddings cleared on logout and on account deletion (`components/MainApp.jsx:handleLogout`).
-- **Analytics:** Vercel Analytics + Speed Insights, no PII, no third-party trackers.
-- **No advertising SDKs**, no Google Tag Manager.
+All ML service endpoints require the `x-ml-key` header matching `ML_SERVICE_KEY`. This is a shared secret, not per-user.
 
-## 6. Threat model
+## Data protection
 
-| Threat                              | Mitigation                                                    |
-| ----------------------------------- | ------------------------------------------------------------- |
-| Stolen password                     | bcrypt + rate-limited login                                   |
-| Stolen JWT                          | Short expiry, httpOnly, SameSite=Lax, server-side session table |
-| IDOR (read other user's goats)      | Every query scoped by `owner_id`                              |
-| CSRF on mutations                   | `SameSite=Lax` cookie + same-origin policy                    |
-| SQL injection                       | Parameterised queries via `pg`                                |
-| Image-based attacks                 | Size + MIME check before Cloudinary upload                    |
-| Mass enumeration via `/api/goats`   | Auth-required + owner-scoped                                  |
-| ML service abuse                    | Bearer-key auth, no public access                             |
-| Offline-local-data leak             | IndexedDB cleared on logout / account delete                  |
+- All database queries use **parameterized statements** (no SQL injection)
+- Error messages in production do **not** leak stack traces or DB details
+- The `apiError()` helper strips details in production
+- Cloudinary uploads use unsigned presets (no upload credentials in client code)
+- JWT secret, DB URL, and ML service key are environment variables only
 
-## 7. What's NOT in v2.0 (planned for v2.1+)
+## Browser security
 
-- Email verification
-- Password reset flow
-- 2FA / TOTP
-- Audit log table for mutations
-- GDPR data-export endpoint
+- `httpOnly` cookies for JWT (not accessible via `document.cookie`)
+- `sameSite: 'lax'` for CSRF mitigation
+- `secure` flag in production (HTTPS only)
+- `suppressHydrationWarning` on `<html>` and `<body>` to handle benign extension-injected attributes

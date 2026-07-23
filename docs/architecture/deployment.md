@@ -1,92 +1,131 @@
 # Deployment
 
-## Frontend (Vercel)
+## Frontend → Vercel
 
-1. Push to `main` → Vercel auto-builds and deploys.
-2. `package.json` declares the entry:
-   ```json
-   "scripts": {
-     "dev": "next dev --turbo",
-     "build": "next build",
-     "start": "next start"
-   }
-   ```
-3. `vercel.json` pins the framework:
-   ```json
-   { "framework": "nextjs" }
-   ```
-4. Required env vars (set in Vercel dashboard):
-   ```
-   DATABASE_URL=postgres://…           # Neon / Supabase / RDS
-   JWT_SECRET=…                        # ≥ 32 chars
-   MIGRATE_SECRET=…                    # one-shot db-migrate
-   NEXT_PUBLIC_CLOUDINARY_NAME=…
-   NEXT_PUBLIC_CLOUDINARY_PRESET=…
-   ML_SERVICE_URL=https://…hf.space
-   ML_SERVICE_KEY=…
-   ```
+### Automatic deploy
 
-### First-time setup
+Push to `main` branch → Vercel auto-builds.
+
+### Environment variables
+
+Set in Vercel dashboard (Settings → Environment Variables):
+
+```
+DATABASE_URL
+JWT_SECRET
+MIGRATE_SECRET
+ML_SERVICE_KEY
+ML_SERVICE_URL
+NEXT_PUBLIC_CLOUDINARY_NAME
+NEXT_PUBLIC_CLOUDINARY_PRESET
+ADMIN_EMAIL
+ADMIN_PASSWORD
+```
+
+### Post-deploy
+
+The `postinstall` hook in `package.json` runs automatically after install on Vercel:
 
 ```bash
-# 1. Create prod database
-# 2. Run migration
+"postinstall": "node scripts/migrate.js && node scripts/create-admin.js"
+```
+
+This creates the `tiers` table (with seed data) and the admin user on every deploy. It's idempotent — `CREATE TABLE IF NOT EXISTS` and `ON CONFLICT (email) DO UPDATE` ensure no duplicate errors.
+
+### Manual migration trigger
+
+```bash
 curl -X POST -H "Content-Type: application/json" \
-  -d '{"secret":"$MIGRATE_SECRET"}' \
+  -d '{"secret":"<MIGRATE_SECRET>"}' \
   https://<your-domain>/api/db-migrate
 ```
 
-## ML service (Hugging Face Spaces)
+---
 
-The ML service is a separate Docker image hosted on HF Spaces.
+## ML Service → Fly.io
 
-### One-time
+The Python FastAPI ML service runs on Fly.io at `https://goatmaster.fly.dev`.
+
+### Configuration
+
+```yaml
+# ml_service/fly.toml
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  auto_stop_machines = false   # always-on
+  min_machines_running = 1
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+```
+
+**Key points:**
+- Port must be **8080** (Fly.io proxy requirement)
+- Dockerfile has `ENV PORT=8080` and `EXPOSE 8080`
+- 1GB RAM prevents OOM crashes (YOLOv8 + ResNet50 need ~600MB)
+- `auto_stop_machines = false` keeps the service always-on (no cold starts)
+
+### Pre-downloaded model weights
+
+To prevent 503 timeouts on first startup, model weights are downloaded during Docker build:
+
+```dockerfile
+RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+RUN python -c "from torchvision import models; models.resnet50(weights='DEFAULT')"
+```
+
+### Secrets
+
+```bash
+fly secrets set DATABASE_URL="..." ML_SERVICE_KEY="..."
+```
+
+### Deploy
 
 ```bash
 cd ml_service
-huggingface-cli login
-# create an empty Space with SDK = Docker
-./deploy_hf.sh
+fly deploy
 ```
 
-### Subsequent deploys
+Or connect GitHub repo in Fly.io dashboard for auto-deploy:
+- **Working directory:** `ml_service`
+- **Config path:** `ml_service/fly.toml`
+
+### Health check
 
 ```bash
-git push hf main   # if you mirrored the repo
-# or
-./deploy_hf.sh
+curl https://goatmaster.fly.dev/health
+# {"status":"ok","models_loaded":true,"detection_mode":"coco_fallback"}
 ```
 
-The HF Space sets `ML_SERVICE_URL` and `ML_SERVICE_KEY` automatically; copy the key into the Vercel env.
+---
 
-## Local development (full stack)
+## Infrastructure alternatives
 
-```bash
-# 1. Database (Docker)
-docker run -d --name goat-pg -p 5432:5432 \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=goatmaster \
-  pgvector/pgvector:pg16
+See the following files for alternative ML service deployment options:
 
-# 2. ML service
-cd ml_service
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+- `ml_service/oracle-cloud/` — Oracle Cloud Always Free (ARM, 4 OCPU, 24GB RAM)
+- `ml_service/koyeb.yaml` — Koyeb deployment config
+- `ml_service/deploy_hf.sh` — Hugging Face Spaces deploy script (legacy)
 
-# 3. Frontend
-cd ..
-bun install
-bun dev
-```
-
-Then `curl -X POST -H "Content-Type: application/json" -d '{"secret":"dev"}' http://localhost:3000/api/db-migrate` to bootstrap the schema.
-
-## Health checks
-
-- Vercel hits `/api/health` on each cold start.
-- HF Space exposes `/health` on port 7860; configurable in the Space settings.
+---
 
 ## Rollback
 
-- **Vercel:** previous deployment is reachable at `https://<sha>.<project>.vercel.app`. Revert via Vercel dashboard → Deployments → Promote.
-- **HF Space:** `git revert` + push, or roll back to a previous revision from the Space settings.
+- **Vercel** — Dashboard → Deployments → Promote a previous deploy
+- **Fly.io** — `fly deploy --image <previous-image-tag>` or Dashboard → Machine → Rebuild
+
+---
+
+## Post-deploy checklist
+
+- [ ] `https://<your-domain>/api/health` returns `{ ok: true }`
+- [ ] `https://goatmaster.fly.dev/health` returns models loaded status
+- [ ] `/admin` loads with dashboard stats
+- [ ] Admin can log in with `admin@goatmaster.com`
+- [ ] Sign up a test account, add a goat, scan it

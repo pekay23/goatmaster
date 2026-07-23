@@ -50,6 +50,8 @@ Operational how-tos — read these to *do* something.
 - [Setup](./guides/setup.md) — install, env, db push
 - [Development](./guides/development.md) — local dev workflow
 - [Deployment](./guides/deployment.md) — Vercel + ML service
+- [Admin portal](./guides/admin-portal.md) — dashboard, users, tiers
+- [ML service deployment](./guides/ml-service-deployment.md) — Fly.io setup, config, troubleshooting
 - [Handover](./guides/handover.md) — onboarding for a new developer
 - [Contributing](./guides/contributing.md) — branch + PR conventions
 
@@ -57,6 +59,7 @@ Operational how-tos — read these to *do* something.
 
 Historical audit reports. Newest first; older reports preserved for context.
 
+- [2026-07-23 · Codebase audit](./audits/2026-07-23-codebase.md) — current state + known issues
 - [Known issues](./audits/known-issues.md) — persistent issues + workarounds
 - [2026-06-05 · Codebase audit](./audits/2026-06-05-codebase.md) — full repo review (v2.0 prep)
 
@@ -67,3 +70,4 @@ RFCs and implementation roadmaps.
 - [Future plans](./plans/future-plans.md) — open roadmap
 - [v2.0 upgrade](./plans/v2-upgrade.md) — bun migration, color system, doc refresh
 - [ML retraining loop](./plans/ml-retraining-loop.md) — feedback-driven model improvement
+- [Documentation update plan](./plans/documentation-update-plan.md) — v2.1 doc refresh plan

@@ -1,89 +1,61 @@
 # Development Guide
 
-## Local workflow
+## Local dev
 
 ```bash
-bun dev          # Next.js with Turbopack
-# edit anything under app/ or components/
-# state is preserved (HMR)
+bun run dev
+# → http://localhost:3000
 ```
 
-## Project layout
+Uses Turbopack for fast HMR.
+
+## Database
+
+- Cloud PostgreSQL (Neon) via `DATABASE_URL` in `.env.local`
+- Local migrations: `bun --env-file=.env.local run scripts/migrate.js`
+- Schema changes: edit `scripts/migrate.js` (raw SQL) — no Prisma schema yet
+
+## Project structure
 
 ```
-goatmaster/
-├── app/                Next.js App Router (page.jsx is the only public page)
-├── components/         All client components
-├── lib/                client-side helpers (breeds.js, localDb.js)
-├── public/             PWA assets
-├── ml_service/         Python FastAPI microservice
-├── scripts/            one-off Python scripts (model conversion, dataset prep)
-└── docs/               ← you are here
+src/
+├── app/          Next.js App Router pages + API routes
+├── components/   React components (panels + extracted sub-components)
+├── lib/          Utilities (auth, db, sync, breeds)
+├── scripts/      DB migrations, admin seeding
+├── ml_service/   Python FastAPI ML service (Fly.io)
+└── docs/         Project documentation
 ```
 
-## Adding a new tab
+## Component extraction pattern
 
-1. Add the tab object to `NAV_TABS` in `components/MainApp.jsx`
-2. Add a `case` in the `activeTab === '…'` switch inside `<main>`
-3. Build the new component in `components/`
-4. Add the tab's icon to the Lucide import
+Large panels are split into sub-components in dedicated directories:
 
-## Adding a new API route
+```
+components/events/     → EventsPanel sub-components
+components/health/     → HealthPanel sub-components
+components/sales/      → SalesPanel sub-components
+components/breeding/   → BreedingPanel sub-components
+components/shared/     → Shared utilities (ImageUploader)
+components/smart-scan/ → Scanner-specific modules
+```
 
+## Known issues
+
+- **Hydration mismatch warnings** — Caused by browser extensions (anti-fingerprinting tools) injecting attributes into the DOM. Mitigated with `suppressHydrationWarning` on root elements. Warnings are benign.
+- **`is_active` column missing** — The `users` table doesn't have this column. The API returns `is_active: true` virtually.
+- **`goat_embeddings` table may not exist** — Admin dashboard shows 0 scans/embeddings if the table hasn't been created.
+
+## Admin access
+
+Users with `role='admin'` can access `/admin`. Run the seed script to create the first admin:
 ```bash
-mkdir -p app/api/<feature>
-# create route.js
-```
-
-Every route is a Next.js App Router handler:
-
-```js
-// app/api/<feature>/route.js
-import { jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
-import { pgPool } from '@/lib/db';
-
-async function requireUser() {
-  const token = cookies().get('gm_session')?.value;
-  if (!token) return null;
-  const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
-  return payload;
-}
-
-export async function GET() {
-  const user = await requireUser();
-  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  const { rows } = await pgPool.query('SELECT * FROM goats WHERE owner_id = $1', [user.sub]);
-  return Response.json(rows);
-}
-```
-
-## Linting
-
-```bash
-bun run lint
+bun --env-file=.env.local run scripts/create-admin.js
 ```
 
 ## Building
 
 ```bash
-bun run build    # production build
-bun start        # serve the build
+bun run build     # full production build
+bun run lint      # ESLint check
 ```
-
-## Conventions
-
-- Server state via `fetch` + `useEffect`. No SWR / React Query (kept dependency count low).
-- Mutations refresh the affected list with a manual `fetchGoats()` re-call.
-- Loading state: skeletons in `components/MainApp.jsx`.
-- Error state: `<ErrorBoundary>` around risky scanners; `showToast('…', 'error')` for inline.
-- All JSX imports from `@/lib/…`, `@/components/…` (see `jsconfig.json`).
-
-## Code style
-
-- Indent: 2 spaces
-- Quotes: single
-- Semicolons: none
-- Trailing commas: never
-- React imports: `import { useState } from 'react'` (named)
-- Style: prefer CSS classes (defined in `app/globals.css`) over inline `style={…}` for repeated patterns

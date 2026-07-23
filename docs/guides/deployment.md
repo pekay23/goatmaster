@@ -10,32 +10,32 @@ See [`architecture/deployment.md`](../architecture/deployment.md) for the full d
 # 1. Push
 git push origin main
 
-# 2. Vercel auto-builds
+# 2. Vercel auto-builds (postinstall runs migrate + seed)
 # 3. Set env vars in dashboard:
 #    DATABASE_URL, JWT_SECRET, MIGRATE_SECRET,
 #    NEXT_PUBLIC_CLOUDINARY_NAME, NEXT_PUBLIC_CLOUDINARY_PRESET,
-#    ML_SERVICE_URL, ML_SERVICE_KEY
-# 4. Run db migration:
-curl -X POST -H "Content-Type: application/json" \
-  -d '{"secret":"<MIGRATE_SECRET>"}' \
-  https://<your-domain>/api/db-migrate
+#    ML_SERVICE_URL, ML_SERVICE_KEY,
+#    ADMIN_EMAIL, ADMIN_PASSWORD
 ```
 
-### ML service → Hugging Face Spaces
+### ML service → Fly.io
 
 ```bash
 cd ml_service
-./deploy_hf.sh
+fly secrets set DATABASE_URL="..." ML_SERVICE_KEY="..."
+fly deploy
 ```
 
 ## Post-deploy checklist
 
 - [ ] `https://<your-domain>/api/health` returns `{ ok: true }`
+- [ ] `https://goatmaster.fly.dev/health` returns models loaded
+- [ ] `/admin` loads with dashboard stats
+- [ ] Admin login works: `admin@goatmaster.com`
 - [ ] Sign up a test account, add a goat, scan it
-- [ ] Open the ML service URL, hit `/health`
-- [ ] Submit one correction, trigger a re-train, confirm the badge updates
+- [ ] Vercel auto-ran `postinstall` (migrate + admin seed)
 
 ## Rollback
 
 - **Vercel** — Dashboard → Deployments → Promote a previous deploy
-- **HF Space** — Settings → revert to a previous revision
+- **Fly.io** — `fly deploy --image <image-tag>` or Dashboard → Machine → Rebuild
