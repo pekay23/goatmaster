@@ -5,6 +5,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
+ENV YOLO_CONFIG_DIR=/tmp/yolo_config
 
 # Install system dependencies for OpenCV, PostgreSQL, and image processing
 RUN apt-get update && apt-get install -y \
@@ -19,10 +20,15 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy requirements and install
-# We use the CPU version of PyTorch to keep the image size manageable
 COPY requirements.txt .
 RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-download YOLOv8 model weights during build (cached in image, no download on startup)
+RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+
+# Pre-download ResNet50 weights during build
+RUN python -c "from torchvision import models; models.resnet50(weights='DEFAULT')"
 
 # Copy the rest of the application code
 COPY . .
