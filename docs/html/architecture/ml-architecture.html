@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ML Architecture · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Architecture</p>
+  <h1 class="he-title">ML Architecture</h1>
+  <p class="he-deck">Goat Master uses a <strong>hybrid on-device + server-side</strong> recognition pipeline.</p>
+</header>
+<ul>
+<li>End-to-end (camera → match) under 400 ms p50 on a Pixel 6 with cache hit</li>
+<li>Server re-ID fallback: ~1.2 s p50 (HF cold start: ~4 s)</li>
+<li>Model size budget: TF.js 5 MB, YOLO 6 MB, ResNet50 100 MB (server only)</li>
+</ul>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#1-on-device-tensorflowjs">1. On-device: TensorFlow.js</a></li>
+    <li class="he-toc__l2"><a href="#2-server-side-fastapi-microservice">2. Server-side: FastAPI microservice</a></li>
+    <li class="he-toc__l3"><a href="#21-detection-yolov8">2.1 Detection (YOLOv8)</a></li>
+    <li class="he-toc__l3"><a href="#22-re-id-resnet50-triplet-loss">2.2 Re-ID (ResNet50 + triplet loss)</a></li>
+    <li class="he-toc__l3"><a href="#23-deployment">2.3 Deployment</a></li>
+    <li class="he-toc__l2"><a href="#3-vector-storage">3. Vector storage</a></li>
+    <li class="he-toc__l2"><a href="#4-feedback-loop">4. Feedback loop</a></li>
+    <li class="he-toc__l2"><a href="#5-performance">5. Performance</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

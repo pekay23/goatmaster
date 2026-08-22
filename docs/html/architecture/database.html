@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Database Schema · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Architecture</p>
+  <h1 class="he-title">Database Schema</h1>
+  <p class="he-deck">PostgreSQL 16 on Neon serverless.</p>
+</header>
+
+<section class="he-section" id="overview">
+  <div class="he-section__num">01 · Overview</div>
+  <h2 class="he-section__title">Overview</h2><p>PostgreSQL 16 on Neon serverless. The <code>pgvector</code> extension is required for ML embedding similarity search.</p>
+<p>Connection via <code>lib/db.js</code> — single <code>Pool</code> instance using <code>DATABASE_URL</code> env var. Singleton client at <code>lib/prisma.ts</code>.</p>
+
+<section class="he-section" id="key-tables">
+  <div class="he-section__num">02 · Key tables</div>
+  <h2 class="he-section__title">Key tables</h2><h3 id="users"><code>users</code></h3><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>UUID</td>
+<td><code>uuid_generate_v4()</code></td>
+<td>PK</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>VARCHAR(255)</td>
+<td>—</td>
+<td>UNIQUE NOT NULL</td>
+</tr>
+<tr>
+<td><code>password_hash</code></td>
+<td>VARCHAR(255)</td>
+<td>—</td>
+<td>bcrypt</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td>VARCHAR(255)</td>
+<td>—</td>
+<td>NOT NULL</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>VARCHAR(50)</td>
+<td><code>'user'</code></td>
+<td><code>'user'</code> or <code>'admin'</code></td>
+</tr>
+<tr>
+<td><code>tier</code></td>
+<td>VARCHAR(50)</td>
+<td><code>'free'</code></td>
+<td>References <code>tiers.id</code> (no FK constraint)</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>TIMESTAMP</td>
+<td><code>CURRENT_TIMESTAMP</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>Note:</strong> There is no <code>is_active</code> column. The API returns <code>is_active: true</code> as a virtual field for UI compatibility.</p>
+<h3 id="tiers"><code>tiers</code></h3><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>VARCHAR(50)</td>
+<td>—</td>
+<td>PK (&#39;free&#39;, &#39;basic&#39;, &#39;pro&#39;)</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>VARCHAR(100)</td>
+<td>—</td>
+<td>Display name</td>
+</tr>
+<tr>
+<td><code>price_cents</code></td>
+<td>INTEGER</td>
+<td><code>0</code></td>
+<td>Price in cents</td>
+</tr>
+<tr>
+<td><code>max_goats</code></td>
+<td>INTEGER</td>
+<td><code>-1</code></td>
+<td>-1 = unlimited</td>
+</tr>
+<tr>
+<td><code>max_scans_per_day</code></td>
+<td>INTEGER</td>
+<td><code>-1</code></td>
+<td>-1 = unlimited</td>
+</tr>
+<tr>
+<td><code>ai_training_enabled</code></td>
+<td>BOOLEAN</td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>smart_scan_enabled</code></td>
+<td>BOOLEAN</td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>TIMESTAMP</td>
+<td><code>CURRENT_TIMESTAMP</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>TIMESTAMP</td>
+<td><code>CURRENT_TIMESTAMP</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>Seed data</strong> (inserted by <code>scripts/migrate.js</code> if table is empty):</p>
+<ul>
+<li><strong>free:</strong> 5 max goats, 10 scans/day, no AI training, no smart scan</li>
+<li><strong>basic:</strong> 25 max goats, 100 scans/day, $9.99/mo, AI training enabled</li>
+<li><strong>pro:</strong> Unlimited goats, unlimited scans, $29.99/mo, all features</li>
+</ul>
+<h3 id="goats"><code>goats</code></h3><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>UUID</td>
+<td><code>uuid_generate_v4()</code></td>
+<td>PK</td>
+</tr>
+<tr>
+<td><code>owner_id</code></td>
+<td>VARCHAR(255)</td>
+<td><code>'demo'</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>VARCHAR(255)</td>
+<td>—</td>
+<td>NOT NULL</td>
+</tr>
+<tr>
+<td><code>breed</code></td>
+<td>VARCHAR(100)</td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>sex</code></td>
+<td>VARCHAR(10)</td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>dob</code></td>
+<td>TIMESTAMP</td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>image_url</code></td>
+<td>TEXT</td>
+<td>—</td>
+<td>Cloudinary URL</td>
+</tr>
+<tr>
+<td><code>ear_tag</code></td>
+<td>VARCHAR(100)</td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>dam_id</code></td>
+<td>UUID</td>
+<td>—</td>
+<td>FK → goats(id)</td>
+</tr>
+<tr>
+<td><code>sire_id</code></td>
+<td>UUID</td>
+<td>—</td>
+<td>FK → goats(id)</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>TIMESTAMP</td>
+<td><code>CURRENT_TIMESTAMP</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>TIMESTAMP</td>
+<td><code>CURRENT_TIMESTAMP</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="healthrecords"><code>health_records</code></h3><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>UUID</td>
+<td>PK</td>
+</tr>
+<tr>
+<td><code>goat_id</code></td>
+<td>UUID</td>
+<td>FK → goats(id) ON DELETE CASCADE</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>VARCHAR(100)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td>TEXT</td>
+<td></td>
+</tr>
+<tr>
+<td><code>treatment</code></td>
+<td>TEXT</td>
+<td></td>
+</tr>
+<tr>
+<td><code>cost</code></td>
+<td>NUMERIC(10,2)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>record_date</code></td>
+<td>TIMESTAMP</td>
+<td></td>
+</tr>
+<tr>
+<td><code>next_due_date</code></td>
+<td>TIMESTAMP</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="breedingrecords"><code>breeding_records</code></h3><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>UUID</td>
+<td>PK</td>
+</tr>
+<tr>
+<td><code>dam_id</code></td>
+<td>UUID</td>
+<td>FK → goats(id) ON DELETE CASCADE</td>
+</tr>
+<tr>
+<td><code>sire_id</code></td>
+<td>UUID</td>
+<td>FK → goats(id) ON DELETE SET NULL</td>
+</tr>
+<tr>
+<td><code>mating_date</code></td>
+<td>TIMESTAMP</td>
+<td></td>
+</tr>
+<tr>
+<td><code>expected_kidding_date</code></td>
+<td>TIMESTAMP</td>
+<td></td>
+</tr>
+<tr>
+<td><code>actual_kidding_date</code></td>
+<td>TIMESTAMP</td>
+<td></td>
+</tr>
+<tr>
+<td><code>kids_count</code></td>
+<td>INTEGER</td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>VARCHAR(50)</td>
+<td>&#39;planned&#39;, &#39;confirmed&#39;, &#39;kidded&#39;</td>
+</tr>
+</tbody></table>
+<h3 id="goatembeddings"><code>goat_embeddings</code></h3><p>Used for ML re-identification. <strong>This table may not exist</strong> in the database — the admin stats API handles this gracefully by catching the missing table error and returning 0.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>UUID</td>
+<td>PK</td>
+</tr>
+<tr>
+<td><code>goat_id</code></td>
+<td>UUID</td>
+<td>FK → goats(id)</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>INTEGER</td>
+<td></td>
+</tr>
+<tr>
+<td><code>embedding</code></td>
+<td>VECTOR(1024)</td>
+<td>pgvector</td>
+</tr>
+<tr>
+<td><code>image_url</code></td>
+<td>TEXT</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="inventory-sales-milkrecords-weightrecords-farmevents-farmeventgoats-alerts-corrections-usagelogs-expenditures"><code>inventory</code>, <code>sales</code>, <code>milk_records</code>, <code>weight_records</code>, <code>farm_events</code>, <code>farm_event_goats</code>, <code>alerts</code>, <code>corrections</code>, <code>usage_logs</code>, <code>expenditures</code></h3><p>These follow the same pattern: UUID PK, <code>owner_id</code> VARCHAR, <code>created_at</code>/<code>updated_at</code> timestamps. See <code>scripts/migrate.js</code> for full CREATE TABLE statements.</p>
+
+<section class="he-section" id="migrations">
+  <div class="he-section__num">03 · Migrations</div>
+  <h2 class="he-section__title">Migrations</h2><p>Managed by <code>scripts/migrate.js</code>. Migration runs:</p>
+<ol>
+<li>Automatically on Vercel deploy via <code>postinstall</code> hook in <code>package.json</code></li>
+<li>Manually: <code>bun run db:migrate</code> (requires env vars: <code>bun --env-file=.env.local run scripts/migrate.js</code>)</li>
+</ol>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#overview">Overview</a></li>
+    <li class="he-toc__l2"><a href="#key-tables">Key tables</a></li>
+    <li class="he-toc__l3"><a href="#users">users</a></li>
+    <li class="he-toc__l3"><a href="#tiers">tiers</a></li>
+    <li class="he-toc__l3"><a href="#goats">goats</a></li>
+    <li class="he-toc__l3"><a href="#healthrecords">health_records</a></li>
+    <li class="he-toc__l3"><a href="#breedingrecords">breeding_records</a></li>
+    <li class="he-toc__l3"><a href="#goatembeddings">goat_embeddings</a></li>
+    <li class="he-toc__l3"><a href="#inventory-sales-milkrecords-weightrecords-farmevents-farmeventgoats-alerts-corrections-usagelogs-expenditures">inventory`, `sales`, `milk_records`, `weight_records`, `farm_events`, `farm_event_goats`, `alerts`, `corrections`, `usage_logs`, `expenditures</a></li>
+    <li class="he-toc__l2"><a href="#migrations">Migrations</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

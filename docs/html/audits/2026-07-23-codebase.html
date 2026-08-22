@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Codebase Audit — 2026-07-23 · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Audits</p>
+  <h1 class="he-title">Codebase Audit — 2026-07-23</h1>
+  <p class="he-deck">The project has undergone a significant refactoring and feature expansion phase since the v2.0 audit. Key milestones achieved…</p>
+</header>
+
+<section class="he-section" id="current-state">
+  <div class="he-section__num">01 · Current state</div>
+  <h2 class="he-section__title">Current state</h2><p>The project has undergone a significant refactoring and feature expansion phase since the v2.0 audit. Key milestones achieved:</p>
+<ul>
+<li><strong>Component extraction:</strong> 22 files extracted from monolithic panels (EventsPanel, HealthPanel, SalesPanel, BreedingPanel, MainApp, SmartScanner)</li>
+<li><strong>Navigation consolidation:</strong> 14 individual bottom tabs → 4 groups (Herd, Ops, Intel, Settings) with sub-tab pills</li>
+<li><strong>Admin portal:</strong> Dashboard, Users CRUD, Tiers management with full CSS v2.0</li>
+<li><strong>Admin API:</strong> 7 REST endpoints for stats, users, tiers</li>
+<li><strong>ML service migration:</strong> Render.com → Fly.io (always-on, 1GB RAM, no cold starts)</li>
+<li><strong>Login UX fixes:</strong> Password toggle, email field correction, response unwrapping fix</li>
+<li><strong>Database:</strong> <code>tiers</code> table created with Free/Basic/Pro seed data</li>
+</ul>
+
+<section class="he-section" id="known-issues">
+  <div class="he-section__num">02 · Known issues</div>
+  <h2 class="he-section__title">Known issues</h2><h3 id="1-isactive-column-doesnt-exist">1. <code>is_active</code> column doesn&#39;t exist</h3><ul>
+<li><strong>File:</strong> <code>app/api/admin/users/[id]/route.js</code></li>
+<li><strong>Impact:</strong> The Active toggle in the admin users panel is visual-only. The API returns <code>is_active: true</code> as a virtual field but never persists it.</li>
+<li><strong>Fix needed:</strong> Add <code>is_active BOOLEAN DEFAULT true</code> column to the <code>users</code> table in <code>scripts/migrate.js</code>.</li>
+</ul>
+<h3 id="2-goatembeddings-table-doesnt-exist">2. <code>goat_embeddings</code> table doesn&#39;t exist</h3><ul>
+<li><strong>File:</strong> <code>app/api/admin/stats/route.js</code></li>
+<li><strong>Impact:</strong> Admin dashboard shows 0 for total scans and total embeddings. The API catches the error gracefully but the data is missing.</li>
+<li><strong>Fix needed:</strong> Create the <code>goat_embeddings</code> table with the pgvector extension. Schema includes <code>id UUID PK</code>, <code>goat_id UUID FK</code>, <code>user_id INTEGER</code>, <code>embedding VECTOR(1024)</code>, <code>image_url TEXT</code>.</li>
+</ul>
+<h3 id="3-admin-auth-uses-localstorage">3. Admin auth uses localStorage</h3><ul>
+<li><strong>File:</strong> <code>app/admin/layout.jsx</code></li>
+<li><strong>Impact:</strong> Admin authentication reads <code>goat_user</code> from localStorage, not the JWT cookie. This is XSS-vulnerable and doesn&#39;t respect JWT expiry. A user with <code>document.cookie</code> access can&#39;t be impersonated, but JS running on the page can read localStorage and impersonate an admin.</li>
+<li><strong>Fix needed:</strong> Migrate admin auth to use the same JWT cookie pattern as the rest of the app. <code>requireAuth()</code> should check <code>role === 'admin'</code> before allowing admin route access.</li>
+</ul>
+<h3 id="4-scan-count-hardcoded-to-0">4. Scan count hardcoded to 0</h3><ul>
+<li><strong>File:</strong> <code>app/api/admin/stats/route.js</code></li>
+<li><strong>Code:</strong> <code>totalScans: 0</code></li>
+<li><strong>Impact:</strong> The scans stat card always shows 0, even if scans have been performed.</li>
+<li><strong>Fix needed:</strong> Query a scans table or count from the ML service logs when available.</li>
+</ul>
+<h3 id="5-hydration-mismatch-warnings-benign">5. Hydration mismatch warnings (benign)</h3><ul>
+<li><strong>Files:</strong> <code>app/layout.jsx</code></li>
+<li><strong>Cause:</strong> Browser extensions (anti-fingerprinting tools like CanvasBlocker) inject <code>__processed_*</code> attributes into the DOM after server rendering.</li>
+<li><strong>Mitigation:</strong> <code>suppressHydrationWarning</code> on <code>&lt;html&gt;</code> and <code>&lt;body&gt;</code> tags. Warnings are harmless and don&#39;t affect functionality.</li>
+</ul>
+<h3 id="6-database-migration-requires-env-vars">6. Database migration requires env vars</h3><ul>
+<li><strong>Impact:</strong> Running <code>scripts/migrate.js</code> locally fails with <code>ECONNREFUSED</code> if <code>DATABASE_URL</code> isn&#39;t set in the environment. The script doesn&#39;t load <code>.env.local</code> automatically.</li>
+<li><strong>Workaround:</strong> <code>bun --env-file=.env.local run scripts/migrate.js</code></li>
+</ul>
+<h3 id="7-no-audit-logging-for-admin-actions">7. No audit logging for admin actions</h3><ul>
+<li><strong>Impact:</strong> Admin user creation, updates, and deletions are not logged. There&#39;s no record of who changed what.</li>
+<li><strong>Fix needed:</strong> Add an <code>audit_logs</code> table and log all admin actions with timestamp, admin user ID, action type, and target user ID.</li>
+</ul>
+
+<section class="he-section" id="recommendations">
+  <div class="he-section__num">03 · Recommendations</div>
+  <h2 class="he-section__title">Recommendations</h2><ol>
+<li><strong>Short-term:</strong> Add <code>is_active</code> column and <code>goat_embeddings</code> table to migration script. These are quick wins.</li>
+<li><strong>Medium-term:</strong> Migrate admin auth to JWT. This is a security improvement but requires updating all admin API routes and the admin layout.</li>
+<li><strong>Medium-term:</strong> Add audit logging for admin actions. Essential for accountability in a multi-admin scenario.</li>
+<li><strong>Long-term:</strong> Add billing integration (Stripe) so tier changes trigger actual payments.</li>
+</ol>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#current-state">Current state</a></li>
+    <li class="he-toc__l2"><a href="#known-issues">Known issues</a></li>
+    <li class="he-toc__l3"><a href="#1-isactive-column-doesnt-exist">1. `is_active` column doesn't exist</a></li>
+    <li class="he-toc__l3"><a href="#2-goatembeddings-table-doesnt-exist">2. `goat_embeddings` table doesn't exist</a></li>
+    <li class="he-toc__l3"><a href="#3-admin-auth-uses-localstorage">3. Admin auth uses localStorage</a></li>
+    <li class="he-toc__l3"><a href="#4-scan-count-hardcoded-to-0">4. Scan count hardcoded to 0</a></li>
+    <li class="he-toc__l3"><a href="#5-hydration-mismatch-warnings-benign">5. Hydration mismatch warnings (benign)</a></li>
+    <li class="he-toc__l3"><a href="#6-database-migration-requires-env-vars">6. Database migration requires env vars</a></li>
+    <li class="he-toc__l3"><a href="#7-no-audit-logging-for-admin-actions">7. No audit logging for admin actions</a></li>
+    <li class="he-toc__l2"><a href="#recommendations">Recommendations</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Changelog · Goatmaster</title>
+<link rel="stylesheet" href="./design-tokens.css">
+<link rel="stylesheet" href="./docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="./index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="./index.html">Index</a>
+    <a href="./index.html#overview">Overview</a>
+    <a href="./index.html#architecture">Architecture</a>
+    <a href="./index.html#audits">Audits</a>
+    <a href="./index.html#design">Design</a>
+    <a href="./index.html#guides">Guides</a>
+    <a href="./index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Overview</p>
+  <h1 class="he-title">Changelog</h1>
+  <p class="he-deck"><strong>Component extraction:</strong> - Extracted 22 files from monolithic panels: <code>EventsPanel</code> (6 files), <code>HealthPanel</code> (3), <code>SalesPanel</code> (2), <code>BreedingPanel</code> (1), <code>MainApp</code> (7), <code>SmartScanner</code> (1), plus <code>ImageUploader</code> shared utility - Each panel…</p>
+</header>
+
+<section class="he-section" id="v210-2026-07-23">
+  <div class="he-section__num">01 · v2.1.0 (2026-07-23)</div>
+  <h2 class="he-section__title">v2.1.0 (2026-07-23)</h2><p><strong>Component extraction:</strong></p>
+<ul>
+<li>Extracted 22 files from monolithic panels: <code>EventsPanel</code> (6 files), <code>HealthPanel</code> (3), <code>SalesPanel</code> (2), <code>BreedingPanel</code> (1), <code>MainApp</code> (7), <code>SmartScanner</code> (1), plus <code>ImageUploader</code> shared utility</li>
+<li>Each panel now imports from its dedicated sub-directory (<code>components/events/</code>, <code>components/health/</code>, etc.)</li>
+</ul>
+<p><strong>Navigation:</strong></p>
+<ul>
+<li>Consolidated 14 bottom tabs into 4 groups: Herd, Ops, Intel, Settings</li>
+<li>Sub-tab pills appear in header when group is active</li>
+<li>Feature merges: Smart Scanner → Scan tab, Reports → Analytics, Pedigree → Breeding</li>
+</ul>
+<p><strong>Admin portal:</strong></p>
+<ul>
+<li>New <code>/admin</code> route group with Dashboard, Users, and Tiers pages</li>
+<li>Dashboard: stat cards (users, goats, scans, embeddings), tier breakdown bar, 30-day signup chart with loading skeleton</li>
+<li>Users: search, paginated list, expand to edit role/tier/active status, add user modal, delete with last-admin guard</li>
+<li>Tiers: view/edit Free/Basic/Pro limits, pricing, and feature toggles</li>
+<li>Admin CSS v2.0 with accent bars, avatars, animations, tooltips</li>
+</ul>
+<p><strong>Admin API (7 new endpoints):</strong></p>
+<ul>
+<li><code>GET /api/admin/stats</code> — aggregated dashboard statistics</li>
+<li><code>GET /api/admin/users</code> — paginated user list with search</li>
+<li><code>POST /api/admin/users</code> — admin creates user</li>
+<li><code>PATCH /api/admin/users/[id]</code> — update role/tier/active</li>
+<li><code>DELETE /api/admin/users/[id]</code> — delete with last-admin guard</li>
+<li><code>GET /api/admin/tiers</code> — list subscription tiers</li>
+<li><code>PUT /api/admin/tiers</code> — update tier limits</li>
+</ul>
+<p><strong>ML service migration:</strong></p>
+<ul>
+<li>Migrated from Render.com (512MB, sleeps after 15min) to Fly.io (1GB, always-on)</li>
+<li>Port changed from 7860 to 8080 for Fly.io compatibility</li>
+<li>Pre-downloaded YOLOv8 + ResNet50 weights in Docker build (no more 503 timeout on startup)</li>
+<li>Added <code>YOLO_CONFIG_DIR</code> env var to fix Ultralytics config warning</li>
+<li>Created deployment configs: <code>ml_service/fly.toml</code>, <code>ml_service/koyeb.yaml</code>, <code>ml_service/oracle-cloud/</code></li>
+</ul>
+<p><strong>Login UX:</strong></p>
+<ul>
+<li>Password visibility toggle with Eye/EyeOff icons</li>
+<li>Fixed field name mismatch (was sending <code>username</code>, API expects <code>email</code>)</li>
+<li>Fixed response unwrapping (was storing whole response, now extracts <code>data.data</code>)</li>
+</ul>
+<p><strong>Database:</strong></p>
+<ul>
+<li>Added <code>tiers</code> table with 3 tiers (Free/Basic/Pro) seed data</li>
+<li>Migrations auto-run via <code>postinstall</code> hook on Vercel deploy</li>
+</ul>
+<p><strong>Infrastructure:</strong></p>
+<ul>
+<li>Oracle Cloud deployment files (<code>ml_service/oracle-cloud/</code>): README, setup.sh, docker-compose.yml</li>
+<li>Koyeb deployment config (<code>ml_service/koyeb.yaml</code>)</li>
+<li>Updated <code>vercel.json</code>, <code>render.yaml</code>, <code>package.json</code> scripts</li>
+</ul>
+<p><strong>Bug fixes:</strong></p>
+<ul>
+<li><code>is_active</code> column doesn&#39;t exist in DB — now handled virtually in API (returns <code>true</code>)</li>
+<li><code>goat_embeddings</code> table may not exist — admin stats API catches gracefully</li>
+<li>Admin user creation is now idempotent (<code>ON CONFLICT (email) DO UPDATE</code>)</li>
+<li>Hydration mismatch warnings mitigated with <code>suppressHydrationWarning</code></li>
+</ul>
+<p><strong>Documentation update:</strong></p>
+<ul>
+<li>All architecture docs updated: system-overview, api, database, deployment, security-model</li>
+<li>All guides updated: deployment, setup, development</li>
+<li>Plans updated: future-plans, v2-upgrade</li>
+<li>New guides: admin-portal, ml-service-deployment</li>
+<li>New audit: 2026-07-23-codebase</li>
+<li>CHANGELOG and docs index refreshed</li>
+</ul>
+
+<section class="he-section" id="v200-2026-06-05">
+  <div class="he-section__num">02 · v2.0.0 (2026-06-05)</div>
+  <h2 class="he-section__title">v2.0.0 (2026-06-05)</h2><ul>
+<li><strong>Bun-only:</strong> Switched package manager to Bun exclusively. Deleted <code>package-lock.json</code> and <code>.npmrc</code>. Updated <code>build</code> script to use <code>cross-env</code> for 4GB heap. <code>postinstall</code> runs <code>prisma generate</code>.</li>
+<li><strong>Simplified dev script:</strong> <code>next dev --turbo</code> with <code>NODE_ENV=development</code>.</li>
+<li><strong>Dependency pins:</strong> Next.js 16.2+ (stable for Turbopack), React 19.2+, Prisma 7.2+ (stable for <code>postinstall</code>).</li>
+<li><strong>Color system rewrite:</strong> Two-layer palette — primitives (Pasture green, Slate neutral, Sun gold, Barn red, Sky blue) → semantic tokens (bg, text, border, primary, accent, danger). Full light + dark mode via <code>[data-theme=&quot;dark&quot;]</code>.</li>
+<li><strong>Documentation refresh:</strong> Reorganized <code>docs/</code> into architecture, design, guides, audits, and plans. Added v2.0 upgrade plan.</li>
+<li><strong><code>CHANGELOG.md</code></strong> introduced.</li>
+</ul>
+
+<section class="he-section" id="v100-2026-05-30">
+  <div class="he-section__num">03 · v1.0.0 (2026-05-30)</div>
+  <h2 class="he-section__title">v1.0.0 (2026-05-30)</h2><ul>
+<li>Initial public release.</li>
+<li>Goat CRUD, health logs, breeding records, kidding schedules.</li>
+<li>On-device TF.js MobileNetV3 scanning.</li>
+<li>Server-side Python YOLOv8 + ResNet50 re-identification.</li>
+<li>Smart Scan with pgvector similarity search.</li>
+<li>Offline-first with IndexedDB.</li>
+<li>Admin tools and tiered accounts.</li>
+<li>JWT auth with httpOnly cookies.</li>
+<li>Cloudinary image uploads.</li>
+</ul>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#v210-2026-07-23">v2.1.0 (2026-07-23)</a></li>
+    <li class="he-toc__l2"><a href="#v200-2026-06-05">v2.0.0 (2026-06-05)</a></li>
+    <li class="he-toc__l2"><a href="#v100-2026-05-30">v1.0.0 (2026-05-30)</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="./../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

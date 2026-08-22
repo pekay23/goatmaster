@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>06 · Motion · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Design</p>
+  <h1 class="he-title">06 · Motion</h1>
+  <p class="he-deck">Goat Master uses motion to make the app feel tactile without ever getting in the way.</p>
+</header>
+<ul>
+<li>❌ <code>animation: ... 2s infinite</code> on functional UI.</li>
+<li>❌ <code>transition: all</code> — animate only the property that changed.</li>
+<li>❌ Bouncy easings (<code>cubic-bezier(0.34, 1.56, 0.64, 1)</code>) outside the splash logo.</li>
+<li>❌ Auto-playing audio / video on the splash.</li>
+</ul>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#default-timings">Default timings</a></li>
+    <li class="he-toc__l2"><a href="#keyframes-defined-in-appglobalscss">Keyframes (defined in `app/globals.css`)</a></li>
+    <li class="he-toc__l2"><a href="#transitions-on-theme-switch">Transitions on theme switch</a></li>
+    <li class="he-toc__l2"><a href="#accessibility">Accessibility</a></li>
+    <li class="he-toc__l2"><a href="#forbidden">Forbidden</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

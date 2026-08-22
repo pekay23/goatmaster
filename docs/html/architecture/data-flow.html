@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Data Flow · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Architecture</p>
+  <h1 class="he-title">Data Flow</h1>
+  <p class="he-deck">This document traces the lifecycle of the three primary data types in Goat Master: <strong>users</strong>, <strong>goats</strong>, and <strong>embeddings</strong>.</p>
+</header>
+<pre><code>admin sees wrong match → &quot;Mark as: &lt;other goat&gt;&quot; or &quot;Merge&quot;
+  → POST /api/corrections { correction_type, source, target, notes }
+  → ML service retrains on the corrected triplet next round
+</code></pre>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#1-user-data">1. User data</a></li>
+    <li class="he-toc__l2"><a href="#2-goat-data">2. Goat data</a></li>
+    <li class="he-toc__l2"><a href="#3-embedding-data-re-identification">3. Embedding data (re-identification)</a></li>
+    <li class="he-toc__l2"><a href="#4-training-data-admin-pro-tier">4. Training data (admin / pro tier)</a></li>
+    <li class="he-toc__l2"><a href="#5-corrections-feedback-loop">5. Corrections / feedback loop</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

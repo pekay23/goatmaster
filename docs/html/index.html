@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documentation · Goatmaster</title>
+<link rel="stylesheet" href="./design-tokens.css">
+<link rel="stylesheet" href="./docs.css">
+</head>
+<body>
+<div class="he-shell ">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="./index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="./index.html">Index</a>
+    <a href="./index.html#overview">Overview</a>
+    <a href="./index.html#architecture">Architecture</a>
+    <a href="./index.html#audits">Audits</a>
+    <a href="./index.html#design">Design</a>
+    <a href="./index.html#guides">Guides</a>
+    <a href="./index.html#plans">Plans</a>
+  </div>
+</nav>
+
+<main>
+<header>
+  <p class="he-eyebrow">Goatmaster · docs</p>
+  <h1 class="he-title">Documentation</h1>
+  <p class="he-deck">All project documentation, generated from the markdown under <code>docs/</code> and organised by folder.</p>
+</header>
+
+<div class="he-kpis">
+  <div class="he-kpi"><div class="he-kpi__value">30</div><div class="he-kpi__label">Generated pages</div></div>
+  <div class="he-kpi"><div class="he-kpi__value">6</div><div class="he-kpi__label">Sections</div></div>
+  <div class="he-kpi"><div class="he-kpi__value">0</div><div class="he-kpi__label">Standalone reports</div></div>
+</div>
+
+<section class="he-index-section" id="overview">
+  <div class="he-index-section__head">
+    <h2>Overview</h2>
+    <p class="he-index-section__blurb">Top-level documents.</p>
+  </div>
+  <div class="he-grid">
+    <a class="he-card" href="./CHANGELOG.html">
+      <div class="he-card__eyebrow">Overview</div>
+      <h3>Changelog</h3>
+      <p>**Component extraction:** - Extracted 22 files from monolithic panels: `EventsPanel` (6 files), `HealthPanel` (3), `SalesPanel` (2), `BreedingPanel` (1), `MainApp` (7), `SmartScann</p>
+      <div class="he-card__meta"><span>docs/CHANGELOG.md</span></div>
+    </a>
+    <a class="he-card" href="./LLM_COUNCIL_FRAMEWORK.html">
+      <div class="he-card__eyebrow">Overview</div>
+      <h3>The LLM Council Framework</h3>
+      <p>The **LLM Council** is an advanced AI evaluation framework used by engineering and design teams to ensure robust, unbiased, and high-quality outcomes when reviewing code, architect</p>
+      <div class="he-card__meta"><span>docs/LLM_COUNCIL_FRAMEWORK.md</span></div>
+    </a>
+    <a class="he-card" href="./PORTFOLIO_SUMMARY.html">
+      <div class="he-card__eyebrow">Overview</div>
+      <h3>🐐 Goat Master — Portfolio Summary</h3>
+      <p>---…</p>
+      <div class="he-card__meta"><span>docs/PORTFOLIO_SUMMARY.md</span></div>
+    </a>
+    <a class="he-card" href="./README.html">
+      <div class="he-card__eyebrow">Overview</div>
+      <h3>🐐 Goat Master — Documentation</h3>
+      <p>All project documentation lives here, organised by purpose.</p>
+      <div class="he-card__meta"><span>docs/README.md</span></div>
+    </a>
+  </div>
+</section>
+
+<section class="he-index-section" id="architecture">
+  <div class="he-index-section__head">
+    <h2>Architecture</h2>
+    <p class="he-index-section__blurb">7 documents.</p>
+  </div>
+  <div class="he-grid">
+    <a class="he-card" href="./architecture/api.html">
+      <div class="he-card__eyebrow">Architecture</div>
+      <h3>API Reference</h3>
+      <p>All endpoints are prefixed with the app domain (e.g. `https://goatmaster-tau.vercel.app`).…</p>
+      <div class="he-card__meta"><span>docs/architecture/api.md</span></div>
+    </a>
+    <a class="he-card" href="./architecture/data-flow.html">
+      <div class="he-card__eyebrow">Architecture</div>
+      <h3>Data Flow</h3>
+      <p>This document traces the lifecycle of the three primary data types in Goat Master: **users**, **goats**, and **embeddings**.</p>
+      <div class="he-card__meta"><span>docs/architecture/data-flow.md</span></div>
+    </a>
+    <a class="he-card" href="./architecture/database.html">
+      <div class="he-card__eyebrow">Architecture</div>
+      <h3>Database Schema</h3>
+      <p>PostgreSQL 16 on Neon serverless.</p>
+      <div class="he-card__meta"><span>docs/architecture/database.md</span></div>
+    </a>
+    <a class="he-card" href="./architecture/deployment.html">
+      <div class="he-card__eyebrow">Architecture</div>
+      <h3>Deployment</h3>
+      <p>Push to `main` branch → Vercel auto-builds.</p>
+      <div class="he-card__meta"><span>docs/architecture/deployment.md</span></div>
+    </a>
+    <a class="he-card" href="./architecture/ml-architecture.html">
+      <div class="he-card__eyebrow">Architecture</div>
+      <h3>ML Architecture</h3>
+      <p>Goat Master uses a **hybrid on-device + server-side** recognition pipeline.</p>
+      <div class="he-card__meta"><span>docs/architecture/ml-architecture.md</span></div>
+    </a>
+    <a class="he-card" href="./architecture/security-model.html">
+      <div class="he-card__eyebrow">Architecture</div>
+      <h3>Security Model</h3>
+      <p>**Known limitation:** The admin portal currently uses `localStorage` (`goat_user`) for authentication, not the JWT cookie.</p>
+      <div class="he-card__meta"><span>docs/architecture/security-model.md</span></div>
+    </a>
+    <a class="he-card" href="./architecture/system-overview.html">
+      <div class="he-card__eyebrow">Architecture</div>
+      <h3>System Architecture Overview</h3>
+      <p>Three pages under the admin route group…</p>
+      <div class="he-card__meta"><span>docs/architecture/system-overview.md</span></div>
+    </a>
+  </div>
+</section>
+
+<section class="he-index-section" id="audits">
+  <div class="he-index-section__head">
+    <h2>Audits</h2>
+    <p class="he-index-section__blurb">3 documents.</p>
+  </div>
+  <div class="he-grid">
+    <a class="he-card" href="./audits/2026-06-05-codebase.html">
+      <div class="he-card__eyebrow">Audits</div>
+      <h3>2026-06-05 · Codebase audit (v2.0 prep)</h3>
+      <p>A full-repo review done before the v2.0 upgrade (bun migration, color system rewrite, doc refresh).…</p>
+      <div class="he-card__meta"><span>docs/audits/2026-06-05-codebase.md</span></div>
+    </a>
+    <a class="he-card" href="./audits/2026-07-23-codebase.html">
+      <div class="he-card__eyebrow">Audits</div>
+      <h3>Codebase Audit — 2026-07-23</h3>
+      <p>The project has undergone a significant refactoring and feature expansion phase since the v2.0 audit. Key milestones achieved…</p>
+      <div class="he-card__meta"><span>docs/audits/2026-07-23-codebase.md</span></div>
+    </a>
+    <a class="he-card" href="./audits/known-issues.html">
+      <div class="he-card__eyebrow">Audits</div>
+      <h3>Known Issues</h3>
+      <p>Living list of persistent issues + workarounds.</p>
+      <div class="he-card__meta"><span>docs/audits/known-issues.md</span></div>
+    </a>
+  </div>
+</section>
+
+<section class="he-index-section" id="design">
+  <div class="he-index-section__head">
+    <h2>Design</h2>
+    <p class="he-index-section__blurb">5 documents.</p>
+  </div>
+  <div class="he-grid">
+    <a class="he-card" href="./design/01-foundations.html">
+      <div class="he-card__eyebrow">Design</div>
+      <h3>01 · Foundations</h3>
+      <p>1.</p>
+      <div class="he-card__meta"><span>docs/design/01-foundations.md</span></div>
+    </a>
+    <a class="he-card" href="./design/02-colors.html">
+      <div class="he-card__eyebrow">Design</div>
+      <h3>02 · Color tokens</h3>
+      <p>The Goat Master palette is a two-layer system, all defined in `app/globals.css`…</p>
+      <div class="he-card__meta"><span>docs/design/02-colors.md</span></div>
+    </a>
+    <a class="he-card" href="./design/03-typography.html">
+      <div class="he-card__eyebrow">Design</div>
+      <h3>03 · Typography</h3>
+      <p>The Goat Master type system is intentionally light: a single system-font stack, three sizes, four weights.</p>
+      <div class="he-card__meta"><span>docs/design/03-typography.md</span></div>
+    </a>
+    <a class="he-card" href="./design/05-components.html">
+      <div class="he-card__eyebrow">Design</div>
+      <h3>05 · Component library</h3>
+      <p>The component layer is a flat set of client components in `components/`, each owning its layout, with the global styling rules in `app/globals.css`.</p>
+      <div class="he-card__meta"><span>docs/design/05-components.md</span></div>
+    </a>
+    <a class="he-card" href="./design/06-motion.html">
+      <div class="he-card__eyebrow">Design</div>
+      <h3>06 · Motion</h3>
+      <p>Goat Master uses motion to make the app feel tactile without ever getting in the way.</p>
+      <div class="he-card__meta"><span>docs/design/06-motion.md</span></div>
+    </a>
+  </div>
+</section>
+
+<section class="he-index-section" id="guides">
+  <div class="he-index-section__head">
+    <h2>Guides</h2>
+    <p class="he-index-section__blurb">7 documents.</p>
+  </div>
+  <div class="he-grid">
+    <a class="he-card" href="./guides/admin-portal.html">
+      <div class="he-card__eyebrow">Guides</div>
+      <h3>Admin Portal Guide</h3>
+      <p>Navigate to `/admin` and log in with an admin account.</p>
+      <div class="he-card__meta"><span>docs/guides/admin-portal.md</span></div>
+    </a>
+    <a class="he-card" href="./guides/contributing.html">
+      <div class="he-card__eyebrow">Guides</div>
+      <h3>Contributing Guide</h3>
+      <p>Conventional Commits…</p>
+      <div class="he-card__meta"><span>docs/guides/contributing.md</span></div>
+    </a>
+    <a class="he-card" href="./guides/deployment.html">
+      <div class="he-card__eyebrow">Guides</div>
+      <h3>Deployment Guide</h3>
+      <p>See [`architecture/deployment.md`](../architecture/deployment.md) for the full deployment runbook.…</p>
+      <div class="he-card__meta"><span>docs/guides/deployment.md</span></div>
+    </a>
+    <a class="he-card" href="./guides/development.html">
+      <div class="he-card__eyebrow">Guides</div>
+      <h3>Development Guide</h3>
+      <p>Uses Turbopack for fast HMR.</p>
+      <div class="he-card__meta"><span>docs/guides/development.md</span></div>
+    </a>
+    <a class="he-card" href="./guides/handover.html">
+      <div class="he-card__eyebrow">Guides</div>
+      <h3>Handover Guide</h3>
+      <p>A 30-minute onboarding for a new engineer picking up Goat Master.</p>
+      <div class="he-card__meta"><span>docs/guides/handover.md</span></div>
+    </a>
+    <a class="he-card" href="./guides/ml-service-deployment.html">
+      <div class="he-card__eyebrow">Guides</div>
+      <h3>ML Service Deployment Guide</h3>
+      <p>The Python FastAPI ML service (YOLOv8 + ResNet50) runs on Fly.io at `https://goatmaster.fly.dev`.…</p>
+      <div class="he-card__meta"><span>docs/guides/ml-service-deployment.md</span></div>
+    </a>
+    <a class="he-card" href="./guides/setup.html">
+      <div class="he-card__eyebrow">Guides</div>
+      <h3>Setup Guide</h3>
+      <p>Copy `.env.local.example` to `.env.local` and fill in…</p>
+      <div class="he-card__meta"><span>docs/guides/setup.md</span></div>
+    </a>
+  </div>
+</section>
+
+<section class="he-index-section" id="plans">
+  <div class="he-index-section__head">
+    <h2>Plans</h2>
+    <p class="he-index-section__blurb">4 documents.</p>
+  </div>
+  <div class="he-grid">
+    <a class="he-card" href="./plans/documentation-update-plan.html">
+      <div class="he-card__eyebrow">Plans</div>
+      <h3>Documentation Update Plan v2.1</h3>
+      <p>**Date:** 2026-07-23 **Objective:** Update all documentation to reflect changes made since commit `b7458a1` (the full refactor + admin portal + ML deployment phase).</p>
+      <div class="he-card__meta"><span>docs/plans/documentation-update-plan.md</span></div>
+    </a>
+    <a class="he-card" href="./plans/future-plans.html">
+      <div class="he-card__eyebrow">Plans</div>
+      <h3>Future Plans</h3>
+      <p></p>
+      <div class="he-card__meta"><span>docs/plans/future-plans.md</span></div>
+    </a>
+    <a class="he-card" href="./plans/ml-retraining-loop.html">
+      <div class="he-card__eyebrow">Plans</div>
+      <h3>ML retraining loop</h3>
+      <p>How a single correction from an admin becomes a smarter model.</p>
+      <div class="he-card__meta"><span>docs/plans/ml-retraining-loop.md</span></div>
+    </a>
+    <a class="he-card" href="./plans/v2-upgrade.html">
+      <div class="he-card__eyebrow">Plans</div>
+      <h3>v2.0 Upgrade Summary</h3>
+      <p>All items from the v2.0 roadmap are complete…</p>
+      <div class="he-card__meta"><span>docs/plans/v2-upgrade.md</span></div>
+    </a>
+  </div>
+</section>
+
+
+</main>
+
+
+<footer class="he-foot">
+  Source · <a href="./../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

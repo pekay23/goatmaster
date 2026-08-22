@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>System Architecture Overview · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Architecture</p>
+  <h1 class="he-title">System Architecture Overview</h1>
+  <p class="he-deck">Three pages under the admin route group…</p>
+</header>
+
+<section class="he-section" id="stack">
+  <div class="he-section__num">01 · Stack</div>
+  <h2 class="he-section__title">Stack</h2><ul>
+<li><strong>Frontend:</strong> Next.js 16 (App Router) + React 19 + TypeScript/JSX</li>
+<li><strong>Styling:</strong> Hand-rolled CSS variable design system (<code>app/globals.css</code>) with full light + dark mode, Pasture green + Slate neutral palette, glassmorphism, and responsive breakpoints (375 / 640 / 1024 / 1440)</li>
+<li><strong>Database:</strong> PostgreSQL (Neon serverless) with <code>pgvector</code> extension for similarity search</li>
+<li><strong>Auth:</strong> Custom JWT via <code>jose</code> + <code>bcryptjs</code>; httpOnly cookies; rate-limited login</li>
+<li><strong>On-device ML:</strong> TensorFlow.js (MobileNetV3) for instant local matching</li>
+<li><strong>Server-side ML:</strong> Python FastAPI microservice (YOLOv8 + ResNet50 triplet-loss re-ID) — <code>ml_service/</code></li>
+<li><strong>Image hosting:</strong> Cloudinary unsigned uploads</li>
+<li><strong>Hosting:</strong> Vercel (frontend + API routes) + Fly.io (ML service)</li>
+</ul>
+
+<section class="he-section" id="route-layout">
+  <div class="he-section__num">02 · Route layout</div>
+  <h2 class="he-section__title">Route layout</h2><pre><code>app/
+├── layout.jsx          Root layout (metadata, Analytics, SpeedInsights)
+├── page.jsx            Main app entry → MainApp client component
+├── globals.css         Design system (color tokens, layout, components)
+├── admin/              Admin panel (Dashboard, Users, Tiers)
+├── api/                Route handlers — see API doc
+├── legal/              Privacy + Terms pages
+</code></pre>
+<h3 id="admin-portal-admin">Admin portal (<code>/admin</code>)</h3><p>Three pages under the admin route group:</p>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/admin</code></td>
+<td>Dashboard — stat cards (users, goats, scans, embeddings), tier breakdown bar, 30-day signup chart</td>
+</tr>
+<tr>
+<td><code>/admin/users</code></td>
+<td>User management — search, paginated list, expand to edit role/tier/active status, add user modal, delete with confirmation</td>
+</tr>
+<tr>
+<td><code>/admin/tiers</code></td>
+<td>Tier configuration — view/edit Free/Basic/Pro limits, pricing, feature toggles</td>
+</tr>
+</tbody></table>
+<p>Admin access is determined by <code>role='admin'</code> in the <code>users</code> table. Currently authenticated via <code>localStorage</code> (<code>goat_user</code>), not JWT — a known limitation.</p>
+
+<section class="he-section" id="navigation">
+  <div class="he-section__num">03 · Navigation</div>
+  <h2 class="he-section__title">Navigation</h2><p>The main app uses a bottom nav bar with <strong>4 groups</strong> (consolidated from 14 individual tabs):</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Sub-tabs</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Herd</strong></td>
+<td>Profiles, Health, Events, Lineage</td>
+<td>Goat management</td>
+</tr>
+<tr>
+<td><strong>Ops</strong></td>
+<td>Inventory, Finance, Sales, Dairy, Nutrition</td>
+<td>Farm operations</td>
+</tr>
+<tr>
+<td><strong>Intel</strong></td>
+<td>Analytics, Scan</td>
+<td>Data + ML</td>
+</tr>
+<tr>
+<td><strong>Settings</strong></td>
+<td>—</td>
+<td>Account, preferences</td>
+</tr>
+</tbody></table>
+<p>Sub-tab pills appear in the header when a group is active. Feature merges:</p>
+<ul>
+<li><strong>Scan</strong> tab merges <code>SmartScanner</code> (TF.js on-device) + Bulk Discovery mode toggle</li>
+<li><strong>Lineage</strong> tab merges <code>BreedingPanel</code> + <code>PedigreePanel</code> stacked</li>
+<li><strong>Analytics</strong> tab merges <code>Reports</code> (with PDF export button via jsPDF)</li>
+</ul>
+
+<section class="he-section" id="component-tree">
+  <div class="he-section__num">04 · Component tree</div>
+  <h2 class="he-section__title">Component tree</h2><pre><code>MainApp (state hub)
+├── SplashScreen                   (loading overlay)
+├── GoatCard                       (reusable goat summary)
+├── AddGoatView                    (goat creation form)
+├── Toast                          (notification)
+├── DeleteModal                    (confirmation dialog)
+├── Herd group
+│   ├── HealthPanel
+│   │   ├── HealthForm             (extracted)
+│   │   ├── HealthHistory          (extracted)
+│   │   └── WeightTracker          (extracted)
+│   ├── EventsPanel
+│   │   ├── GoatTagSelector        (extracted)
+│   │   ├── EventForm              (extracted)
+│   │   ├── EventTimeline          (extracted)
+│   │   └── KeywordInsights        (extracted)
+│   ├── BreedingPanel
+│   │   └── BreedingForm           (extracted)
+│   └── PedigreePanel
+├── Ops group
+│   ├── InventoryPanel
+│   ├── ExpenditurePanel
+│   ├── SalesPanel
+│   │   ├── SaleForm               (extracted)
+│   │   └── SalesList              (extracted)
+│   ├── DairyPanel
+│   └── RationCalculator
+├── Intel group
+│   ├── AnalyticsDashboard         (includes Reports PDF export)
+│   └── SmartScanner
+│       └── ScanModels             (extracted — TF.js model loading)
+└── Settings
+    ├── Login / Logout
+    └── SettingsFooter
+</code></pre>
+
+<section class="he-section" id="auth-flow">
+  <div class="he-section__num">05 · Auth flow</div>
+  <h2 class="he-section__title">Auth flow</h2><ol>
+<li>User signs up via <code>POST /api/auth/signup</code> — bcrypt hash stored; JWT set as httpOnly cookie</li>
+<li>User logs in via <code>POST /api/auth/login</code> — rate-limited (5 attempts / 15 min); JWT set as httpOnly cookie</li>
+<li>API routes call <code>requireAuth()</code> / <code>requireRole(role)</code> from <code>lib/auth.js</code> — reads JWT cookie, verifies, attaches user to request</li>
+<li>Admin routes check <code>role === 'admin'</code> before returning data</li>
+</ol>
+
+<section class="he-section" id="data-flow-offline-first">
+  <div class="he-section__num">06 · Data flow (offline-first)</div>
+  <h2 class="he-section__title">Data flow (offline-first)</h2><pre><code>User action → IndexedDB (localDb.js) → Background sync (sync.js) → PostgreSQL
+                                                ↕
+                                         ML Service (Fly.io)
+                                              ↕
+                                        pgvector search
+</code></pre>
+<p>All farm operations work offline via IndexedDB. Data syncs to PostgreSQL when connection is available. The ML service runs on Fly.io (always-on, 1GB RAM) and performs YOLOv8 detection + ResNet50 embedding extraction for goat re-identification.</p>
+
+<section class="he-section" id="key-design-decisions">
+  <div class="he-section__num">07 · Key design decisions</div>
+  <h2 class="he-section__title">Key design decisions</h2><ol>
+<li><strong>Offline-first</strong> — farmers in remote areas. IndexedDB is the source of truth until sync completes.</li>
+<li><strong>Two-layer ML</strong> — TF.js on-device for instant feedback; server-side ResNet50 for accurate re-ID.</li>
+<li><strong>No ORM</strong> (initially) — raw SQL via <code>pg</code> for simplicity. Later migration to Prisma is planned.</li>
+<li><strong>JWT over sessions</strong> — no server-side session store, simpler scaling.</li>
+<li><strong>httpOnly cookies</strong> — XSS-resistant token storage.</li>
+<li><strong>Rate-limited login</strong> — 5 attempts per 15 min window per email.</li>
+<li><strong><code>suppressHydrationWarning</code> on <code>&lt;html&gt;</code> and <code>&lt;body&gt;</code></strong> — mitigates hydration mismatches caused by browser extensions injecting DOM attributes (anti-fingerprinting tools). The warnings are benign.</li>
+</ol>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#stack">Stack</a></li>
+    <li class="he-toc__l2"><a href="#route-layout">Route layout</a></li>
+    <li class="he-toc__l3"><a href="#admin-portal-admin">Admin portal (`/admin`)</a></li>
+    <li class="he-toc__l2"><a href="#navigation">Navigation</a></li>
+    <li class="he-toc__l2"><a href="#component-tree">Component tree</a></li>
+    <li class="he-toc__l2"><a href="#auth-flow">Auth flow</a></li>
+    <li class="he-toc__l2"><a href="#data-flow-offline-first">Data flow (offline-first)</a></li>
+    <li class="he-toc__l2"><a href="#key-design-decisions">Key design decisions</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

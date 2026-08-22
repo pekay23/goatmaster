@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Known Issues · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Audits</p>
+  <h1 class="he-title">Known Issues</h1>
+  <p class="he-deck">Living list of persistent issues + workarounds.</p>
+</header>
+<p><strong>Severity:</strong> low
+<strong>Symptom:</strong> long smart-scan batches (&gt;30 images) can be cut off
+<strong>Workaround:</strong> SmartScanner caps batch at 20 by default
+<strong>Fix planned for:</strong> v2.1 — break into smaller batches server-side, return a job id, poll for completion.</p>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#2026-06-05-prefers-reduced-motion-not-honoured">2026-06-05 — `prefers-reduced-motion` not honoured</a></li>
+    <li class="he-toc__l2"><a href="#2026-06-05-no-ci">2026-06-05 — No CI</a></li>
+    <li class="he-toc__l2"><a href="#2026-06-05-no-password-reset-email-verification">2026-06-05 — No password reset / email verification</a></li>
+    <li class="he-toc__l2"><a href="#2026-06-05-ml-service-cold-start">2026-06-05 — ML service cold start</a></li>
+    <li class="he-toc__l2"><a href="#2026-06-05-cloudinary-unsigned-preset-allows-anyone-to-upload">2026-06-05 — Cloudinary unsigned preset allows anyone to upload</a></li>
+    <li class="he-toc__l2"><a href="#2026-05-30-vercel-serverless-10-s-timeout">2026-05-30 — Vercel serverless 10 s timeout</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

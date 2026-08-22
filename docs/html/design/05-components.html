@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>05 · Component library · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Design</p>
+  <h1 class="he-title">05 · Component library</h1>
+  <p class="he-deck">The component layer is a flat set of client components in <code>components/</code>, each owning its layout, with the global styling rules in <code>app/globals.css</code>.</p>
+</header>
+<ul>
+<li>❌ Emoji as icons (Lucide React only). The 🐐 inside a goat card is the one exception.</li>
+<li>❌ Buttons smaller than 44×44 px.</li>
+<li>❌ <code>transition: all</code> — use <code>transition-colors</code> or <code>transition-transform</code>.</li>
+<li>❌ Silent accessibility drops — every interactive element needs <code>cursor: pointer</code>, focus ring, and an accessible label.</li>
+</ul>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#1-composite-components">1 · Composite components</a></li>
+    <li class="he-toc__l2"><a href="#2-primitive-classes-in-globalscss">2 · Primitive classes (in `globals.css`)</a></li>
+    <li class="he-toc__l2"><a href="#3-responsive-behaviour">3 · Responsive behaviour</a></li>
+    <li class="he-toc__l2"><a href="#4-motion-default-timings">4 · Motion (default timings)</a></li>
+    <li class="he-toc__l2"><a href="#5-forbidden-patterns">5 · Forbidden patterns</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

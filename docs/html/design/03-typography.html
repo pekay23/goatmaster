@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>03 · Typography · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Design</p>
+  <h1 class="he-title">03 · Typography</h1>
+  <p class="he-deck">The Goat Master type system is intentionally light: a single system-font stack, three sizes, four weights.</p>
+</header>
+<ul>
+<li>❌ No <code>@import</code> or <code>&lt;link&gt;</code> to Google Fonts.</li>
+<li>❌ No <code>font-size</code> smaller than <code>10px</code> (legibility floor on mobile).</li>
+<li>❌ No <code>text-transform: uppercase</code> on body copy (only the splash tagline + nav labels are uppercase).</li>
+</ul>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#font-stack">Font stack</a></li>
+    <li class="he-toc__l2"><a href="#scale">Scale</a></li>
+    <li class="he-toc__l2"><a href="#weights">Weights</a></li>
+    <li class="he-toc__l2"><a href="#headings">Headings</a></li>
+    <li class="he-toc__l2"><a href="#letter-spacing">Letter-spacing</a></li>
+    <li class="he-toc__l2"><a href="#line-height">Line-height</a></li>
+    <li class="he-toc__l2"><a href="#numeric-tabular">Numeric + tabular</a></li>
+    <li class="he-toc__l2"><a href="#forbidden">Forbidden</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

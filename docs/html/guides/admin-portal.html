@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Portal Guide · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Guides</p>
+  <h1 class="he-title">Admin Portal Guide</h1>
+  <p class="he-deck">Navigate to <code>/admin</code> and log in with an admin account.</p>
+</header>
+
+<section class="he-section" id="access">
+  <div class="he-section__num">01 · Access</div>
+  <h2 class="he-section__title">Access</h2><p>Navigate to <code>/admin</code> and log in with an admin account. Admin access is determined by <code>role='admin'</code> in the <code>users</code> table.</p>
+<p><strong>Current limitation:</strong> Admin auth uses <code>localStorage</code> (<code>goat_user</code>), not the JWT cookie. This means the admin session persists even after JWT expiry.</p>
+
+<section class="he-section" id="pages">
+  <div class="he-section__num">02 · Pages</div>
+  <h2 class="he-section__title">Pages</h2><h3 id="dashboard-admin">Dashboard (<code>/admin</code>)</h3><p>The dashboard shows four stat cards at the top:</p>
+<ul>
+<li><strong>Users</strong> — total registered users</li>
+<li><strong>Goats</strong> — total goats across all farms</li>
+<li><strong>Scans</strong> — total ML scans (currently hardcoded to 0)</li>
+<li><strong>Embeddings</strong> — total ML embeddings (0 if <code>goat_embeddings</code> table doesn&#39;t exist)</li>
+</ul>
+<p>Below the cards:</p>
+<ul>
+<li><strong>Users by Tier</strong> — horizontal stacked bar chart showing Free/Basic/Pro distribution</li>
+<li><strong>Signups (Last 30 Days)</strong> — bar chart of daily new user registrations</li>
+</ul>
+<h3 id="users-adminusers">Users (<code>/admin/users</code>)</h3><p>Search, filter, and manage all users:</p>
+<ul>
+<li><strong>Search bar</strong> — filters by email or username (debounced 300ms)</li>
+<li><strong>Add User button</strong> — opens a modal form to create a new user (email, password, username, role, tier)</li>
+<li><strong>User cards</strong> — click to expand, showing:<ul>
+<li><strong>Role</strong> dropdown — switch between <code>user</code> and <code>admin</code></li>
+<li><strong>Tier</strong> dropdown — switch between <code>free</code>, <code>basic</code>, <code>pro</code></li>
+<li><strong>Active toggle</strong> — visual toggle (does not persist — <code>is_active</code> column doesn&#39;t exist in DB)</li>
+<li><strong>Joined date</strong> — formatted as &quot;Jul 22, 2026&quot;</li>
+<li><strong>Delete button</strong> — red button with confirmation modal (safety guard: cannot delete the last admin)</li>
+</ul>
+</li>
+</ul>
+<h3 id="tiers-admintiers">Tiers (<code>/admin/tiers</code>)</h3><p>View and edit subscription tier configurations:</p>
+<ul>
+<li><strong>Free</strong> — 5 goats, 10 scans/day, no AI training, no smart scan</li>
+<li><strong>Basic ($9.99/mo)</strong> — 25 goats, 100 scans/day, AI training enabled</li>
+<li><strong>Pro ($29.99/mo)</strong> — unlimited goats, unlimited scans, all features</li>
+</ul>
+<p>Click <strong>Edit</strong> on any tier card to modify limits, pricing, and feature flags. Click <strong>Save</strong> to persist changes.</p>
+
+<section class="he-section" id="known-limitations">
+  <div class="he-section__num">03 · Known limitations</div>
+  <h2 class="he-section__title">Known limitations</h2><ol>
+<li><strong>Admin auth uses localStorage</strong> — not JWT. XSS-vulnerable. Sessions don&#39;t expire with JWT.</li>
+<li><strong>No audit logging</strong> — admin actions (user create/update/delete) are not tracked.</li>
+<li><strong>No billing integration</strong> — tier changes don&#39;t trigger payments or invoices.</li>
+<li><strong><code>is_active</code> toggle is visual only</strong> — the column doesn&#39;t exist in the DB.</li>
+</ol>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#access">Access</a></li>
+    <li class="he-toc__l2"><a href="#pages">Pages</a></li>
+    <li class="he-toc__l3"><a href="#dashboard-admin">Dashboard (`/admin`)</a></li>
+    <li class="he-toc__l3"><a href="#users-adminusers">Users (`/admin/users`)</a></li>
+    <li class="he-toc__l3"><a href="#tiers-admintiers">Tiers (`/admin/tiers`)</a></li>
+    <li class="he-toc__l2"><a href="#known-limitations">Known limitations</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

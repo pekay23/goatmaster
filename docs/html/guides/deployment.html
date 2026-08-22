@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deployment Guide · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Guides</p>
+  <h1 class="he-title">Deployment Guide</h1>
+  <p class="he-deck">See <a href="../architecture/deployment.md"><code>architecture/deployment.md</code></a> for the full deployment runbook.…</p>
+</header>
+<ul>
+<li><strong>Vercel</strong> — Dashboard → Deployments → Promote a previous deploy</li>
+<li><strong>Fly.io</strong> — <code>fly deploy --image &lt;image-tag&gt;</code> or Dashboard → Machine → Rebuild</li>
+</ul>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#quick-reference">Quick reference</a></li>
+    <li class="he-toc__l3"><a href="#frontend-vercel">Frontend → Vercel</a></li>
+    <li class="he-toc__l3"><a href="#ml-service-flyio">ML service → Fly.io</a></li>
+    <li class="he-toc__l2"><a href="#post-deploy-checklist">Post-deploy checklist</a></li>
+    <li class="he-toc__l2"><a href="#rollback">Rollback</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

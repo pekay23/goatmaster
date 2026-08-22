@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🐐 Goat Master — Portfolio Summary · Goatmaster</title>
+<link rel="stylesheet" href="./design-tokens.css">
+<link rel="stylesheet" href="./docs.css">
+</head>
+<body>
+<div class="he-shell ">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="./index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="./index.html">Index</a>
+    <a href="./index.html#overview">Overview</a>
+    <a href="./index.html#architecture">Architecture</a>
+    <a href="./index.html#audits">Audits</a>
+    <a href="./index.html#design">Design</a>
+    <a href="./index.html#guides">Guides</a>
+    <a href="./index.html#plans">Plans</a>
+  </div>
+</nav>
+
+<main>
+<header>
+  <p class="he-eyebrow">Overview</p>
+  <h1 class="he-title">🐐 Goat Master — Portfolio Summary</h1>
+  <p class="he-deck">---…</p>
+</header>
+<blockquote><p>Copy-paste this into your portfolio CMS / case study.</p>
+</blockquote><hr>
+<p><strong>PROJECT:</strong> Goat Master</p>
+<p><strong>INDUSTRY:</strong> Agriculture &amp; AgriTech (smart farming / livestock management)</p>
+<p><strong>WHAT IT DOES:</strong> A mobile-first PWA that identifies individual goats from a photo and tracks the full life of a herd — profiles, health, breeding, and AI-powered scanning.</p>
+<p><strong>THE PROBLEM:</strong> Smallholder farmers and hobby shepherds can identify <em>breeds</em> in a photo, but they can&#39;t tell one goat from another in a herd of 30, can&#39;t keep reliable breeding records on paper, and lose track of vaccinations and kidding dates. Existing &quot;farm software&quot; is desktop-first, expensive, and built for industrial operations.</p>
+<p><strong>WHAT YOU BUILT:</strong></p>
+<ul>
+<li><strong>Hybrid on-device + server-side recognition.</strong> TensorFlow.js (MobileNetV3) runs in the browser for instant local matching against an IndexedDB cache; a FastAPI microservice (YOLOv8 detector + ResNet50 triplet-loss re-ID) verifies and handles cache misses. Vectors are stored in PostgreSQL with the <code>pgvector</code> extension and queried via cosine distance.</li>
+<li><strong>Mobile-first PWA shell.</strong> Splash screen, glassmorphism, three breakpoints (mobile bottom-nav → tablet → desktop sidebar), light / dark / system theme. Designed like a native app but ships as a Next.js 16 + React 19 installable PWA.</li>
+<li><strong>Full herd management</strong> — goat profiles (name, breed, sex, DOB, ear tag, photo), health log, breeding lineage with parent-child links, alerts, breeding-cycle maturation helper, per-herd reports.</li>
+<li><strong>Smart Scan auto-discovery</strong> — point the camera at a herd, the system detects every goat, suggests a new profile for the ones it can&#39;t match, and lets the user accept / reject / merge in one pass.</li>
+<li><strong>Admin tools that improve the model</strong> — &quot;Train AI&quot; runs triplet-loss fine-tuning on the entire dataset; &quot;Merge duplicates&quot; lets a human fix any wrong matches and feeds them back into the next training cycle.</li>
+<li><strong>Custom design system</strong> with a two-layer CSS variable palette (<code>--pasture-*</code> brand + <code>--slate-*</code> UI neutrals), full light + dark mode, all values WCAG AA.</li>
+<li><strong>Production-grade ops</strong> — JWT auth in httpOnly cookies, rate-limited login, parameterised SQL, owner-scoped queries, indexed image uploads via Cloudinary, ML service on Hugging Face Spaces, frontend on Vercel with Turbopack.</li>
+</ul>
+<p><strong>THE RESULT:</strong></p>
+<ul>
+<li>Recognition round-trip under 400 ms p50 on a mid-range phone (local cache hit).</li>
+<li>Works offline thanks to the IndexedDB embedding cache — re-identification keeps working in a barn with no signal.</li>
+<li>Used daily by a small user base for real herd management (owner-managed pilot — no public metrics yet).</li>
+<li>30+ goat breeds pre-loaded with origin, type, and traits.</li>
+<li>Single-developer ship: 700-line client component, ~12 API routes, one Python microservice.</li>
+</ul>
+<p><strong>PERMISSION:</strong> Yes — it&#39;s mine, open source, public. Live on Vercel.</p>
+<p><strong>LINKS:</strong></p>
+<ul>
+<li>Live app: <a href="https://goatmaster-tau.vercel.app">https://goatmaster-tau.vercel.app</a></li>
+<li>GitHub: <a href="https://github.com/pekay23/goatmaster">https://github.com/pekay23/goatmaster</a></li>
+<li>Screenshots: see <code>public/splashscreen.png</code> and <code>public/icon-512.png</code> in the repo</li>
+</ul>
+<hr>
+
+<section class="he-section" id="tech-stack-one-liner">
+  <div class="he-section__num">01 · Tech stack (one-liner)</div>
+  <h2 class="he-section__title">Tech stack (one-liner)</h2><p>Next.js 16 (App Router) · React 19 · PostgreSQL + pgvector · TensorFlow.js · FastAPI + YOLOv8 + ResNet50 · Cloudinary · Vercel · Hugging Face Spaces · Bun</p>
+
+<section class="he-section" id="tags-for-the-portfolio-filter">
+  <div class="he-section__num">02 · Tags for the portfolio filter</div>
+  <h2 class="he-section__title">Tags for the portfolio filter</h2><p><code>#ai</code> <code>#machine-learning</code> <code>#computer-vision</code> <code>#pwa</code> <code>#nextjs</code> <code>#react</code> <code>#postgres</code> <code>#full-stack</code> <code>#mobile-first</code> <code>#agtech</code> <code>#livestock</code> <code>#product-design</code></p>
+
+</main>
+
+
+<footer class="he-foot">
+  Source · <a href="./../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

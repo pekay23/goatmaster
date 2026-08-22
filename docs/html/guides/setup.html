@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Setup Guide · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Guides</p>
+  <h1 class="he-title">Setup Guide</h1>
+  <p class="he-deck">Copy <code>.env.local.example</code> to <code>.env.local</code> and fill in…</p>
+</header>
+
+<section class="he-section" id="prerequisites">
+  <div class="he-section__num">01 · Prerequisites</div>
+  <h2 class="he-section__title">Prerequisites</h2><ul>
+<li><strong>Bun</strong> (v1.2+) — project uses <code>bun</code> exclusively (not npm/pnpm)</li>
+<li>PostgreSQL instance (cloud: Neon, local: Docker)</li>
+<li>Fly.io account (for ML service deployment)</li>
+<li>Cloudinary account (for image uploads)</li>
+</ul>
+
+<section class="he-section" id="installation">
+  <div class="he-section__num">02 · Installation</div>
+  <h2 class="he-section__title">Installation</h2><pre><code class="language-bash">git clone https://github.com/pekay23/goatmaster.git
+cd goatmaster
+bun install
+</code></pre>
+
+<section class="he-section" id="environment-variables">
+  <div class="he-section__num">03 · Environment variables</div>
+  <h2 class="he-section__title">Environment variables</h2><p>Copy <code>.env.local.example</code> to <code>.env.local</code> and fill in:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DATABASE_URL</code></td>
+<td>✅</td>
+<td>PostgreSQL connection string</td>
+</tr>
+<tr>
+<td><code>JWT_SECRET</code></td>
+<td>✅</td>
+<td>Random 64-char hex for token signing</td>
+</tr>
+<tr>
+<td><code>MIGRATE_SECRET</code></td>
+<td>✅</td>
+<td>Protects the <code>/api/db-migrate</code> endpoint</td>
+</tr>
+<tr>
+<td><code>ML_SERVICE_KEY</code></td>
+<td>✅</td>
+<td>Shared secret for ML service auth</td>
+</tr>
+<tr>
+<td><code>ML_SERVICE_URL</code></td>
+<td>✅</td>
+<td>Fly.io URL: <code>https://goatmaster.fly.dev</code></td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_CLOUDINARY_NAME</code></td>
+<td>✅</td>
+<td>Cloudinary cloud name</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_CLOUDINARY_PRESET</code></td>
+<td>✅</td>
+<td>Cloudinary upload preset</td>
+</tr>
+<tr>
+<td><code>ADMIN_EMAIL</code></td>
+<td>✅</td>
+<td>Admin login email (postinstall seed)</td>
+</tr>
+<tr>
+<td><code>ADMIN_PASSWORD</code></td>
+<td>✅</td>
+<td>Admin login password</td>
+</tr>
+</tbody></table>
+
+<section class="he-section" id="database-setup">
+  <div class="he-section__num">04 · Database setup</div>
+  <h2 class="he-section__title">Database setup</h2><pre><code class="language-bash"># Run migrations (requires DATABASE_URL in env)
+bun --env-file=.env.local run scripts/migrate.js
+
+# Seed admin user
+bun --env-file=.env.local run scripts/create-admin.js
+</code></pre>
+
+<section class="he-section" id="run-locally">
+  <div class="he-section__num">05 · Run locally</div>
+  <h2 class="he-section__title">Run locally</h2><pre><code class="language-bash">bun run dev
+# → http://localhost:3000
+</code></pre>
+<p>The <code>postinstall</code> hook runs <code>migrate.js</code> + <code>create-admin.js</code> automatically on <code>bun install</code> (but only if env vars are loaded). For local dev, you must run them manually with <code>--env-file</code>.</p>
+
+<section class="he-section" id="available-scripts">
+  <div class="he-section__num">06 · Available scripts</div>
+  <h2 class="he-section__title">Available scripts</h2><table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bun run dev</code></td>
+<td>Start dev server (localhost:3000)</td>
+</tr>
+<tr>
+<td><code>bun run build</code></td>
+<td>Production build (Prisma generate + Next.js)</td>
+</tr>
+<tr>
+<td><code>bun run lint</code></td>
+<td>ESLint</td>
+</tr>
+<tr>
+<td><code>bun run db:migrate</code></td>
+<td>Run DB migrations</td>
+</tr>
+<tr>
+<td><code>bun run db:seed:admin</code></td>
+<td>Seed/update admin user</td>
+</tr>
+</tbody></table>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#prerequisites">Prerequisites</a></li>
+    <li class="he-toc__l2"><a href="#installation">Installation</a></li>
+    <li class="he-toc__l2"><a href="#environment-variables">Environment variables</a></li>
+    <li class="he-toc__l2"><a href="#database-setup">Database setup</a></li>
+    <li class="he-toc__l2"><a href="#run-locally">Run locally</a></li>
+    <li class="he-toc__l2"><a href="#available-scripts">Available scripts</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

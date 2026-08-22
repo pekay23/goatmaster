@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>API Reference · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Architecture</p>
+  <h1 class="he-title">API Reference</h1>
+  <p class="he-deck">All endpoints are prefixed with the app domain (e.g. <code>https://goatmaster-tau.vercel.app</code>).…</p>
+</header>
+<p>See <a href="../guides/ml-service-deployment.html"><code>ml-service-deployment.md</code></a> for deployment details.</p>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#conventions">Conventions</a></li>
+    <li class="he-toc__l2"><a href="#auth">Auth</a></li>
+    <li class="he-toc__l3"><a href="#post-apiauthsignup">POST /api/auth/signup</a></li>
+    <li class="he-toc__l3"><a href="#post-apiauthlogin">POST /api/auth/login</a></li>
+    <li class="he-toc__l3"><a href="#post-apiauthlogout">POST /api/auth/logout</a></li>
+    <li class="he-toc__l3"><a href="#get-apiauthme">GET /api/auth/me</a></li>
+    <li class="he-toc__l3"><a href="#post-apiauthdelete">POST /api/auth/delete</a></li>
+    <li class="he-toc__l2"><a href="#smart-scan">Smart Scan</a></li>
+    <li class="he-toc__l3"><a href="#post-apiscan">POST /api/scan</a></li>
+    <li class="he-toc__l3"><a href="#post-apienroll">POST /api/enroll</a></li>
+    <li class="he-toc__l3"><a href="#post-apicorrections">POST /api/corrections</a></li>
+    <li class="he-toc__l2"><a href="#maturation">Maturation</a></li>
+    <li class="he-toc__l3"><a href="#post-apimaturationcalculate">POST /api/maturation/calculate</a></li>
+    <li class="he-toc__l2"><a href="#admin-api">Admin API</a></li>
+    <li class="he-toc__l3"><a href="#get-apiadminstats">GET /api/admin/stats</a></li>
+    <li class="he-toc__l3"><a href="#get-apiadminusers">GET /api/admin/users</a></li>
+    <li class="he-toc__l3"><a href="#post-apiadminusers">POST /api/admin/users</a></li>
+    <li class="he-toc__l3"><a href="#patch-apiadminusersid">PATCH /api/admin/users/[id]</a></li>
+    <li class="he-toc__l3"><a href="#delete-apiadminusersid">DELETE /api/admin/users/[id]</a></li>
+    <li class="he-toc__l3"><a href="#get-apiadmintiers">GET /api/admin/tiers</a></li>
+    <li class="he-toc__l3"><a href="#put-apiadmintiers">PUT /api/admin/tiers</a></li>
+    <li class="he-toc__l2"><a href="#db-migration">DB Migration</a></li>
+    <li class="he-toc__l3"><a href="#post-apidb-migrate">POST /api/db-migrate</a></li>
+    <li class="he-toc__l2"><a href="#health">Health</a></li>
+    <li class="he-toc__l3"><a href="#get-apihealth">GET /api/health</a></li>
+    <li class="he-toc__l2"><a href="#ml-service-internal">ML Service (internal)</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>

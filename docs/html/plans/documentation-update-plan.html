@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documentation Update Plan v2.1 · Goatmaster</title>
+<link rel="stylesheet" href="../design-tokens.css">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<div class="he-shell he-shell--wide">
+
+<nav class="he-nav">
+  <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
+  <div class="he-nav__links">
+    <a href="../index.html">Index</a>
+    <a href="../index.html#overview">Overview</a>
+    <a href="../index.html#architecture">Architecture</a>
+    <a href="../index.html#audits">Audits</a>
+    <a href="../index.html#design">Design</a>
+    <a href="../index.html#guides">Guides</a>
+    <a href="../index.html#plans">Plans</a>
+  </div>
+</nav>
+<div class="he-layout">
+<main class="he-main">
+<header>
+  <p class="he-eyebrow">Plans</p>
+  <h1 class="he-title">Documentation Update Plan v2.1</h1>
+  <p class="he-deck"><strong>Date:</strong> 2026-07-23 <strong>Objective:</strong> Update all documentation to reflect changes made since commit <code>b7458a1</code> (the full refactor + admin portal + ML deployment phase).</p>
+</header>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Priority</th>
+<th>Docs</th>
+<th>Est. Effort</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.1</td>
+<td>High</td>
+<td><code>system-overview.md</code></td>
+<td>30 min</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>High</td>
+<td><code>api.md</code></td>
+<td>20 min</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>High</td>
+<td><code>database.md</code></td>
+<td>15 min</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>High</td>
+<td><code>deployment.md</code></td>
+<td>25 min</td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>High</td>
+<td><code>guides/deployment.md</code></td>
+<td>15 min</td>
+</tr>
+<tr>
+<td>4.1</td>
+<td>High</td>
+<td><code>guides/admin-portal.md</code> (NEW)</td>
+<td>30 min</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>High</td>
+<td><code>guides/ml-service-deployment.md</code> (NEW)</td>
+<td>25 min</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>Medium</td>
+<td><code>security-model.md</code></td>
+<td>10 min</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>Medium</td>
+<td><code>guides/setup.md</code></td>
+<td>10 min</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>Medium</td>
+<td><code>guides/development.md</code></td>
+<td>5 min</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>Medium</td>
+<td><code>plans/future-plans.md</code></td>
+<td>15 min</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>Medium</td>
+<td><code>plans/v2-upgrade.md</code></td>
+<td>5 min</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>Medium</td>
+<td><code>audits/2026-07-23-codebase.md</code> (NEW)</td>
+<td>20 min</td>
+</tr>
+<tr>
+<td>5.1</td>
+<td>Low</td>
+<td><code>CHANGELOG.md</code></td>
+<td>10 min</td>
+</tr>
+<tr>
+<td>5.2</td>
+<td>Low</td>
+<td><code>docs/README.md</code></td>
+<td>5 min</td>
+</tr>
+</tbody></table>
+
+</main>
+
+<aside class="he-toc" aria-label="On this page">
+  <p class="he-toc__label">On this page</p>
+  <ul>
+    <li class="he-toc__l2"><a href="#phase-1-core-reference-docs-architecture">Phase 1: Core Reference Docs (Architecture)</a></li>
+    <li class="he-toc__l3"><a href="#11-docsarchitecturesystem-overviewmd">1.1 `docs/architecture/system-overview.md</a></li>
+    <li class="he-toc__l3"><a href="#12-docsarchitectureapimd">1.2 `docs/architecture/api.md</a></li>
+    <li class="he-toc__l3"><a href="#13-docsarchitecturedatabasemd">1.3 `docs/architecture/database.md</a></li>
+    <li class="he-toc__l3"><a href="#14-docsarchitecturedeploymentmd">1.4 `docs/architecture/deployment.md</a></li>
+    <li class="he-toc__l3"><a href="#15-docsarchitecturesecurity-modelmd">1.5 `docs/architecture/security-model.md</a></li>
+    <li class="he-toc__l2"><a href="#phase-2-operational-guides">Phase 2: Operational Guides</a></li>
+    <li class="he-toc__l3"><a href="#21-docsguidesdeploymentmd">2.1 `docs/guides/deployment.md</a></li>
+    <li class="he-toc__l3"><a href="#22-docsguidessetupmd">2.2 `docs/guides/setup.md</a></li>
+    <li class="he-toc__l3"><a href="#23-docsguidesdevelopmentmd">2.3 `docs/guides/development.md</a></li>
+    <li class="he-toc__l2"><a href="#phase-3-plans-roadmap">Phase 3: Plans &amp; Roadmap</a></li>
+    <li class="he-toc__l3"><a href="#31-docsplansfuture-plansmd">3.1 `docs/plans/future-plans.md</a></li>
+    <li class="he-toc__l3"><a href="#32-docsplansv2-upgrademd">3.2 `docs/plans/v2-upgrade.md</a></li>
+    <li class="he-toc__l2"><a href="#phase-4-reference-docs-new">Phase 4: Reference Docs (New)</a></li>
+    <li class="he-toc__l3"><a href="#41-new-docsguidesadmin-portalmd">4.1 NEW: `docs/guides/admin-portal.md</a></li>
+    <li class="he-toc__l3"><a href="#42-new-docsguidesml-service-deploymentmd">4.2 NEW: `docs/guides/ml-service-deployment.md</a></li>
+    <li class="he-toc__l3"><a href="#43-new-docsaudits2026-07-23-codebasemd">4.3 NEW: `docs/audits/2026-07-23-codebase.md</a></li>
+    <li class="he-toc__l2"><a href="#phase-5-changelog-root-docs">Phase 5: CHANGELOG &amp; Root Docs</a></li>
+    <li class="he-toc__l3"><a href="#51-docschangelogmd">5.1 `docs/CHANGELOG.md</a></li>
+    <li class="he-toc__l3"><a href="#52-docsreadmemd-the-index">5.2 `docs/README.md` (the index)</a></li>
+    <li class="he-toc__l2"><a href="#execution-order">Execution Order</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="he-foot">
+  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+</footer>
+</div>
+</body>
+</html>
