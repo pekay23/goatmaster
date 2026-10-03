@@ -14,12 +14,11 @@
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
@@ -29,14 +28,11 @@
   <h1 class="he-title">ML Service Deployment Guide</h1>
   <p class="he-deck">The Python FastAPI ML service (YOLOv8 + ResNet50) runs on Fly.io at <code>https://goatmaster.fly.dev</code>.…</p>
 </header>
-
-<section class="he-section" id="overview">
-  <div class="he-section__num">01 · Overview</div>
-  <h2 class="he-section__title">Overview</h2><p>The Python FastAPI ML service (YOLOv8 + ResNet50) runs on Fly.io at <code>https://goatmaster.fly.dev</code>.</p>
-
-<section class="he-section" id="configuration">
-  <div class="he-section__num">02 · Configuration</div>
-  <h2 class="he-section__title">Configuration</h2><h3 id="flytoml"><code>fly.toml</code></h3><pre><code class="language-yaml">app = &quot;goatmaster-ml&quot;
+<section class="he-section" id="overview"><div class="he-section__num">01 · Overview</div><h2 class="he-section__title">Overview</h2></section>
+<p>The Python FastAPI ML service (YOLOv8 + ResNet50) runs on Fly.io at <code>https://goatmaster.fly.dev</code>.</p>
+<section class="he-section" id="configuration"><div class="he-section__num">02 · Configuration</div><h2 class="he-section__title">Configuration</h2></section>
+<h3 id="flytoml"><code>fly.toml</code></h3>
+<pre><code class="language-yaml">app = &quot;goatmaster-ml&quot;
 primary_region = &quot;iad&quot;
 
 [build]
@@ -60,24 +56,26 @@ primary_region = &quot;iad&quot;
   YOLO_CONFIG_DIR = &quot;/tmp/yolo_config&quot;
   PYTHONUNBUFFERED = &quot;1&quot;
 </code></pre>
-<h3 id="dockerfile">Dockerfile</h3><p>Must use port <strong>8080</strong> (Fly.io proxy requirement):</p>
+<h3 id="dockerfile">Dockerfile</h3>
+<p>Must use port <strong>8080</strong> (Fly.io proxy requirement):</p>
 <pre><code class="language-dockerfile">ENV PORT=8080
 EXPOSE 8080
 CMD [&quot;sh&quot;, &quot;-c&quot;, &quot;uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}&quot;]
 </code></pre>
-<h3 id="pre-downloaded-model-weights">Pre-downloaded model weights</h3><p>To prevent 503 timeouts on first startup, weights download during Docker build:</p>
-<pre><code class="language-dockerfile">RUN python -c &quot;from ultralytics import YOLO; YOLO(&#39;yolov8n.pt&#39;)&quot;
-RUN python -c &quot;from torchvision import models; models.resnet50(weights=&#39;DEFAULT&#39;)&quot;
+<h3 id="pre-downloaded-model-weights">Pre-downloaded model weights</h3>
+<p>To prevent 503 timeouts on first startup, weights download during Docker build:</p>
+<pre><code class="language-dockerfile">RUN python -c &quot;from ultralytics import YOLO; YOLO('yolov8n.pt')&quot;
+RUN python -c &quot;from torchvision import models; models.resnet50(weights='DEFAULT')&quot;
 </code></pre>
 <p>This adds ~100MB to the image but ensures instant startup.</p>
-
-<section class="he-section" id="deployment">
-  <div class="he-section__num">03 · Deployment</div>
-  <h2 class="he-section__title">Deployment</h2><h3 id="prerequisites">Prerequisites</h3><ul>
+<section class="he-section" id="deployment"><div class="he-section__num">03 · Deployment</div><h2 class="he-section__title">Deployment</h2></section>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
 <li><a href="https://fly.io">Fly.io account</a></li>
 <li><code>flyctl</code> CLI installed</li>
 </ul>
-<h3 id="first-deploy">First deploy</h3><pre><code class="language-bash">cd ml_service
+<h3 id="first-deploy">First deploy</h3>
+<pre><code class="language-bash">cd ml_service
 
 # Launch the app
 fly launch --name goatmaster-ml --dockerfile Dockerfile --no-deploy
@@ -89,13 +87,15 @@ fly secrets set ML_SERVICE_KEY=&quot;your-key-here&quot;
 # Deploy
 fly deploy
 </code></pre>
-<h3 id="github-auto-deploy">GitHub auto-deploy</h3><p>In Fly.io dashboard → go to your app → <strong>Settings</strong> → <strong>Deploy</strong> → Connect GitHub repo:</p>
+<h3 id="github-auto-deploy">GitHub auto-deploy</h3>
+<p>In Fly.io dashboard → go to your app → <strong>Settings</strong> → <strong>Deploy</strong> → Connect GitHub repo:</p>
 <ul>
 <li><strong>Working directory:</strong> <code>ml_service</code></li>
 <li><strong>Config path:</strong> <code>ml_service/fly.toml</code></li>
 </ul>
 <p>Every push to <code>main</code> triggers an automatic rebuild and deploy.</p>
-<h3 id="updating">Updating</h3><pre><code class="language-bash"># Push code changes
+<h3 id="updating">Updating</h3>
+<pre><code class="language-bash"># Push code changes
 git push origin main
 # Fly.io auto-deploys
 
@@ -103,57 +103,34 @@ git push origin main
 cd ml_service
 fly deploy
 </code></pre>
-
-<section class="he-section" id="health-check">
-  <div class="he-section__num">04 · Health check</div>
-  <h2 class="he-section__title">Health check</h2><pre><code class="language-bash">curl https://goatmaster.fly.dev/health
+<section class="he-section" id="health-check"><div class="he-section__num">04 · Health check</div><h2 class="he-section__title">Health check</h2></section>
+<pre><code class="language-bash">curl https://goatmaster.fly.dev/health
 # {&quot;status&quot;:&quot;ok&quot;,&quot;models_loaded&quot;:true,&quot;detection_mode&quot;:&quot;coco_fallback&quot;}
 </code></pre>
-
-<section class="he-section" id="troubleshooting">
-  <div class="he-section__num">05 · Troubleshooting</div>
-  <h2 class="he-section__title">Troubleshooting</h2><h3 id="app-restarts-oom">App restarts / OOM</h3><p><strong>Symptom:</strong> Machines restart frequently. Log shows <code>[PC01] instance refused connection</code>.</p>
+<section class="he-section" id="troubleshooting"><div class="he-section__num">05 · Troubleshooting</div><h2 class="he-section__title">Troubleshooting</h2></section>
+<h3 id="app-restarts-oom">App restarts / OOM</h3>
+<p><strong>Symptom:</strong> Machines restart frequently. Log shows <code>[PC01] instance refused connection</code>.</p>
 <p><strong>Fix:</strong> Ensure <code>fly.toml</code> has <code>memory = &quot;1gb&quot;</code>. 512MB is insufficient for YOLOv8 + ResNet50 + PyTorch.</p>
-<h3 id="503-timeout-on-health-check">503 timeout on health check</h3><p><strong>Symptom:</strong> First request to <code>/health</code> times out.</p>
-<p><strong>Fix:</strong> Pre-download model weights in Dockerfile (see above). The first startup needs to download YOLOv8 (6.2MB) and ResNet50 (98MB) which takes too long for Fly.io&#39;s proxy timeout.</p>
-<h3 id="port-connection-refused">Port connection refused</h3><p><strong>Symptom:</strong> <code>[PC01] instance refused connection. is your app listening on 0.0.0.0:8080?</code></p>
+<h3 id="503-timeout-on-health-check">503 timeout on health check</h3>
+<p><strong>Symptom:</strong> First request to <code>/health</code> times out.</p>
+<p><strong>Fix:</strong> Pre-download model weights in Dockerfile (see above). The first startup needs to download YOLOv8 (6.2MB) and ResNet50 (98MB) which takes too long for Fly.io's proxy timeout.</p>
+<h3 id="port-connection-refused">Port connection refused</h3>
+<p><strong>Symptom:</strong> <code>[PC01] instance refused connection. is your app listening on 0.0.0.0:8080?</code></p>
 <p><strong>Fix:</strong> Ensure Dockerfile has <code>ENV PORT=8080</code> and <code>EXPOSE 8080</code>. The <code>fly.toml</code> <code>internal_port</code> must match.</p>
-
-<section class="he-section" id="secrets-reference">
-  <div class="he-section__num">06 · Secrets reference</div>
-  <h2 class="he-section__title">Secrets reference</h2><table>
+<section class="he-section" id="secrets-reference"><div class="he-section__num">06 · Secrets reference</div><h2 class="he-section__title">Secrets reference</h2></section>
+<table>
 <thead>
-<tr>
-<th>Secret</th>
-<th>Source</th>
-<th>Required</th>
-</tr>
+<tr><th>Secret</th><th>Source</th><th>Required</th></tr>
 </thead>
-<tbody><tr>
-<td><code>DATABASE_URL</code></td>
-<td>Neon dashboard</td>
-<td>✅</td>
-</tr>
-<tr>
-<td><code>ML_SERVICE_KEY</code></td>
-<td>Your <code>.env.local</code></td>
-<td>✅</td>
-</tr>
-<tr>
-<td><code>ROBOFLOW_API_KEY</code></td>
-<td>Roboflow dashboard</td>
-<td>Optional</td>
-</tr>
-<tr>
-<td><code>ROBOFLOW_MODEL_ID</code></td>
-<td>Roboflow dashboard</td>
-<td>Optional</td>
-</tr>
-</tbody></table>
-
-<section class="he-section" id="alternatives">
-  <div class="he-section__num">07 · Alternatives</div>
-  <h2 class="he-section__title">Alternatives</h2><p>If Fly.io doesn&#39;t work for your use case, see:</p>
+<tbody>
+<tr><td><code>DATABASE_URL</code></td><td>Neon dashboard</td><td>✅</td></tr>
+<tr><td><code>ML_SERVICE_KEY</code></td><td>Your <code>.env.local</code></td><td>✅</td></tr>
+<tr><td><code>ROBOFLOW_API_KEY</code></td><td>Roboflow dashboard</td><td>Optional</td></tr>
+<tr><td><code>ROBOFLOW_MODEL_ID</code></td><td>Roboflow dashboard</td><td>Optional</td></tr>
+</tbody>
+</table>
+<section class="he-section" id="alternatives"><div class="he-section__num">07 · Alternatives</div><h2 class="he-section__title">Alternatives</h2></section>
+<p>If Fly.io doesn't work for your use case, see:</p>
 <ul>
 <li><code>ml_service/oracle-cloud/</code> — Oracle Cloud Always Free (ARM, 4 OCPU, 24GB RAM)</li>
 <li><code>ml_service/koyeb.yaml</code> — Koyeb deployment config</li>
@@ -186,7 +163,7 @@ fly deploy
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

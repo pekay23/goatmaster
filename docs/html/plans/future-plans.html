@@ -14,12 +14,11 @@
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
@@ -29,56 +28,46 @@
   <h1 class="he-title">Future Plans</h1>
   
 </header>
-
-<section class="he-section" id="done-v20-v21">
-  <div class="he-section__num">01 · Done (v2.0 / v2.1)</div>
-  <h2 class="he-section__title">Done (v2.0 / v2.1)</h2><ul>
-<li><input checked="" disabled="" type="checkbox"> Bun-only package manager (removed npm/yarn/pnpm)</li>
-<li><input checked="" disabled="" type="checkbox"> Color system rewrite (Pasture green + Slate neutral palette)</li>
-<li><input checked="" disabled="" type="checkbox"> Documentation refresh (architecture, design, guides)</li>
-<li><input checked="" disabled="" type="checkbox"> Component extraction from large files (22 files from EventsPanel, HealthPanel, SalesPanel, BreedingPanel)</li>
-<li><input checked="" disabled="" type="checkbox"> Tab consolidation (14 individual tabs → 4 groups: Herd, Ops, Intel, Settings)</li>
-<li><input checked="" disabled="" type="checkbox"> Feature merges (Smart Scanner → Scan tab, Reports → Analytics, Pedigree → Breeding)</li>
-<li><input checked="" disabled="" type="checkbox"> Admin portal (Dashboard, Users CRUD, Tiers management)</li>
-<li><input checked="" disabled="" type="checkbox"> Admin API (7 REST endpoints for stats, users, tiers)</li>
-<li><input checked="" disabled="" type="checkbox"> ML service migration (Render → Fly.io — always-on, 1GB RAM)</li>
-<li><input checked="" disabled="" type="checkbox"> Login UX fixes (password visibility toggle, email field label)</li>
-<li><input checked="" disabled="" type="checkbox"> Database tiers table (Free/Basic/Pro seed data)</li>
-<li><input checked="" disabled="" type="checkbox"> Infrastructure configs (Oracle Cloud, Fly.io, Koyeb deployment files)</li>
+<section class="he-section" id="done-v20-v21"><div class="he-section__num">01 · Done (v2.0 / v2.1)</div><h2 class="he-section__title">Done (v2.0 / v2.1)</h2></section>
+<ul>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Bun-only package manager (removed npm/yarn/pnpm)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Color system rewrite (Pasture green + Slate neutral palette)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Documentation refresh (architecture, design, guides)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Component extraction from large files (22 files from EventsPanel, HealthPanel, SalesPanel, BreedingPanel)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Tab consolidation (14 individual tabs → 4 groups: Herd, Ops, Intel, Settings)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Feature merges (Smart Scanner → Scan tab, Reports → Analytics, Pedigree → Breeding)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Admin portal (Dashboard, Users CRUD, Tiers management)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Admin API (7 REST endpoints for stats, users, tiers)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>ML service migration (Render → Fly.io — always-on, 1GB RAM)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Login UX fixes (password visibility toggle, email field label)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Database tiers table (Free/Basic/Pro seed data)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled checked>Infrastructure configs (Oracle Cloud, Fly.io, Koyeb deployment files)</li>
 </ul>
-
-<section class="he-section" id="now-v21-current">
-  <div class="he-section__num">02 · Now (v2.1 — current)</div>
-  <h2 class="he-section__title">Now (v2.1 — current)</h2><ul>
+<section class="he-section" id="now-v21-current"><div class="he-section__num">02 · Now (v2.1 — current)</div><h2 class="he-section__title">Now (v2.1 — current)</h2></section>
+<ul>
 <li>Admin panel improvements (audit logs, activity timeline)</li>
 <li>Smart scan embedding page (handle missing <code>goat_embeddings</code> table)</li>
 <li>ML model fine-tuning trigger from admin panel</li>
 <li>Email notifications for important events (kidding alerts, health reminders)</li>
 </ul>
-
-<section class="he-section" id="next-v22">
-  <div class="he-section__num">03 · Next (v2.2)</div>
-  <h2 class="he-section__title">Next (v2.2)</h2><ul>
+<section class="he-section" id="next-v22"><div class="he-section__num">03 · Next (v2.2)</div><h2 class="he-section__title">Next (v2.2)</h2></section>
+<ul>
 <li>Prisma ORM migration (replace raw SQL queries)</li>
 <li>JWT-based admin auth (replace localStorage hack)</li>
 <li>Billing / subscription management integration</li>
 <li>Advanced analytics dashboard (charts, export, trends)</li>
 <li>Push notifications (mobile-friendly)</li>
 </ul>
-
-<section class="he-section" id="later-v30">
-  <div class="he-section__num">04 · Later (v3.0)</div>
-  <h2 class="he-section__title">Later (v3.0)</h2><ul>
+<section class="he-section" id="later-v30"><div class="he-section__num">04 · Later (v3.0)</div><h2 class="he-section__title">Later (v3.0)</h2></section>
+<ul>
 <li>Mobile app (React Native / Flutter)</li>
 <li>Multi-farm management (super-admin view across farms)</li>
 <li>Public marketplace for goat genetics / breeding stock</li>
 <li>IoT integration (smart scales, automated milk recording)</li>
 <li>AI-powered health predictions (mastitis, parasites)</li>
 </ul>
-
-<section class="he-section" id="out-of-scope">
-  <div class="he-section__num">05 · Out of scope</div>
-  <h2 class="he-section__title">Out of scope</h2><ul>
+<section class="he-section" id="out-of-scope"><div class="he-section__num">05 · Out of scope</div><h2 class="he-section__title">Out of scope</h2></section>
+<ul>
 <li>Real-time multi-user collaboration (Google Docs–style)</li>
 <li>Blockchain / NFT integration</li>
 <li>Crypto payments</li>
@@ -98,7 +87,7 @@
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

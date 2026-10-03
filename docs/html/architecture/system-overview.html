@@ -14,12 +14,11 @@
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
@@ -29,10 +28,8 @@
   <h1 class="he-title">System Architecture Overview</h1>
   <p class="he-deck">Three pages under the admin route group…</p>
 </header>
-
-<section class="he-section" id="stack">
-  <div class="he-section__num">01 · Stack</div>
-  <h2 class="he-section__title">Stack</h2><ul>
+<section class="he-section" id="stack"><div class="he-section__num">01 · Stack</div><h2 class="he-section__title">Stack</h2></section>
+<ul>
 <li><strong>Frontend:</strong> Next.js 16 (App Router) + React 19 + TypeScript/JSX</li>
 <li><strong>Styling:</strong> Hand-rolled CSS variable design system (<code>app/globals.css</code>) with full light + dark mode, Pasture green + Slate neutral palette, glassmorphism, and responsive breakpoints (375 / 640 / 1024 / 1440)</li>
 <li><strong>Database:</strong> PostgreSQL (Neon serverless) with <code>pgvector</code> extension for similarity search</li>
@@ -42,10 +39,8 @@
 <li><strong>Image hosting:</strong> Cloudinary unsigned uploads</li>
 <li><strong>Hosting:</strong> Vercel (frontend + API routes) + Fly.io (ML service)</li>
 </ul>
-
-<section class="he-section" id="route-layout">
-  <div class="he-section__num">02 · Route layout</div>
-  <h2 class="he-section__title">Route layout</h2><pre><code>app/
+<section class="he-section" id="route-layout"><div class="he-section__num">02 · Route layout</div><h2 class="he-section__title">Route layout</h2></section>
+<pre><code>app/
 ├── layout.jsx          Root layout (metadata, Analytics, SpeedInsights)
 ├── page.jsx            Main app entry → MainApp client component
 ├── globals.css         Design system (color tokens, layout, components)
@@ -53,71 +48,40 @@
 ├── api/                Route handlers — see API doc
 ├── legal/              Privacy + Terms pages
 </code></pre>
-<h3 id="admin-portal-admin">Admin portal (<code>/admin</code>)</h3><p>Three pages under the admin route group:</p>
+<h3 id="admin-portal-admin">Admin portal (<code>/admin</code>)</h3>
+<p>Three pages under the admin route group:</p>
 <table>
 <thead>
-<tr>
-<th>Route</th>
-<th>Description</th>
-</tr>
+<tr><th>Route</th><th>Description</th></tr>
 </thead>
-<tbody><tr>
-<td><code>/admin</code></td>
-<td>Dashboard — stat cards (users, goats, scans, embeddings), tier breakdown bar, 30-day signup chart</td>
-</tr>
-<tr>
-<td><code>/admin/users</code></td>
-<td>User management — search, paginated list, expand to edit role/tier/active status, add user modal, delete with confirmation</td>
-</tr>
-<tr>
-<td><code>/admin/tiers</code></td>
-<td>Tier configuration — view/edit Free/Basic/Pro limits, pricing, feature toggles</td>
-</tr>
-</tbody></table>
+<tbody>
+<tr><td><code>/admin</code></td><td>Dashboard — stat cards (users, goats, scans, embeddings), tier breakdown bar, 30-day signup chart</td></tr>
+<tr><td><code>/admin/users</code></td><td>User management — search, paginated list, expand to edit role/tier/active status, add user modal, delete with confirmation</td></tr>
+<tr><td><code>/admin/tiers</code></td><td>Tier configuration — view/edit Free/Basic/Pro limits, pricing, feature toggles</td></tr>
+</tbody>
+</table>
 <p>Admin access is determined by <code>role='admin'</code> in the <code>users</code> table. Currently authenticated via <code>localStorage</code> (<code>goat_user</code>), not JWT — a known limitation.</p>
-
-<section class="he-section" id="navigation">
-  <div class="he-section__num">03 · Navigation</div>
-  <h2 class="he-section__title">Navigation</h2><p>The main app uses a bottom nav bar with <strong>4 groups</strong> (consolidated from 14 individual tabs):</p>
+<section class="he-section" id="navigation"><div class="he-section__num">03 · Navigation</div><h2 class="he-section__title">Navigation</h2></section>
+<p>The main app uses a bottom nav bar with <strong>4 groups</strong> (consolidated from 14 individual tabs):</p>
 <table>
 <thead>
-<tr>
-<th>Group</th>
-<th>Sub-tabs</th>
-<th>Description</th>
-</tr>
+<tr><th>Group</th><th>Sub-tabs</th><th>Description</th></tr>
 </thead>
-<tbody><tr>
-<td><strong>Herd</strong></td>
-<td>Profiles, Health, Events, Lineage</td>
-<td>Goat management</td>
-</tr>
-<tr>
-<td><strong>Ops</strong></td>
-<td>Inventory, Finance, Sales, Dairy, Nutrition</td>
-<td>Farm operations</td>
-</tr>
-<tr>
-<td><strong>Intel</strong></td>
-<td>Analytics, Scan</td>
-<td>Data + ML</td>
-</tr>
-<tr>
-<td><strong>Settings</strong></td>
-<td>—</td>
-<td>Account, preferences</td>
-</tr>
-</tbody></table>
+<tbody>
+<tr><td><strong>Herd</strong></td><td>Profiles, Health, Events, Lineage</td><td>Goat management</td></tr>
+<tr><td><strong>Ops</strong></td><td>Inventory, Finance, Sales, Dairy, Nutrition</td><td>Farm operations</td></tr>
+<tr><td><strong>Intel</strong></td><td>Analytics, Scan</td><td>Data + ML</td></tr>
+<tr><td><strong>Settings</strong></td><td>—</td><td>Account, preferences</td></tr>
+</tbody>
+</table>
 <p>Sub-tab pills appear in the header when a group is active. Feature merges:</p>
 <ul>
 <li><strong>Scan</strong> tab merges <code>SmartScanner</code> (TF.js on-device) + Bulk Discovery mode toggle</li>
 <li><strong>Lineage</strong> tab merges <code>BreedingPanel</code> + <code>PedigreePanel</code> stacked</li>
 <li><strong>Analytics</strong> tab merges <code>Reports</code> (with PDF export button via jsPDF)</li>
 </ul>
-
-<section class="he-section" id="component-tree">
-  <div class="he-section__num">04 · Component tree</div>
-  <h2 class="he-section__title">Component tree</h2><pre><code>MainApp (state hub)
+<section class="he-section" id="component-tree"><div class="he-section__num">04 · Component tree</div><h2 class="he-section__title">Component tree</h2></section>
+<pre><code>MainApp (state hub)
 ├── SplashScreen                   (loading overlay)
 ├── GoatCard                       (reusable goat summary)
 ├── AddGoatView                    (goat creation form)
@@ -152,29 +116,23 @@
     ├── Login / Logout
     └── SettingsFooter
 </code></pre>
-
-<section class="he-section" id="auth-flow">
-  <div class="he-section__num">05 · Auth flow</div>
-  <h2 class="he-section__title">Auth flow</h2><ol>
+<section class="he-section" id="auth-flow"><div class="he-section__num">05 · Auth flow</div><h2 class="he-section__title">Auth flow</h2></section>
+<ol>
 <li>User signs up via <code>POST /api/auth/signup</code> — bcrypt hash stored; JWT set as httpOnly cookie</li>
 <li>User logs in via <code>POST /api/auth/login</code> — rate-limited (5 attempts / 15 min); JWT set as httpOnly cookie</li>
 <li>API routes call <code>requireAuth()</code> / <code>requireRole(role)</code> from <code>lib/auth.js</code> — reads JWT cookie, verifies, attaches user to request</li>
 <li>Admin routes check <code>role === 'admin'</code> before returning data</li>
 </ol>
-
-<section class="he-section" id="data-flow-offline-first">
-  <div class="he-section__num">06 · Data flow (offline-first)</div>
-  <h2 class="he-section__title">Data flow (offline-first)</h2><pre><code>User action → IndexedDB (localDb.js) → Background sync (sync.js) → PostgreSQL
+<section class="he-section" id="data-flow-offline-first"><div class="he-section__num">06 · Data flow (offline-first)</div><h2 class="he-section__title">Data flow (offline-first)</h2></section>
+<pre><code>User action → IndexedDB (localDb.js) → Background sync (sync.js) → PostgreSQL
                                                 ↕
                                          ML Service (Fly.io)
                                               ↕
                                         pgvector search
 </code></pre>
 <p>All farm operations work offline via IndexedDB. Data syncs to PostgreSQL when connection is available. The ML service runs on Fly.io (always-on, 1GB RAM) and performs YOLOv8 detection + ResNet50 embedding extraction for goat re-identification.</p>
-
-<section class="he-section" id="key-design-decisions">
-  <div class="he-section__num">07 · Key design decisions</div>
-  <h2 class="he-section__title">Key design decisions</h2><ol>
+<section class="he-section" id="key-design-decisions"><div class="he-section__num">07 · Key design decisions</div><h2 class="he-section__title">Key design decisions</h2></section>
+<ol>
 <li><strong>Offline-first</strong> — farmers in remote areas. IndexedDB is the source of truth until sync completes.</li>
 <li><strong>Two-layer ML</strong> — TF.js on-device for instant feedback; server-side ResNet50 for accurate re-ID.</li>
 <li><strong>No ORM</strong> (initially) — raw SQL via <code>pg</code> for simplicity. Later migration to Prisma is planned.</li>
@@ -201,7 +159,7 @@
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

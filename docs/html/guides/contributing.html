@@ -14,12 +14,11 @@
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
@@ -29,31 +28,26 @@
   <h1 class="he-title">Contributing Guide</h1>
   <p class="he-deck">Conventional Commits…</p>
 </header>
-
-<section class="he-section" id="branching">
-  <div class="he-section__num">01 · Branching</div>
-  <h2 class="he-section__title">Branching</h2><ul>
+<section class="he-section" id="branching"><div class="he-section__num">01 · Branching</div><h2 class="he-section__title">Branching</h2></section>
+<ul>
 <li><code>main</code> — always deployable</li>
 <li><code>feat/&lt;scope&gt;-&lt;short-desc&gt;</code> — new feature</li>
 <li><code>fix/&lt;scope&gt;-&lt;short-desc&gt;</code> — bug fix</li>
 <li><code>chore/&lt;scope&gt;-&lt;short-desc&gt;</code> — maintenance</li>
 <li><code>docs/&lt;scope&gt;</code> — docs only</li>
 </ul>
-
-<section class="he-section" id="commits">
-  <div class="he-section__num">02 · Commits</div>
-  <h2 class="he-section__title">Commits</h2><p>Conventional Commits:</p>
+<section class="he-section" id="commits"><div class="he-section__num">02 · Commits</div><h2 class="he-section__title">Commits</h2></section>
+<p>Conventional Commits:</p>
 <pre><code>feat(scanner): add torch-mode torch overlay
 fix(merge): prevent merging a goat with itself
 docs(colors): document sun-700 token
 chore(deps): bump next to 16.2.4
 </code></pre>
-
-<section class="he-section" id="pull-requests">
-  <div class="he-section__num">03 · Pull requests</div>
-  <h2 class="he-section__title">Pull requests</h2><ul>
+<section class="he-section" id="pull-requests"><div class="he-section__num">03 · Pull requests</div><h2 class="he-section__title">Pull requests</h2></section>
+<ul>
 <li>Title format: <code>&lt;type&gt;(&lt;scope&gt;): &lt;imperative summary&gt;</code></li>
-<li>Description must include:<ul>
+<li>Description must include:
+<ul>
 <li><strong>What</strong> changed</li>
 <li><strong>Why</strong></li>
 <li><strong>How</strong> to verify</li>
@@ -63,29 +57,23 @@ chore(deps): bump next to 16.2.4
 <li>At least one approval before merge</li>
 <li>Squash-merge to <code>main</code></li>
 </ul>
-
-<section class="he-section" id="local-checks">
-  <div class="he-section__num">04 · Local checks</div>
-  <h2 class="he-section__title">Local checks</h2><pre><code class="language-bash">bun run lint
+<section class="he-section" id="local-checks"><div class="he-section__num">04 · Local checks</div><h2 class="he-section__title">Local checks</h2></section>
+<pre><code class="language-bash">bun run lint
 bun run build
 </code></pre>
 <p>CI is not yet wired up — please run both locally before opening a PR.</p>
-
-<section class="he-section" id="style">
-  <div class="he-section__num">05 · Style</div>
-  <h2 class="he-section__title">Style</h2><ul>
+<section class="he-section" id="style"><div class="he-section__num">05 · Style</div><h2 class="he-section__title">Style</h2></section>
+<ul>
 <li>2-space indent, single quotes, no semicolons, no trailing commas</li>
 <li>See <code>docs/guides/development.md</code> for the full conventions</li>
 <li>For UI changes, update <code>docs/design/</code> and add a screenshot to the PR</li>
 </ul>
-
-<section class="he-section" id="releases">
-  <div class="he-section__num">06 · Releases</div>
-  <h2 class="he-section__title">Releases</h2><ol>
+<section class="he-section" id="releases"><div class="he-section__num">06 · Releases</div><h2 class="he-section__title">Releases</h2></section>
+<ol>
 <li>Bump <code>version</code> in <code>package.json</code></li>
 <li>Append a section to <code>docs/CHANGELOG.md</code></li>
 <li>Tag: <code>git tag v2.x.y &amp;&amp; git push --tags</code></li>
-<li>Vercel auto-deploys from the tag&#39;s commit</li>
+<li>Vercel auto-deploys from the tag's commit</li>
 </ol>
 
 </main>
@@ -103,7 +91,7 @@ bun run build
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

@@ -14,12 +14,11 @@
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
@@ -29,11 +28,11 @@
   <h1 class="he-title">Deployment</h1>
   <p class="he-deck">Push to <code>main</code> branch → Vercel auto-builds.</p>
 </header>
-
-<section class="he-section" id="frontend-vercel">
-  <div class="he-section__num">01 · Frontend → Vercel</div>
-  <h2 class="he-section__title">Frontend → Vercel</h2><h3 id="automatic-deploy">Automatic deploy</h3><p>Push to <code>main</code> branch → Vercel auto-builds.</p>
-<h3 id="environment-variables">Environment variables</h3><p>Set in Vercel dashboard (Settings → Environment Variables):</p>
+<section class="he-section" id="frontend-vercel"><div class="he-section__num">01 · Frontend → Vercel</div><h2 class="he-section__title">Frontend → Vercel</h2></section>
+<h3 id="automatic-deploy">Automatic deploy</h3>
+<p>Push to <code>main</code> branch → Vercel auto-builds.</p>
+<h3 id="environment-variables">Environment variables</h3>
+<p>Set in Vercel dashboard (Settings → Environment Variables):</p>
 <pre><code>DATABASE_URL
 JWT_SECRET
 MIGRATE_SECRET
@@ -44,20 +43,21 @@ NEXT_PUBLIC_CLOUDINARY_PRESET
 ADMIN_EMAIL
 ADMIN_PASSWORD
 </code></pre>
-<h3 id="post-deploy">Post-deploy</h3><p>The <code>postinstall</code> hook in <code>package.json</code> runs automatically after install on Vercel:</p>
+<h3 id="post-deploy">Post-deploy</h3>
+<p>The <code>postinstall</code> hook in <code>package.json</code> runs automatically after install on Vercel:</p>
 <pre><code class="language-bash">&quot;postinstall&quot;: &quot;node scripts/migrate.js &amp;&amp; node scripts/create-admin.js&quot;
 </code></pre>
-<p>This creates the <code>tiers</code> table (with seed data) and the admin user on every deploy. It&#39;s idempotent — <code>CREATE TABLE IF NOT EXISTS</code> and <code>ON CONFLICT (email) DO UPDATE</code> ensure no duplicate errors.</p>
-<h3 id="manual-migration-trigger">Manual migration trigger</h3><pre><code class="language-bash">curl -X POST -H &quot;Content-Type: application/json&quot; \
-  -d &#39;{&quot;secret&quot;:&quot;&lt;MIGRATE_SECRET&gt;&quot;}&#39; \
+<p>This creates the <code>tiers</code> table (with seed data) and the admin user on every deploy. It's idempotent — <code>CREATE TABLE IF NOT EXISTS</code> and <code>ON CONFLICT (email) DO UPDATE</code> ensure no duplicate errors.</p>
+<h3 id="manual-migration-trigger">Manual migration trigger</h3>
+<pre><code class="language-bash">curl -X POST -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;secret&quot;:&quot;&lt;MIGRATE_SECRET&gt;&quot;}' \
   https://&lt;your-domain&gt;/api/db-migrate
 </code></pre>
-<hr>
-
-<section class="he-section" id="ml-service-flyio">
-  <div class="he-section__num">02 · ML Service → Fly.io</div>
-  <h2 class="he-section__title">ML Service → Fly.io</h2><p>The Python FastAPI ML service runs on Fly.io at <code>https://goatmaster.fly.dev</code>.</p>
-<h3 id="configuration">Configuration</h3><pre><code class="language-yaml"># ml_service/fly.toml
+<hr />
+<section class="he-section" id="ml-service-flyio"><div class="he-section__num">02 · ML Service → Fly.io</div><h2 class="he-section__title">ML Service → Fly.io</h2></section>
+<p>The Python FastAPI ML service runs on Fly.io at <code>https://goatmaster.fly.dev</code>.</p>
+<h3 id="configuration">Configuration</h3>
+<pre><code class="language-yaml"># ml_service/fly.toml
 [build]
   dockerfile = &quot;Dockerfile&quot;
 
@@ -78,13 +78,16 @@ ADMIN_PASSWORD
 <li>1GB RAM prevents OOM crashes (YOLOv8 + ResNet50 need ~600MB)</li>
 <li><code>auto_stop_machines = false</code> keeps the service always-on (no cold starts)</li>
 </ul>
-<h3 id="pre-downloaded-model-weights">Pre-downloaded model weights</h3><p>To prevent 503 timeouts on first startup, model weights are downloaded during Docker build:</p>
-<pre><code class="language-dockerfile">RUN python -c &quot;from ultralytics import YOLO; YOLO(&#39;yolov8n.pt&#39;)&quot;
-RUN python -c &quot;from torchvision import models; models.resnet50(weights=&#39;DEFAULT&#39;)&quot;
+<h3 id="pre-downloaded-model-weights">Pre-downloaded model weights</h3>
+<p>To prevent 503 timeouts on first startup, model weights are downloaded during Docker build:</p>
+<pre><code class="language-dockerfile">RUN python -c &quot;from ultralytics import YOLO; YOLO('yolov8n.pt')&quot;
+RUN python -c &quot;from torchvision import models; models.resnet50(weights='DEFAULT')&quot;
 </code></pre>
-<h3 id="secrets">Secrets</h3><pre><code class="language-bash">fly secrets set DATABASE_URL=&quot;...&quot; ML_SERVICE_KEY=&quot;...&quot;
+<h3 id="secrets">Secrets</h3>
+<pre><code class="language-bash">fly secrets set DATABASE_URL=&quot;...&quot; ML_SERVICE_KEY=&quot;...&quot;
 </code></pre>
-<h3 id="deploy">Deploy</h3><pre><code class="language-bash">cd ml_service
+<h3 id="deploy">Deploy</h3>
+<pre><code class="language-bash">cd ml_service
 fly deploy
 </code></pre>
 <p>Or connect GitHub repo in Fly.io dashboard for auto-deploy:</p>
@@ -92,37 +95,32 @@ fly deploy
 <li><strong>Working directory:</strong> <code>ml_service</code></li>
 <li><strong>Config path:</strong> <code>ml_service/fly.toml</code></li>
 </ul>
-<h3 id="health-check">Health check</h3><pre><code class="language-bash">curl https://goatmaster.fly.dev/health
+<h3 id="health-check">Health check</h3>
+<pre><code class="language-bash">curl https://goatmaster.fly.dev/health
 # {&quot;status&quot;:&quot;ok&quot;,&quot;models_loaded&quot;:true,&quot;detection_mode&quot;:&quot;coco_fallback&quot;}
 </code></pre>
-<hr>
-
-<section class="he-section" id="infrastructure-alternatives">
-  <div class="he-section__num">03 · Infrastructure alternatives</div>
-  <h2 class="he-section__title">Infrastructure alternatives</h2><p>See the following files for alternative ML service deployment options:</p>
+<hr />
+<section class="he-section" id="infrastructure-alternatives"><div class="he-section__num">03 · Infrastructure alternatives</div><h2 class="he-section__title">Infrastructure alternatives</h2></section>
+<p>See the following files for alternative ML service deployment options:</p>
 <ul>
 <li><code>ml_service/oracle-cloud/</code> — Oracle Cloud Always Free (ARM, 4 OCPU, 24GB RAM)</li>
 <li><code>ml_service/koyeb.yaml</code> — Koyeb deployment config</li>
 <li><code>ml_service/deploy_hf.sh</code> — Hugging Face Spaces deploy script (legacy)</li>
 </ul>
-<hr>
-
-<section class="he-section" id="rollback">
-  <div class="he-section__num">04 · Rollback</div>
-  <h2 class="he-section__title">Rollback</h2><ul>
+<hr />
+<section class="he-section" id="rollback"><div class="he-section__num">04 · Rollback</div><h2 class="he-section__title">Rollback</h2></section>
+<ul>
 <li><strong>Vercel</strong> — Dashboard → Deployments → Promote a previous deploy</li>
 <li><strong>Fly.io</strong> — <code>fly deploy --image &lt;previous-image-tag&gt;</code> or Dashboard → Machine → Rebuild</li>
 </ul>
-<hr>
-
-<section class="he-section" id="post-deploy-checklist">
-  <div class="he-section__num">05 · Post-deploy checklist</div>
-  <h2 class="he-section__title">Post-deploy checklist</h2><ul>
-<li><input disabled="" type="checkbox"> <code>https://&lt;your-domain&gt;/api/health</code> returns <code>{ ok: true }</code></li>
-<li><input disabled="" type="checkbox"> <code>https://goatmaster.fly.dev/health</code> returns models loaded status</li>
-<li><input disabled="" type="checkbox"> <code>/admin</code> loads with dashboard stats</li>
-<li><input disabled="" type="checkbox"> Admin can log in with <code>admin@goatmaster.com</code></li>
-<li><input disabled="" type="checkbox"> Sign up a test account, add a goat, scan it</li>
+<hr />
+<section class="he-section" id="post-deploy-checklist"><div class="he-section__num">05 · Post-deploy checklist</div><h2 class="he-section__title">Post-deploy checklist</h2></section>
+<ul>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled><code>https://&lt;your-domain&gt;/api/health</code> returns <code>{ ok: true }</code></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled><code>https://goatmaster.fly.dev/health</code> returns models loaded status</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled><code>/admin</code> loads with dashboard stats</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled>Admin can log in with <code>admin@goatmaster.com</code></li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled>Sign up a test account, add a goat, scan it</li>
 </ul>
 
 </main>
@@ -148,7 +146,7 @@ fly deploy
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

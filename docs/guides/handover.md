@@ -4,7 +4,7 @@ A 30-minute onboarding for a new engineer picking up Goat Master.
 
 ## 0. Skim these first (5 min)
 
-- [README.md](../../README.md) — project pitch + commands
+- `README.md` (repo root, outside this docs site) — project pitch + commands
 - [System overview](../architecture/system-overview.md) — the architecture in one page
 - [Color tokens](../design/02-colors.md) — where the palette lives
 

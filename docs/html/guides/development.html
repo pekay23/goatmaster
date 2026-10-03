@@ -14,12 +14,11 @@
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
@@ -29,25 +28,19 @@
   <h1 class="he-title">Development Guide</h1>
   <p class="he-deck">Uses Turbopack for fast HMR.</p>
 </header>
-
-<section class="he-section" id="local-dev">
-  <div class="he-section__num">01 · Local dev</div>
-  <h2 class="he-section__title">Local dev</h2><pre><code class="language-bash">bun run dev
+<section class="he-section" id="local-dev"><div class="he-section__num">01 · Local dev</div><h2 class="he-section__title">Local dev</h2></section>
+<pre><code class="language-bash">bun run dev
 # → http://localhost:3000
 </code></pre>
 <p>Uses Turbopack for fast HMR.</p>
-
-<section class="he-section" id="database">
-  <div class="he-section__num">02 · Database</div>
-  <h2 class="he-section__title">Database</h2><ul>
+<section class="he-section" id="database"><div class="he-section__num">02 · Database</div><h2 class="he-section__title">Database</h2></section>
+<ul>
 <li>Cloud PostgreSQL (Neon) via <code>DATABASE_URL</code> in <code>.env.local</code></li>
 <li>Local migrations: <code>bun --env-file=.env.local run scripts/migrate.js</code></li>
 <li>Schema changes: edit <code>scripts/migrate.js</code> (raw SQL) — no Prisma schema yet</li>
 </ul>
-
-<section class="he-section" id="project-structure">
-  <div class="he-section__num">03 · Project structure</div>
-  <h2 class="he-section__title">Project structure</h2><pre><code>src/
+<section class="he-section" id="project-structure"><div class="he-section__num">03 · Project structure</div><h2 class="he-section__title">Project structure</h2></section>
+<pre><code>src/
 ├── app/          Next.js App Router pages + API routes
 ├── components/   React components (panels + extracted sub-components)
 ├── lib/          Utilities (auth, db, sync, breeds)
@@ -55,10 +48,8 @@
 ├── ml_service/   Python FastAPI ML service (Fly.io)
 └── docs/         Project documentation
 </code></pre>
-
-<section class="he-section" id="component-extraction-pattern">
-  <div class="he-section__num">04 · Component extraction pattern</div>
-  <h2 class="he-section__title">Component extraction pattern</h2><p>Large panels are split into sub-components in dedicated directories:</p>
+<section class="he-section" id="component-extraction-pattern"><div class="he-section__num">04 · Component extraction pattern</div><h2 class="he-section__title">Component extraction pattern</h2></section>
+<p>Large panels are split into sub-components in dedicated directories:</p>
 <pre><code>components/events/     → EventsPanel sub-components
 components/health/     → HealthPanel sub-components
 components/sales/      → SalesPanel sub-components
@@ -66,24 +57,18 @@ components/breeding/   → BreedingPanel sub-components
 components/shared/     → Shared utilities (ImageUploader)
 components/smart-scan/ → Scanner-specific modules
 </code></pre>
-
-<section class="he-section" id="known-issues">
-  <div class="he-section__num">05 · Known issues</div>
-  <h2 class="he-section__title">Known issues</h2><ul>
+<section class="he-section" id="known-issues"><div class="he-section__num">05 · Known issues</div><h2 class="he-section__title">Known issues</h2></section>
+<ul>
 <li><strong>Hydration mismatch warnings</strong> — Caused by browser extensions (anti-fingerprinting tools) injecting attributes into the DOM. Mitigated with <code>suppressHydrationWarning</code> on root elements. Warnings are benign.</li>
-<li><strong><code>is_active</code> column missing</strong> — The <code>users</code> table doesn&#39;t have this column. The API returns <code>is_active: true</code> virtually.</li>
-<li><strong><code>goat_embeddings</code> table may not exist</strong> — Admin dashboard shows 0 scans/embeddings if the table hasn&#39;t been created.</li>
+<li><strong><code>is_active</code> column missing</strong> — The <code>users</code> table doesn't have this column. The API returns <code>is_active: true</code> virtually.</li>
+<li><strong><code>goat_embeddings</code> table may not exist</strong> — Admin dashboard shows 0 scans/embeddings if the table hasn't been created.</li>
 </ul>
-
-<section class="he-section" id="admin-access">
-  <div class="he-section__num">06 · Admin access</div>
-  <h2 class="he-section__title">Admin access</h2><p>Users with <code>role='admin'</code> can access <code>/admin</code>. Run the seed script to create the first admin:</p>
+<section class="he-section" id="admin-access"><div class="he-section__num">06 · Admin access</div><h2 class="he-section__title">Admin access</h2></section>
+<p>Users with <code>role='admin'</code> can access <code>/admin</code>. Run the seed script to create the first admin:</p>
 <pre><code class="language-bash">bun --env-file=.env.local run scripts/create-admin.js
 </code></pre>
-
-<section class="he-section" id="building">
-  <div class="he-section__num">07 · Building</div>
-  <h2 class="he-section__title">Building</h2><pre><code class="language-bash">bun run build     # full production build
+<section class="he-section" id="building"><div class="he-section__num">07 · Building</div><h2 class="he-section__title">Building</h2></section>
+<pre><code class="language-bash">bun run build     # full production build
 bun run lint      # ESLint check
 </code></pre>
 
@@ -103,7 +88,7 @@ bun run lint      # ESLint check
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

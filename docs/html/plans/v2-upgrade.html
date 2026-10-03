@@ -8,18 +8,17 @@
 <link rel="stylesheet" href="../docs.css">
 </head>
 <body>
-<div class="he-shell ">
+<div class="he-shell">
 
 <nav class="he-nav">
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 
@@ -29,10 +28,8 @@
   <h1 class="he-title">v2.0 Upgrade Summary</h1>
   <p class="he-deck">All items from the v2.0 roadmap are complete…</p>
 </header>
-
-<section class="he-section" id="completed">
-  <div class="he-section__num">01 · Completed</div>
-  <h2 class="he-section__title">Completed</h2><p>All items from the v2.0 roadmap are complete:</p>
+<section class="he-section" id="completed"><div class="he-section__num">01 · Completed</div><h2 class="he-section__title">Completed</h2></section>
+<p>All items from the v2.0 roadmap are complete:</p>
 <ol>
 <li><strong>Bun-only package manager</strong> — Switched from npm to Bun. <code>package.json</code> scripts updated. Lockfile committed.</li>
 <li><strong>Color system rewrite</strong> — Two-layer palette (Pasture + Slate primitives → semantic tokens). Light + dark mode via <code>[data-theme=&quot;dark&quot;]</code>.</li>
@@ -43,69 +40,29 @@
 <li><strong>Admin portal</strong> — Dashboard with stat cards/tier breakdown/signup chart, Users CRUD, Tiers management.</li>
 <li><strong>ML service migration</strong> — Render → Fly.io. Always-on with 1GB RAM, no cold starts, pre-downloaded model weights.</li>
 </ol>
-
-<section class="he-section" id="key-changes">
-  <div class="he-section__num">02 · Key changes</div>
-  <h2 class="he-section__title">Key changes</h2><table>
+<section class="he-section" id="key-changes"><div class="he-section__num">02 · Key changes</div><h2 class="he-section__title">Key changes</h2></section>
+<table>
 <thead>
-<tr>
-<th>Area</th>
-<th>Before (v1)</th>
-<th>After (v2)</th>
-</tr>
+<tr><th>Area</th><th>Before (v1)</th><th>After (v2)</th></tr>
 </thead>
-<tbody><tr>
-<td>Package manager</td>
-<td>npm/pnpm</td>
-<td>Bun only</td>
-</tr>
-<tr>
-<td>Color system</td>
-<td>Flat CSS variables</td>
-<td>Two-layer palette (Pasture + Slate)</td>
-</tr>
-<tr>
-<td>Navigation</td>
-<td>14 bottom tabs</td>
-<td>4 groups with sub-tabs</td>
-</tr>
-<tr>
-<td>Large components</td>
-<td>Monolithic panels</td>
-<td>Extracted sub-components</td>
-</tr>
-<tr>
-<td>Admin panel</td>
-<td>None</td>
-<td>Dashboard, Users, Tiers</td>
-</tr>
-<tr>
-<td>ML hosting</td>
-<td>Render.com (512MB, sleeps)</td>
-<td>Fly.io (1GB, always-on)</td>
-</tr>
-<tr>
-<td>Admin API</td>
-<td>None</td>
-<td>7 REST endpoints</td>
-</tr>
-<tr>
-<td>Database tiers</td>
-<td>Hardcoded</td>
-<td><code>tiers</code> table with seed data</td>
-</tr>
-<tr>
-<td>Browser hydration</td>
-<td>Full mismatches</td>
-<td><code>suppressHydrationWarning</code> mitigation</td>
-</tr>
-</tbody></table>
+<tbody>
+<tr><td>Package manager</td><td>npm/pnpm</td><td>Bun only</td></tr>
+<tr><td>Color system</td><td>Flat CSS variables</td><td>Two-layer palette (Pasture + Slate)</td></tr>
+<tr><td>Navigation</td><td>14 bottom tabs</td><td>4 groups with sub-tabs</td></tr>
+<tr><td>Large components</td><td>Monolithic panels</td><td>Extracted sub-components</td></tr>
+<tr><td>Admin panel</td><td>None</td><td>Dashboard, Users, Tiers</td></tr>
+<tr><td>ML hosting</td><td>Render.com (512MB, sleeps)</td><td>Fly.io (1GB, always-on)</td></tr>
+<tr><td>Admin API</td><td>None</td><td>7 REST endpoints</td></tr>
+<tr><td>Database tiers</td><td>Hardcoded</td><td><code>tiers</code> table with seed data</td></tr>
+<tr><td>Browser hydration</td><td>Full mismatches</td><td><code>suppressHydrationWarning</code> mitigation</td></tr>
+</tbody>
+</table>
 
 </main>
 
 
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

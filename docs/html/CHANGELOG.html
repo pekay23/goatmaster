@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Changelog · Goatmaster</title>
-<link rel="stylesheet" href="./design-tokens.css">
-<link rel="stylesheet" href="./docs.css">
+<link rel="stylesheet" href="design-tokens.css">
+<link rel="stylesheet" href="docs.css">
 </head>
 <body>
 <div class="he-shell he-shell--wide">
@@ -14,25 +14,22 @@
   <a class="he-nav__brand" href="./index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="./index.html">Index</a>
-    <a href="./index.html#overview">Overview</a>
-    <a href="./index.html#architecture">Architecture</a>
-    <a href="./index.html#audits">Audits</a>
-    <a href="./index.html#design">Design</a>
-    <a href="./index.html#guides">Guides</a>
-    <a href="./index.html#plans">Plans</a>
+    <a href="./architecture/index.html">Architecture</a>
+    <a href="./guides/index.html">Guides</a>
+    <a href="./plans/index.html">Plans</a>
+    <a href="./design/index.html">Design</a>
+    <a href="./audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
 <main class="he-main">
 <header>
-  <p class="he-eyebrow">Overview</p>
+  <p class="he-eyebrow">Docs</p>
   <h1 class="he-title">Changelog</h1>
   <p class="he-deck"><strong>Component extraction:</strong> - Extracted 22 files from monolithic panels: <code>EventsPanel</code> (6 files), <code>HealthPanel</code> (3), <code>SalesPanel</code> (2), <code>BreedingPanel</code> (1), <code>MainApp</code> (7), <code>SmartScanner</code> (1), plus <code>ImageUploader</code> shared utility - Each panel…</p>
 </header>
-
-<section class="he-section" id="v210-2026-07-23">
-  <div class="he-section__num">01 · v2.1.0 (2026-07-23)</div>
-  <h2 class="he-section__title">v2.1.0 (2026-07-23)</h2><p><strong>Component extraction:</strong></p>
+<section class="he-section" id="v210-2026-07-23"><div class="he-section__num">01 · v2.1.0 (2026-07-23)</div><h2 class="he-section__title">v2.1.0 (2026-07-23)</h2></section>
+<p><strong>Component extraction:</strong></p>
 <ul>
 <li>Extracted 22 files from monolithic panels: <code>EventsPanel</code> (6 files), <code>HealthPanel</code> (3), <code>SalesPanel</code> (2), <code>BreedingPanel</code> (1), <code>MainApp</code> (7), <code>SmartScanner</code> (1), plus <code>ImageUploader</code> shared utility</li>
 <li>Each panel now imports from its dedicated sub-directory (<code>components/events/</code>, <code>components/health/</code>, etc.)</li>
@@ -88,7 +85,7 @@
 </ul>
 <p><strong>Bug fixes:</strong></p>
 <ul>
-<li><code>is_active</code> column doesn&#39;t exist in DB — now handled virtually in API (returns <code>true</code>)</li>
+<li><code>is_active</code> column doesn't exist in DB — now handled virtually in API (returns <code>true</code>)</li>
 <li><code>goat_embeddings</code> table may not exist — admin stats API catches gracefully</li>
 <li>Admin user creation is now idempotent (<code>ON CONFLICT (email) DO UPDATE</code>)</li>
 <li>Hydration mismatch warnings mitigated with <code>suppressHydrationWarning</code></li>
@@ -102,10 +99,8 @@
 <li>New audit: 2026-07-23-codebase</li>
 <li>CHANGELOG and docs index refreshed</li>
 </ul>
-
-<section class="he-section" id="v200-2026-06-05">
-  <div class="he-section__num">02 · v2.0.0 (2026-06-05)</div>
-  <h2 class="he-section__title">v2.0.0 (2026-06-05)</h2><ul>
+<section class="he-section" id="v200-2026-06-05"><div class="he-section__num">02 · v2.0.0 (2026-06-05)</div><h2 class="he-section__title">v2.0.0 (2026-06-05)</h2></section>
+<ul>
 <li><strong>Bun-only:</strong> Switched package manager to Bun exclusively. Deleted <code>package-lock.json</code> and <code>.npmrc</code>. Updated <code>build</code> script to use <code>cross-env</code> for 4GB heap. <code>postinstall</code> runs <code>prisma generate</code>.</li>
 <li><strong>Simplified dev script:</strong> <code>next dev --turbo</code> with <code>NODE_ENV=development</code>.</li>
 <li><strong>Dependency pins:</strong> Next.js 16.2+ (stable for Turbopack), React 19.2+, Prisma 7.2+ (stable for <code>postinstall</code>).</li>
@@ -113,10 +108,8 @@
 <li><strong>Documentation refresh:</strong> Reorganized <code>docs/</code> into architecture, design, guides, audits, and plans. Added v2.0 upgrade plan.</li>
 <li><strong><code>CHANGELOG.md</code></strong> introduced.</li>
 </ul>
-
-<section class="he-section" id="v100-2026-05-30">
-  <div class="he-section__num">03 · v1.0.0 (2026-05-30)</div>
-  <h2 class="he-section__title">v1.0.0 (2026-05-30)</h2><ul>
+<section class="he-section" id="v100-2026-05-30"><div class="he-section__num">03 · v1.0.0 (2026-05-30)</div><h2 class="he-section__title">v1.0.0 (2026-05-30)</h2></section>
+<ul>
 <li>Initial public release.</li>
 <li>Goat CRUD, health logs, breeding records, kidding schedules.</li>
 <li>On-device TF.js MobileNetV3 scanning.</li>
@@ -140,7 +133,7 @@
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="./../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

@@ -14,12 +14,11 @@
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
@@ -29,63 +28,51 @@
   <h1 class="he-title">Security Model</h1>
   <p class="he-deck"><strong>Known limitation:</strong> The admin portal currently uses <code>localStorage</code> (<code>goat_user</code>) for authentication, not the JWT cookie.</p>
 </header>
-
-<section class="he-section" id="authentication">
-  <div class="he-section__num">01 · Authentication</div>
-  <h2 class="he-section__title">Authentication</h2><ul>
+<section class="he-section" id="authentication"><div class="he-section__num">01 · Authentication</div><h2 class="he-section__title">Authentication</h2></section>
+<ul>
 <li><strong>JWT-based</strong> using <code>jose</code> library (HS256 algorithm)</li>
 <li>Tokens stored in <strong>httpOnly cookies</strong> (<code>jwt</code>) — not accessible from JavaScript</li>
 <li>Token expiry: 7 days</li>
 <li>Passwords hashed with <strong>bcrypt</strong> (salt rounds: 10)</li>
 <li><strong>Rate limiting</strong> on login: 5 attempts per 15-minute window per email (via <code>lib/rate-limit.ts</code>)</li>
 </ul>
-
-<section class="he-section" id="authorization">
-  <div class="he-section__num">02 · Authorization</div>
-  <h2 class="he-section__title">Authorization</h2><h3 id="standard-routes">Standard routes</h3><p>API routes use <code>requireAuth()</code> from <code>lib/auth.js</code> which:</p>
+<section class="he-section" id="authorization"><div class="he-section__num">02 · Authorization</div><h2 class="he-section__title">Authorization</h2></section>
+<h3 id="standard-routes">Standard routes</h3>
+<p>API routes use <code>requireAuth()</code> from <code>lib/auth.js</code> which:</p>
 <ol>
 <li>Reads the <code>jwt</code> cookie</li>
 <li>Verifies the token signature</li>
 <li>Returns the user payload or null</li>
 </ol>
-<h3 id="admin-routes">Admin routes</h3><p>Admin endpoints check <code>role === 'admin'</code> before returning data.</p>
+<h3 id="admin-routes">Admin routes</h3>
+<p>Admin endpoints check <code>role === 'admin'</code> before returning data.</p>
 <p><strong>Known limitation:</strong> The admin portal currently uses <code>localStorage</code> (<code>goat_user</code>) for authentication, not the JWT cookie. This means:</p>
 <ul>
 <li>Admin auth is XSS-vulnerable (localStorage is accessible to JS)</li>
-<li>Admin sessions aren&#39;t tied to the JWT expiry</li>
+<li>Admin sessions aren't tied to the JWT expiry</li>
 <li>Future improvement: migrate admin auth to use the same JWT cookie pattern</li>
 </ul>
-
-<section class="he-section" id="admin-user">
-  <div class="he-section__num">03 · Admin user</div>
-  <h2 class="he-section__title">Admin user</h2><p>Created automatically on deploy via <code>scripts/create-admin.js</code> (runs in <code>postinstall</code>):</p>
+<section class="he-section" id="admin-user"><div class="he-section__num">03 · Admin user</div><h2 class="he-section__title">Admin user</h2></section>
+<p>Created automatically on deploy via <code>scripts/create-admin.js</code> (runs in <code>postinstall</code>):</p>
 <ul>
 <li>Email and password from <code>ADMIN_EMAIL</code> / <code>ADMIN_PASSWORD</code> env vars</li>
 <li>Idempotent: uses <code>ON CONFLICT (email) DO UPDATE</code></li>
 <li>Can also be created manually: <code>bun run db:seed:admin</code></li>
 </ul>
-
-<section class="he-section" id="multi-tenancy">
-  <div class="he-section__num">04 · Multi-tenancy</div>
-  <h2 class="he-section__title">Multi-tenancy</h2><p>All data queries filter by <code>user_id</code> (or <code>owner_id</code>). Farm A cannot see Farm B&#39;s data. User deletion cascades: health_logs, breeding_logs, embeddings, goats, then user row.</p>
-
-<section class="he-section" id="api-key-protection-ml-service">
-  <div class="he-section__num">05 · API key protection (ML service)</div>
-  <h2 class="he-section__title">API key protection (ML service)</h2><p>All ML service endpoints require the <code>x-ml-key</code> header matching <code>ML_SERVICE_KEY</code>. This is a shared secret, not per-user.</p>
-
-<section class="he-section" id="data-protection">
-  <div class="he-section__num">06 · Data protection</div>
-  <h2 class="he-section__title">Data protection</h2><ul>
+<section class="he-section" id="multi-tenancy"><div class="he-section__num">04 · Multi-tenancy</div><h2 class="he-section__title">Multi-tenancy</h2></section>
+<p>All data queries filter by <code>user_id</code> (or <code>owner_id</code>). Farm A cannot see Farm B's data. User deletion cascades: health_logs, breeding_logs, embeddings, goats, then user row.</p>
+<section class="he-section" id="api-key-protection-ml-service"><div class="he-section__num">05 · API key protection (ML service)</div><h2 class="he-section__title">API key protection (ML service)</h2></section>
+<p>All ML service endpoints require the <code>x-ml-key</code> header matching <code>ML_SERVICE_KEY</code>. This is a shared secret, not per-user.</p>
+<section class="he-section" id="data-protection"><div class="he-section__num">06 · Data protection</div><h2 class="he-section__title">Data protection</h2></section>
+<ul>
 <li>All database queries use <strong>parameterized statements</strong> (no SQL injection)</li>
 <li>Error messages in production do <strong>not</strong> leak stack traces or DB details</li>
 <li>The <code>apiError()</code> helper strips details in production</li>
 <li>Cloudinary uploads use unsigned presets (no upload credentials in client code)</li>
 <li>JWT secret, DB URL, and ML service key are environment variables only</li>
 </ul>
-
-<section class="he-section" id="browser-security">
-  <div class="he-section__num">07 · Browser security</div>
-  <h2 class="he-section__title">Browser security</h2><ul>
+<section class="he-section" id="browser-security"><div class="he-section__num">07 · Browser security</div><h2 class="he-section__title">Browser security</h2></section>
+<ul>
 <li><code>httpOnly</code> cookies for JWT (not accessible via <code>document.cookie</code>)</li>
 <li><code>sameSite: 'lax'</code> for CSRF mitigation</li>
 <li><code>secure</code> flag in production (HTTPS only)</li>
@@ -110,7 +97,7 @@
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>

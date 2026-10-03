@@ -14,12 +14,11 @@
   <a class="he-nav__brand" href="../index.html">Goatmaster <small>docs</small></a>
   <div class="he-nav__links">
     <a href="../index.html">Index</a>
-    <a href="../index.html#overview">Overview</a>
-    <a href="../index.html#architecture">Architecture</a>
-    <a href="../index.html#audits">Audits</a>
-    <a href="../index.html#design">Design</a>
-    <a href="../index.html#guides">Guides</a>
-    <a href="../index.html#plans">Plans</a>
+    <a href="../architecture/index.html">Architecture</a>
+    <a href="../guides/index.html">Guides</a>
+    <a href="../plans/index.html">Plans</a>
+    <a href="../design/index.html">Design</a>
+    <a href="../audits/index.html">Audits</a>
   </div>
 </nav>
 <div class="he-layout">
@@ -27,175 +26,73 @@
 <header>
   <p class="he-eyebrow">Design</p>
   <h1 class="he-title">01 · Foundations</h1>
-  <p class="he-deck">1.</p>
+  
 </header>
-<blockquote><p>Brand voice, color cheat-sheet, and where every token in the design system lives.</p>
+<blockquote>
+<p>Brand voice, color cheat-sheet, and where every token in the design system lives.</p>
 </blockquote>
-<section class="he-section" id="voice-visual-language">
-  <div class="he-section__num">01 · Voice &amp; visual language</div>
-  <h2 class="he-section__title">Voice &amp; visual language</h2><ul>
+<section class="he-section" id="voice-amp-visual-language"><div class="he-section__num">01 · Voice &amp;amp; visual language</div><h2 class="he-section__title">Voice &amp; visual language</h2></section>
+<ul>
 <li><strong>Pastoral + premium.</strong> The app feels like a high-end farming tool — soft greens, warm sunlight accents, generous whitespace, glassmorphism on a radial-gradient pasture background.</li>
 <li><strong>Mobile-first PWA.</strong> A mobile-app-grade experience on the phone, a focused workspace on the desktop (sidebar nav).</li>
 <li><strong>Splash + glassmorphism</strong> is the signature: blurred translucent panels, light radial gradients, no flat-blue &quot;admin panel&quot; look.</li>
 </ul>
-
-<section class="he-section" id="color-hex-cheat-sheet">
-  <div class="he-section__num">02 · Color hex cheat-sheet</div>
-  <h2 class="he-section__title">Color hex cheat-sheet</h2><table>
+<section class="he-section" id="color-hex-cheat-sheet"><div class="he-section__num">02 · Color hex cheat-sheet</div><h2 class="he-section__title">Color hex cheat-sheet</h2></section>
+<table>
 <thead>
-<tr>
-<th>Token</th>
-<th>HSL</th>
-<th>Hex</th>
-<th>Role</th>
-</tr>
+<tr><th>Token</th><th>HSL</th><th>Hex</th><th>Role</th></tr>
 </thead>
-<tbody><tr>
-<td><code>--pasture-50</code></td>
-<td><code>140 60% 96%</code></td>
-<td><code>#ecf9ef</code></td>
-<td>Hover / wash</td>
-</tr>
-<tr>
-<td><code>--pasture-100</code></td>
-<td><code>140 55% 90%</code></td>
-<td><code>#d5f1dc</code></td>
-<td>Hero gradient stop</td>
-</tr>
-<tr>
-<td><code>--pasture-500</code></td>
-<td><code>140 60% 38%</code></td>
-<td><code>#2e9b48</code></td>
-<td><strong>Primary brand</strong></td>
-</tr>
-<tr>
-<td><code>--pasture-600</code></td>
-<td><code>140 65% 30%</code></td>
-<td><code>#218838</code></td>
-<td>Hover (AA on white)</td>
-</tr>
-<tr>
-<td><code>--pasture-700</code></td>
-<td><code>140 70% 22%</code></td>
-<td><code>#166527</code></td>
-<td>Pressed / dark CTA</td>
-</tr>
-<tr>
-<td><code>--sun-500</code></td>
-<td><code>38 92% 50%</code></td>
-<td><code>#f59e0b</code></td>
-<td>Warm accent / warnings / merge</td>
-</tr>
-<tr>
-<td><code>--barn-500</code></td>
-<td><code>0 72% 51%</code></td>
-<td><code>#dc3545</code></td>
-<td>Danger / delete</td>
-</tr>
-<tr>
-<td><code>--sky-500</code></td>
-<td><code>199 89% 48%</code></td>
-<td><code>#0ea5e9</code></td>
-<td>Info / links</td>
-</tr>
-<tr>
-<td><code>--slate-0</code></td>
-<td><code>210 20% 100%</code></td>
-<td><code>#fafbfc</code></td>
-<td>Page card</td>
-</tr>
-<tr>
-<td><code>--slate-100</code></td>
-<td><code>210 16% 95%</code></td>
-<td><code>#eef1f4</code></td>
-<td>Page bg (light)</td>
-</tr>
-<tr>
-<td><code>--slate-600</code></td>
-<td><code>210 10% 32%</code></td>
-<td><code>#404a59</code></td>
-<td>Body text (light, AA)</td>
-</tr>
-<tr>
-<td><code>--slate-900</code></td>
-<td><code>210 22% 8%</code></td>
-<td><code>#0e1620</code></td>
-<td>Headings (light)</td>
-</tr>
-<tr>
-<td><code>--slate-950</code></td>
-<td><code>210 28% 5%</code></td>
-<td><code>#070b10</code></td>
-<td>Page bg (dark)</td>
-</tr>
-</tbody></table>
-<blockquote><p>All brand greens are tuned to clear WCAG AA (4.5:1) against the light <code>--slate-0</code> card surface.</p>
+<tbody>
+<tr><td><code>--pasture-50</code></td><td><code>140 60% 96%</code></td><td><code>#ecf9ef</code></td><td>Hover / wash</td></tr>
+<tr><td><code>--pasture-100</code></td><td><code>140 55% 90%</code></td><td><code>#d5f1dc</code></td><td>Hero gradient stop</td></tr>
+<tr><td><code>--pasture-500</code></td><td><code>140 60% 38%</code></td><td><code>#2e9b48</code></td><td><strong>Primary brand</strong></td></tr>
+<tr><td><code>--pasture-600</code></td><td><code>140 65% 30%</code></td><td><code>#218838</code></td><td>Hover (AA on white)</td></tr>
+<tr><td><code>--pasture-700</code></td><td><code>140 70% 22%</code></td><td><code>#166527</code></td><td>Pressed / dark CTA</td></tr>
+<tr><td><code>--sun-500</code></td><td><code>38 92% 50%</code></td><td><code>#f59e0b</code></td><td>Warm accent / warnings / merge</td></tr>
+<tr><td><code>--barn-500</code></td><td><code>0 72% 51%</code></td><td><code>#dc3545</code></td><td>Danger / delete</td></tr>
+<tr><td><code>--sky-500</code></td><td><code>199 89% 48%</code></td><td><code>#0ea5e9</code></td><td>Info / links</td></tr>
+<tr><td><code>--slate-0</code></td><td><code>210 20% 100%</code></td><td><code>#fafbfc</code></td><td>Page card</td></tr>
+<tr><td><code>--slate-100</code></td><td><code>210 16% 95%</code></td><td><code>#eef1f4</code></td><td>Page bg (light)</td></tr>
+<tr><td><code>--slate-600</code></td><td><code>210 10% 32%</code></td><td><code>#404a59</code></td><td>Body text (light, AA)</td></tr>
+<tr><td><code>--slate-900</code></td><td><code>210 22% 8%</code></td><td><code>#0e1620</code></td><td>Headings (light)</td></tr>
+<tr><td><code>--slate-950</code></td><td><code>210 28% 5%</code></td><td><code>#070b10</code></td><td>Page bg (dark)</td></tr>
+</tbody>
+</table>
+<blockquote>
+<p>All brand greens are tuned to clear WCAG AA (4.5:1) against the light <code>--slate-0</code> card surface.</p>
 </blockquote>
-<section class="he-section" id="where-every-token-comes-from">
-  <div class="he-section__num">03 · Where every token comes from</div>
-  <h2 class="he-section__title">Where every token comes from</h2><table>
+<section class="he-section" id="where-every-token-comes-from"><div class="he-section__num">03 · Where every token comes from</div><h2 class="he-section__title">Where every token comes from</h2></section>
+<table>
 <thead>
-<tr>
-<th>Concern</th>
-<th>File</th>
-</tr>
+<tr><th>Concern</th><th>File</th></tr>
 </thead>
-<tbody><tr>
-<td>Color &amp; font CSS vars</td>
-<td><code>app/globals.css</code></td>
-</tr>
-<tr>
-<td>Brand pastel palette</td>
-<td><code>--pasture-*</code>, <code>--sun-*</code>, <code>--barn-*</code>, <code>--sky-*</code></td>
-</tr>
-<tr>
-<td>Neutral UI grey scale</td>
-<td><code>--slate-*</code></td>
-</tr>
-<tr>
-<td>Light semantic tokens</td>
-<td><code>:root</code> block in <code>app/globals.css</code></td>
-</tr>
-<tr>
-<td>Dark semantic tokens</td>
-<td><code>[data-theme=&quot;dark&quot;]</code> block</td>
-</tr>
-<tr>
-<td>Theme toggle</td>
-<td><code>useEffect</code> in <code>MainApp.jsx</code> (system / light / dark)</td>
-</tr>
-<tr>
-<td>Icons</td>
-<td>Lucide React (SVG only, no emoji)</td>
-</tr>
-<tr>
-<td>Fonts</td>
-<td>System stack (<code>-apple-system, Segoe UI, Roboto</code>) — no external fonts</td>
-</tr>
-<tr>
-<td>Public PWA icon set</td>
-<td><code>public/icon-*.png</code>, <code>public/splashscreen.png</code></td>
-</tr>
-</tbody></table>
-
-<section class="he-section" id="brand-marks">
-  <div class="he-section__num">04 · Brand marks</div>
-  <h2 class="he-section__title">Brand marks</h2><ul>
+<tbody>
+<tr><td>Color &amp; font CSS vars</td><td><code>app/globals.css</code></td></tr>
+<tr><td>Brand pastel palette</td><td><code>--pasture-*</code>, <code>--sun-*</code>, <code>--barn-*</code>, <code>--sky-*</code></td></tr>
+<tr><td>Neutral UI grey scale</td><td><code>--slate-*</code></td></tr>
+<tr><td>Light semantic tokens</td><td><code>:root</code> block in <code>app/globals.css</code></td></tr>
+<tr><td>Dark semantic tokens</td><td><code>[data-theme=&quot;dark&quot;]</code> block</td></tr>
+<tr><td>Theme toggle</td><td><code>useEffect</code> in <code>MainApp.jsx</code> (system / light / dark)</td></tr>
+<tr><td>Icons</td><td>Lucide React (SVG only, no emoji)</td></tr>
+<tr><td>Fonts</td><td>System stack (<code>-apple-system, Segoe UI, Roboto</code>) — no external fonts</td></tr>
+<tr><td>Public PWA icon set</td><td><code>public/icon-*.png</code>, <code>public/splashscreen.png</code></td></tr>
+</tbody>
+</table>
+<section class="he-section" id="brand-marks"><div class="he-section__num">04 · Brand marks</div><h2 class="he-section__title">Brand marks</h2></section>
+<ul>
 <li><strong>Logo</strong> — <code>public/logo.png</code> (square) and <code>public/splashscreen.png</code> (1024×1024)</li>
 <li><strong>PWA icons</strong> — 192 + 512 (maskable) in <code>public/</code></li>
 <li><strong>Edit glyph</strong> — <code>public/editlogo.png</code> (used as the per-card edit button)</li>
 <li><strong>Favicon</strong> — <code>public/favicon-16.png</code>, <code>public/favicon-32.png</code></li>
 </ul>
-
-<section class="he-section" id="design-rules-of-thumb">
-  <div class="he-section__num">05 · Design rules of thumb</div>
-  <h2 class="he-section__title">Design rules of thumb</h2><ol>
+<section class="he-section" id="design-rules-of-thumb"><div class="he-section__num">05 · Design rules of thumb</div><h2 class="he-section__title">Design rules of thumb</h2></section>
+<ol>
 <li><strong>Use the semantic tokens</strong> (<code>--primary</code>, <code>--bg-card</code>, <code>--text-main</code>) — never the raw <code>--pasture-*</code> scale in component CSS.</li>
 <li><strong>WCAG AA</strong> for all text. The <code>--pasture-500</code> brand and <code>--slate-600</code> body both clear 4.5:1 on <code>--slate-0</code>.</li>
 <li><strong>Touch targets</strong> are at least 44×44 px (<code>.btn-primary</code>, <code>.btn-filter</code>, <code>.nav-item</code>).</li>
 <li><strong>Transitions</strong> are 150–200 ms, <code>cubic-bezier(0.4, 0, 0.2, 1)</code> for tactile feel.</li>
 <li><strong>Glassmorphism</strong> is reserved for surfaces that need to &quot;float&quot; over the gradient bg — never on plain page chrome.</li>
-<li><strong>No emoji as icons.</strong> Use Lucide React. (The 🐐 goat avatar inside a goat card is the one intentional exception — it&#39;s a content glyph, not a UI icon.)</li>
+<li><strong>No emoji as icons.</strong> Use Lucide React. (The 🐐 goat avatar inside a goat card is the one intentional exception — it's a content glyph, not a UI icon.)</li>
 </ol>
 
 </main>
@@ -212,7 +109,7 @@
 </aside>
 </div>
 <footer class="he-foot">
-  Source · <a href="../../">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
+  Source · <a href="../..">browse the markdown</a> · rebuild with <code>bun run docs:html</code>
 </footer>
 </div>
 </body>
