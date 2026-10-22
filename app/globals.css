@@ -1,3 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Breakpoints (Tailwind v4) ── */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  /* ── Colors ── */
+  --color-pasture-50:  hsl(var(--pasture-50));
+  --color-pasture-100: hsl(var(--pasture-100));
+  --color-pasture-200: hsl(var(--pasture-200));
+  --color-pasture-300: hsl(var(--pasture-300));
+  --color-pasture-400: hsl(var(--pasture-400));
+  --color-pasture-500: hsl(var(--pasture-500));
+  --color-pasture-600: hsl(var(--pasture-600));
+  --color-pasture-700: hsl(var(--pasture-700));
+  --color-pasture-800: hsl(var(--pasture-800));
+  --color-pasture-900: hsl(var(--pasture-900));
+
+  --color-sun-50:  hsl(var(--sun-50));
+  --color-sun-100: hsl(var(--sun-100));
+  --color-sun-300: hsl(var(--sun-300));
+  --color-sun-500: hsl(var(--sun-500));
+  --color-sun-600: hsl(var(--sun-600));
+  --color-sun-700: hsl(var(--sun-700));
+
+  --color-barn-50:  hsl(var(--barn-50));
+  --color-barn-100: hsl(var(--barn-100));
+  --color-barn-500: hsl(var(--barn-500));
+  --color-barn-600: hsl(var(--barn-600));
+  --color-barn-700: hsl(var(--barn-700));
+
+  --color-sky-500: hsl(var(--sky-500));
+  --color-sky-600: hsl(var(--sky-600));
+
+  --color-slate-0:   hsl(var(--slate-0));
+  --color-slate-50:  hsl(var(--slate-50));
+  --color-slate-100: hsl(var(--slate-100));
+  --color-slate-200: hsl(var(--slate-200));
+  --color-slate-300: hsl(var(--slate-300));
+  --color-slate-400: hsl(var(--slate-400));
+  --color-slate-500: hsl(var(--slate-500));
+  --color-slate-600: hsl(var(--slate-600));
+  --color-slate-700: hsl(var(--slate-700));
+  --color-slate-800: hsl(var(--slate-800));
+  --color-slate-900: hsl(var(--slate-900));
+  --color-slate-950: hsl(var(--slate-950));
+
+  /* ── Semantic tokens ── */
+  --color-bg-app:        hsl(var(--slate-100));
+  --color-bg-card:       hsl(var(--slate-0));
+  --color-bg-nav:        hsl(var(--slate-0));
+  --color-bg-elevated:   hsl(var(--slate-50));
+  --color-text-main:     hsl(var(--slate-900));
+  --color-text-sub:      hsl(var(--slate-600));
+  --color-text-muted:    hsl(var(--slate-500));
+  --color-text-invert:   hsl(var(--slate-0));
+  --color-border:        hsl(var(--slate-200));
+  --color-border-strong: hsl(var(--slate-300));
+  --color-primary:       hsl(var(--pasture-500));
+  --color-primary-hover: hsl(var(--pasture-600));
+  --color-primary-bg:    hsl(var(--pasture-50));
+  --color-accent:        hsl(var(--sun-500));
+  --color-accent-bg:     hsl(var(--sun-50));
+  --color-danger:        hsl(var(--barn-500));
+  --color-danger-bg:     hsl(var(--barn-50));
+  --color-info:          hsl(var(--sky-500));
+  --color-info-bg:       hsl(199 89% 96%);
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow:    0 4px 20px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 30px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.14);
+
+  /* ── Layout tokens ── */
+  --nav-height: 70px;
+  --sidebar-width: 240px;
+  --content-max: 1200px;
+}
+
 /* ============================================================
    GOAT MASTER — APP.CSS v2.0
    Responsive: Mobile → Tablet (640px) → Desktop (1024px)
