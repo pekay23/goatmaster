@@ -289,6 +289,14 @@ html, body {
   position: relative;
 }
 
+/* === Breakpoint definitions for easy reference === */
+/* xs: < 375px (small phones)
+   sm: 375px - 639px (large phones)
+   md: 640px - 767px (tablets portrait)
+   lg: 768px - 1023px (tablets landscape)
+   xl: 1024px - 1279px (desktop)
+   2xl: 1280px+ (large desktop) */
+
 /* === Header === */
 .app-header {
   position: sticky;
