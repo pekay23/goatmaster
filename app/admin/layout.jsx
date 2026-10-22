@@ -27,7 +27,8 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="admin-layout min-h-screen-dvh flex flex-col bg-bg-app text-text-main">
-      <header className="admin-header sticky top-0 z-100 flex items-center justify-between px-5 py-3.5 bg-bg-nav border-b border-border backdrop-blur-20 -backdrop-blur-20">
+      {/* Header — full width mobile, starts after sidebar on desktop */}
+      <header className="admin-header sticky top-0 z-100 flex items-center justify-between px-5 py-3.5 bg-bg-nav border-b border-border backdrop-blur-20 -backdrop-blur-20 lg:pl-[var(--sidebar-width)] lg:w-[calc(100vw-var(--sidebar-width))]">
         <div className="admin-header-left flex items-center gap-3">
           <Link href="/" className="admin-back inline-flex items-center gap-1 text-xs text-primary no-underline rounded px-2.5 py-1.5 transition-colors duration-75 hover:bg-primary-bg">
             <ArrowLeft size={14} className="shrink-0" /> App
@@ -46,11 +47,12 @@ export default function AdminLayout({ children }) {
         )}
       </header>
 
-      <main className="admin-content flex-1 w-full max-w-[var(--content-max)] mx-auto p-4 animate-[adminFadeIn_0.3s_ease]">
+      <main className="admin-content flex-1 w-full max-w-[var(--content-max)] mx-auto p-4 lg:pl-[calc(var(--sidebar-width)+1rem)] animate-[adminFadeIn_0.3s_ease]">
         {children}
       </main>
 
-      <nav className="admin-nav fixed bottom-0 left-0 right-0 z-100 flex justify-around bg-bg-nav border-t border-border px-0 py-2 [padding-bottom:env(safe-area-inset-bottom,8px)] backdrop-blur-20 -backdrop-blur-20">
+      {/* Mobile: bottom nav — hidden on desktop */}
+      <nav className="admin-nav lg:hidden fixed bottom-0 left-0 right-0 z-100 flex justify-around bg-bg-nav border-t border-border px-0 py-2 [padding-bottom:env(safe-area-inset-bottom,8px)] backdrop-blur-20 -backdrop-blur-20">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           return (
@@ -67,8 +69,8 @@ export default function AdminLayout({ children }) {
         })}
       </nav>
 
-      {/* Desktop: sidebar nav (lg:) */}
-      <nav className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[var(--sidebar-width)] max-w-[var(--sidebar-width)] flex-col justify-start items-stretch gap-1 p-6 pb-3 border-r border-border rounded-r-[1.5rem] overflow-y-auto box-shadow-[var(--shadow-sm)] lg:block">
+      {/* Desktop: left sidebar — hidden on mobile */}
+      <nav className="hidden lg:flex fixed left-0 top-0 bottom-0 z-100 w-[var(--sidebar-width)] flex-col justify-start items-stretch gap-1 p-6 pb-3 border-r border-border rounded-r-[1.5rem] overflow-y-auto box-shadow-[var(--shadow-sm)]">
         <div className="flex items-center text-sm font-black text-primary px-3 py-1 mb-3 border-b border-border letter-spacing-[-0.03em]">
           🐐 Goat Master
         </div>
