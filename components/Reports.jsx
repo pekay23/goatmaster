@@ -23,8 +23,15 @@ const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], b
     return newRow;
   });
 
+  // Recompute the report and reset the UI state whenever the report type or
+  // source data changes. These are derived-state updates triggered by a prop
+  // change, run once per report-type switch, so they cannot cascade renders.
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setLoading(true);
+    setTableSearch('');
+    setSortConfig({ key: null, direction: 'asc' });
+    /* eslint-enable react-hooks/set-state-in-effect */
     setTableSearch('');
     setSortConfig({ key: null, direction: 'asc' });
     

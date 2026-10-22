@@ -86,15 +86,31 @@ export default function BreedIdentifier() {
   const [error, setError] = useState('');
   const [result, setResult] = useState(null); // { best, alternatives, thumb }
 
-  useEffect(() => {
-    loadModels().then(() => setModelsReady(true)).catch(console.error);
-    return () => stopCamera();
-  }, []);
-
   const stopCamera = () => {
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     streamRef.current = null;
   };
+
+  const runIdentify = async (canvas) => {
+    if (!modelsReady) return;
+    setPhase(STATE.LOADING);
+    try {
+      const predictions = await mobilenet.classify(canvas, 5);
+      const colourAnalysis = analyseImageColours(canvas);
+      const id = identifyBreed({ predictions, colourAnalysis, userRegion: 'GH' });
+      const thumb = canvas.toDataURL('image/jpeg', 0.8);
+      setResult({ ...id, thumb });
+      setPhase(STATE.RESULT);
+    } catch (err) {
+      setError('Identification failed: ' + err.message);
+      setPhase(STATE.IDLE);
+    }
+  };
+
+  useEffect(() => {
+    loadModels().then(() => setModelsReady(true)).catch(console.error);
+    return () => stopCamera();
+  }, []);
 
   const startCamera = async () => {
     setError(''); setResult(null); setPhase(STATE.LOADING);
@@ -124,22 +140,6 @@ export default function BreedIdentifier() {
     await runIdentify(c);
     stopCamera();
   }, []);
-
-  const runIdentify = async (canvas) => {
-    if (!modelsReady) return;
-    setPhase(STATE.LOADING);
-    try {
-      const predictions = await mobilenet.classify(canvas, 5);
-      const colourAnalysis = analyseImageColours(canvas);
-      const id = identifyBreed({ predictions, colourAnalysis, userRegion: 'GH' });
-      const thumb = canvas.toDataURL('image/jpeg', 0.8);
-      setResult({ ...id, thumb });
-      setPhase(STATE.RESULT);
-    } catch (err) {
-      setError('Identification failed: ' + err.message);
-      setPhase(STATE.IDLE);
-    }
-  };
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];

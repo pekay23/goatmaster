@@ -1,0 +1,95 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 2,
+  "stabilityDays": 2,
+  "timezone": "UTC",
+  "schedule": ["before 5am on monday"],
+  "semanticCommits": "disabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "rebaseWhen": "behind-base-branch",
+  "rangeStrategy": "bump",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 4am on sunday"]
+  },
+  "major": {
+    "automerge": false
+  },
+  "minor": {
+    "automerge": true
+  },
+  "patch": {
+    "automerge": true
+  },
+  "packageRules": [
+    {
+      "description": "Group non-major dependency updates into a single reviewable PR instead of one PR per package.",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "non-major dependencies",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Group GitHub Actions version bumps into one PR.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "automerge": true
+    },
+    {
+      "description": "Group Next.js and related packages; majors need manual approval.",
+      "matchPackageNames": ["next", "eslint-config-next", "@next/*"],
+      "groupName": "next.js ecosystem",
+      "automerge": false
+    },
+    {
+      "description": "Group React and related packages; majors need manual approval.",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "groupName": "react ecosystem",
+      "automerge": false
+    },
+    {
+      "description": "Group Tailwind and related packages.",
+      "matchPackageNames": ["tailwindcss", "@tailwindcss/*", "postcss", "tailwind-merge"],
+      "groupName": "tailwind ecosystem",
+      "automerge": true
+    },
+    {
+      "description": "Group Radix UI packages.",
+      "matchPackageNames": ["@radix-ui/*"],
+      "groupName": "radix ui",
+      "automerge": true
+    },
+    {
+      "description": "Group TypeScript and ESLint packages; majors need manual approval.",
+      "matchPackageNames": ["typescript", "eslint", "@typescript-eslint/*", "@eslint/*"],
+      "groupName": "typescript and eslint",
+      "automerge": false
+    },
+    {
+      "description": "Group Upstash packages.",
+      "matchPackageNames": ["@upstash/*"],
+      "groupName": "upstash",
+      "automerge": true
+    },
+    {
+      "description": "Hold Bun majors for approval until verified against the 1.4.x lockfile format.",
+      "matchPackageNames": ["bun"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "recreateWhen": "always",
+      "automerge": false
+    },
+    {
+      "description": "Hold TensorFlow.js majors for approval; ML model bindings can break between majors.",
+      "matchPackageNames": ["@tensorflow/tfjs", "@tensorflow-models/*"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "recreateWhen": "always",
+      "automerge": false
+    }
+  ]
+}

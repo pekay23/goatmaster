@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, LogOut, Shield, Package, TrendingUp, BarChart3, Wallet, Droplets, Wheat, CalendarDays, BookOpen, ChevronRight, ScanLine, Sparkles, Beef, Milk, DollarSign, LineChart, HeartPulse, UserCog } from 'lucide-react';
 import HealthPanel from './HealthPanel';
 import BreedingPanel from './BreedingPanel';
@@ -70,13 +70,28 @@ const EMPTY_FORM = { id: '', name: '', breed: '', sex: 'F', dob: '', image_url: 
 
 export default function MainApp() {
   const [loadingSplash, setLoadingSplash] = useState(true);
-  const [user, setUser]         = useState(null);
+  const [user, setUser]         = useState(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const saved = localStorage.getItem('goat_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [toast, setToast]       = useState(null);
   const [modalOpen, setModalOpen]     = useState(false);
   const [modalConfig, setModalConfig] = useState({});
   const [showBreedRef, setShowBreedRef] = useState(false);
-  const [activeGroup, setActiveGroup] = useState('herd');
-  const [activeTab, setActiveTab]   = useState('profiles');
+  const [activeTab, setActiveTab]   = useState(() => {
+    if (typeof window === 'undefined') return 'profiles';
+    try {
+      const saved = localStorage.getItem('goat_active_tab');
+      return saved || 'profiles';
+    } catch {
+      return 'profiles';
+    }
+  });
   const [showForm, setShowForm]     = useState(false);
   const [editingGoat, setEditingGoat] = useState(null);
   const [formData, setFormData]     = useState(EMPTY_FORM);
@@ -92,7 +107,15 @@ export default function MainApp() {
   const [milkRecords, setMilkRecords]       = useState([]);
   const [weightRecords, setWeightRecords]   = useState([]);
   const [farmEvents, setFarmEvents]         = useState([]);
-  const [currency, setCurrency]             = useState('GH₵');
+  const [currency, setCurrency]             = useState(() => {
+    if (typeof window === 'undefined') return 'GH₵';
+    try {
+      const saved = localStorage.getItem('currency');
+      return saved || 'GH₵';
+    } catch {
+      return 'GH₵';
+    }
+  });
   const [initialEventGoatId, setInitialEventGoatId] = useState(null);
 
   const [isFetching, setIsFetching] = useState(false);
@@ -100,29 +123,26 @@ export default function MainApp() {
   const [isUploading, setIsUploading]   = useState(false);
   const [searchTerm, setSearchTerm]     = useState('');
   const [filterSex, setFilterSex]       = useState('All');
-  const [theme, setTheme]               = useState('system');
+  const [theme, setTheme]               = useState(() => {
+    if (typeof window === 'undefined') return 'system';
+    try {
+      const saved = localStorage.getItem('goat_theme');
+      return saved || 'system';
+    } catch {
+      return 'system';
+    }
+  });
   const [scanMode, setScanMode]         = useState('identify');
 
-  // Restore saved tab
-  useEffect(() => {
-    const savedTab = window.localStorage.getItem('goat_active_tab');
-    if (savedTab) {
-      setActiveTab(savedTab);
-      for (const g of NAV_GROUPS) {
-        if (g.subs?.some(s => s.id === savedTab) || g.id === savedTab) {
-          setActiveGroup(g.id);
-          break;
-        }
-      }
-    }
-  }, []);
+  // Derive the active nav group from the active tab (no setState in an effect).
+  const activeGroup = useMemo(() =>
+    NAV_GROUPS.find(g => g.subs?.some(s => s.id === activeTab) || g.id === activeTab) || 'herd',
+  [activeTab]);
 
   useEffect(() => {
     window.localStorage.setItem('goat_active_tab', activeTab);
   }, [activeTab]);
 
-  // Theme
-  useEffect(() => { const saved = localStorage.getItem('goat_theme'); if (saved) setTheme(saved); }, []);
   useEffect(() => {
     const root = document.documentElement;
     const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -130,18 +150,13 @@ export default function MainApp() {
     localStorage.setItem('goat_theme', theme);
   }, [theme]);
 
-  // Auth
+  // Auth — user is hydrated lazily via useState initializer above.
+  // Hide the splash once the initial render has committed. This one-off
+  // setState after mount is the standard "run once after mount" pattern and
+  // cannot cascade renders.
   useEffect(() => {
-    const savedUser = localStorage.getItem('goat_user');
-    if (savedUser) { try { setUser(JSON.parse(savedUser)); } catch { setUser(null); } }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingSplash(false);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedCurrency = localStorage.getItem('currency');
-      if (savedCurrency) setCurrency(savedCurrency);
-    }
   }, []);
 
   const showToast = useCallback((msg, type = 'success') => {
@@ -253,6 +268,10 @@ export default function MainApp() {
     }
   }, [activeTab]);
 
+  // Refetch the active tab's data whenever the tab changes. The setState
+  // occurs inside the async fetchData callback, not synchronously in the
+  // effect body, so it cannot cause cascading renders.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [activeTab]);
 
   const fetchGoats = useCallback(() => { fetchData('profiles'); }, [fetchData]);
@@ -267,13 +286,13 @@ export default function MainApp() {
     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
     setUser(null);
     localStorage.removeItem('goat_user');
-    setActiveGroup('herd'); setActiveTab('profiles');
+    setActiveTab('profiles');
     window.localStorage.setItem('goat_active_tab', 'profiles');
   }, []);
 
   const navigateToEvents = (goatId) => {
     setInitialEventGoatId(goatId);
-    setActiveGroup('herd'); setActiveTab('events');
+    setActiveTab('events');
     setShowForm(false);
   };
 
@@ -545,8 +564,7 @@ export default function MainApp() {
           {NAV_GROUPS.map(({ id, label, icon: Icon }) => (
             <button key={id} className={`nav-item ${activeGroup === id ? 'active' : ''}`}
               onClick={() => {
-                if (id === 'settings') { setActiveGroup('settings'); setActiveTab('settings'); return; }
-                setActiveGroup(id);
+                if (id === 'settings') { setActiveTab('settings'); return; }
                 const firstSub = NAV_GROUPS.find(g => g.id === id)?.subs?.[0];
                 if (firstSub) setActiveTab(firstSub.id);
               }}>

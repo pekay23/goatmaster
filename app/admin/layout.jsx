@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { BarChart3, Users, Layers, ArrowLeft, Shield } from 'lucide-react';
 import './admin.css';
 
@@ -13,20 +14,21 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
+    if (typeof window === 'undefined') return null;
     try {
       const stored = localStorage.getItem('goat_user');
-      if (stored) setUser(JSON.parse(stored));
-    } catch {}
-  }, []);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
 
   return (
     <div className="admin-layout">
       <header className="admin-header">
         <div className="admin-header-left">
-          <a href="/" className="admin-back"><ArrowLeft size={16} /> App</a>
+          <Link href="/" className="admin-back"><ArrowLeft size={16} /> App</Link>
           <h1><Shield size={18} /> Admin</h1>
         </div>
         {user && (

@@ -130,17 +130,17 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
     return () => clearInterval(timer);
   }, [state, drawOverlay]);
 
-  useEffect(() => {
-    loadModels().then(() => setModelsReady(true)).catch(console.error);
-    return () => stopCamera();
-  }, []);
-
   const stopCamera = () => {
     if (frameTimerRef.current) clearInterval(frameTimerRef.current);
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     streamRef.current = null;
     setCameraActive(false);
   };
+
+  useEffect(() => {
+    loadModels().then(() => setModelsReady(true)).catch(console.error);
+    return () => stopCamera();
+  }, []);
 
   const startCamera = async () => {
     stopCamera();

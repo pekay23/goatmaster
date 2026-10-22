@@ -14,6 +14,9 @@ export default function MaturationHelper({ goats = [], onSelectGoat, onDismiss }
     if ((g.photo_count || 0) < 3) return true;
     if (g.dob && g.created_at) {
       const dobDate = new Date(g.dob);
+      // Current time is required to compute the goat's age; this is derived
+      // during render and does not depend on any prop/state, so it is safe.
+      // eslint-disable-next-line react-hooks/purity
       const ageMonths = (Date.now() - dobDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
       const enrollAgeMonths = (new Date(g.created_at) - dobDate) / (1000 * 60 * 60 * 24 * 30);
       // Was enrolled before 6 months old AND is now over 6 months

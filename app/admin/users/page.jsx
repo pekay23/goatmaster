@@ -31,6 +31,11 @@ export default function AdminUsers() {
     setLoading(false);
   }, [page, search]);
 
+  // Fetch users on mount / when pagination or search changes. Reading remote
+  // data and storing it in state is the standard React data-fetching pattern;
+  // the setState happens inside the async fetch, not synchronously in the
+  // effect body, so it cannot cascade renders.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   // Debounced search

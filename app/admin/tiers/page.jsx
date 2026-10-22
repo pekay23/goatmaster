@@ -72,9 +72,7 @@ export default function AdminTiers() {
 }
 
 function TierCard({ tier, isEditing, saving, onEdit, onSave }) {
-  const [form, setForm] = useState({ ...tier });
-
-  useEffect(() => { setForm({ ...tier }); }, [tier]);
+  const [form, setForm] = useState(() => ({ ...tier }));
 
   const price = tier.price_cents
     ? `$${(tier.price_cents / 100).toFixed(2)}/mo`

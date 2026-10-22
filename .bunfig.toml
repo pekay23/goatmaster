@@ -1,0 +1,14 @@
+[install]
+# Use hoisted linker — single shared node_modules at the root (default for existing projects).
+linker = "hoisted"
+
+# Save lockfile in text format (bun.lock) — default since Bun 1.2, keeps diffs reviewable.
+saveTextLockfile = true
+
+# Install dev and peer dependencies.
+dev = true
+peer = true
+
+[run]
+# Auto-alias `node` to `bun` for all scripts — ensures consistency and faster startup.
+bun = true

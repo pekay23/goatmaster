@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Users, Github, ScanLine, Camera, Loader2, BarChart3, TrendingUp, CalendarDays } from 'lucide-react';
+import { Users, Gift, ScanLine, Camera, Loader2, BarChart3, TrendingUp, CalendarDays } from 'lucide-react';
 
 const TIER_COLORS = {
   free: '#888',
@@ -10,7 +10,7 @@ const TIER_COLORS = {
 
 const STAT_ICONS = [
   { icon: Users, bg: 'var(--primary-bg)', color: 'var(--primary)' },
-  { icon: Github, bg: 'var(--accent-bg)', color: 'var(--accent)' },
+  { icon: Gift, bg: 'var(--accent-bg)', color: 'var(--accent)' },
   { icon: ScanLine, bg: 'var(--info-bg)', color: 'var(--info)' },
   { icon: Camera, bg: 'hsl(140, 50%, 96%)', color: 'hsl(var(--pasture-300))' },
 ];
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
       <div className="stat-grid">
         {[
           { icon: Users, value: stats.totalUsers, label: 'Users' },
-          { icon: Github, value: stats.totalGoats, label: 'Goats' },
+          { icon: Gift, value: stats.totalGoats, label: 'Goats' },
           { icon: ScanLine, value: stats.totalScans, label: 'Scans' },
           { icon: Camera, value: stats.totalEmbeddings, label: 'Embeddings' },
         ].map((item, i) => (

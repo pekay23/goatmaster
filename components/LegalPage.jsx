@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export default function LegalPage({ title, lastUpdated, children }) {
@@ -20,7 +21,7 @@ export default function LegalPage({ title, lastUpdated, children }) {
         alignItems: 'center',
         gap: 12,
       }}>
-        <a href="/" style={{
+        <Link href="/" style={{
           background: 'var(--bg-app)',
           border: '1px solid var(--border-color)',
           borderRadius: 10,
@@ -30,7 +31,7 @@ export default function LegalPage({ title, lastUpdated, children }) {
           display: 'flex',
         }} aria-label="Back">
           <ArrowLeft size={18} />
-        </a>
+        </Link>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Goat Master</div>
           <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-main)' }}>{title}</h1>

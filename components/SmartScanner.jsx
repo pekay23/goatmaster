@@ -165,6 +165,12 @@ export default function SmartScanner({ goats = [], onComplete, showToast }) {
   // Server-side embedding: better quality when ML service is available
   const useServerEmbedRef = useRef(false);
 
+  const stopCamera = () => {
+    if (captureTimerRef.current) clearInterval(captureTimerRef.current);
+    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+  };
+
   // Pre-load models + probe for server embedding availability
   useEffect(() => {
     loadModels().then(() => setModelsReady(true)).catch(console.error);
@@ -175,12 +181,6 @@ export default function SmartScanner({ goats = [], onComplete, showToast }) {
       .catch(() => {});
     return () => stopCamera();
   }, []);
-
-  const stopCamera = () => {
-    if (captureTimerRef.current) clearInterval(captureTimerRef.current);
-    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
-    streamRef.current = null;
-  };
 
   // ── INITIALISE SESSION ────────────────────────────────────────
   const initSession = useCallback(async () => {

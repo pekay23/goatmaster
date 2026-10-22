@@ -3,6 +3,20 @@ import { TrendingUp, Package, Activity, Users, AlertTriangle, CheckCircle, BarCh
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+// Simple, statically-defined progress bar (declared outside render so its
+// state is not reset on every re-render).
+const ProgressBar = ({ label, value, max, color }) => (
+  <div style={{ marginBottom: 12 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-sub)', marginBottom: 4 }}>
+      <span>{label}</span>
+      <span style={{ fontWeight: 600 }}>{value} / {max}</span>
+    </div>
+    <div style={{ height: 6, background: 'var(--border-color)', borderRadius: 3, overflow: 'hidden' }}>
+      <div style={{ height: '100%', width: `${Math.min(100, (value / (max || 1)) * 100)}%`, background: color, borderRadius: 3 }} />
+    </div>
+  </div>
+);
+
 export default function AnalyticsDashboard({ goats = [], inventory = [], sales = [], alerts = [], healthRecords = [], breedingRecords = [], expenditures = [], usageLogs = [], farmEvents = [], currency = 'GH₵' }) {
   
   // -- Herd Metrics --
@@ -57,19 +71,6 @@ export default function AnalyticsDashboard({ goats = [], inventory = [], sales =
     }).length;
     return { activeAlerts, upcomingBirths };
   }, [alerts, breedingRecords]);
-
-  // Simple Progress Bar Component
-  const ProgressBar = ({ label, value, max, color }) => (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-sub)', marginBottom: 4 }}>
-        <span>{label}</span>
-        <span style={{ fontWeight: 600 }}>{value} / {max}</span>
-      </div>
-      <div style={{ height: 6, background: 'var(--border-color)', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${Math.min(100, (value / (max || 1)) * 100)}%`, background: color, borderRadius: 3 }} />
-      </div>
-    </div>
-  );
 
   const exportPDF = () => {
     const doc = new jsPDF();
