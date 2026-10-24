@@ -53,6 +53,13 @@ jobs:
         env:
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
+          PAYSTACK_WEBHOOK_SECRET: ${{ secrets.PAYSTACK_WEBHOOK_SECRET }}
+          NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ML_SERVICE_KEY: ${{ secrets.ML_SERVICE_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
 
   # ---------------------------------------------------------------------
   # Deploy preview — the ONLY path to a Vercel preview deployment.
