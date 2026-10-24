@@ -134,7 +134,7 @@ const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], b
 
   return (
     <div className="glass-panel" style={{ padding: 20, borderRadius: 16, border: '1px solid var(--border-color)', marginBottom: 40, width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 15, flexWrap: 'wrap' }}>
         <div style={{ background: '#e3f2fd', padding: 12, borderRadius: 14, display: 'flex' }}>
           <FileText size={28} color="#2196f3" />
         </div>
@@ -144,12 +144,15 @@ const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], b
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
         {['herd', 'health', 'breeding', 'inventory', 'sales', 'events'].map(type => (
-          <button key={type} onClick={() => setReportType(type)} className={`btn-filter ${reportType === type ? 'active' : ''}`}>
+          <button key={type} onClick={() => setReportType(type)} className={`btn-filter ${reportType === type ? 'active' : ''}`} style={{ minHeight: 44, whiteSpace: 'nowrap', padding: '10px 16px' }}>
             {type === 'herd' ? 'Herd Census' : type === 'health' ? 'Health Issues' : type === 'breeding' ? 'Kidding Schedule' : type === 'inventory' ? 'Inventory' : type === 'sales' ? 'Sales' : 'Farm Events'}
           </button>
         ))}
+        <style>{`
+          .Reports div[style*="overflowX"]::-webkit-scrollbar { display: none; }
+        `}</style>
       </div>
 
       <div className="search-bar" style={{ background: 'var(--bg-app)', marginBottom: 0 }}>
@@ -157,11 +160,11 @@ const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], b
         <input className="search-input" placeholder={`Search ${reportType} records...`} value={tableSearch} onChange={e => setTableSearch(e.target.value)} style={{ fontSize: 14 }} />
       </div>
 
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={exportToCSV} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: 13 }}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button onClick={exportToCSV} className="btn-primary" style={{ flex: '1 1 140px', justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: 13, minHeight: 44 }}>
           <Download size={14} /> CSV
         </button>
-        <button onClick={exportToPDF} className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: 13 }}>
+        <button onClick={exportToPDF} className="btn-primary" style={{ flex: '1 1 140px', justifyContent: 'center', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: 13, minHeight: 44 }}>
           <Download size={14} /> PDF
         </button>
       </div>
@@ -173,12 +176,12 @@ const Reports = ({ goats = [], inventory = [], sales = [], healthRecords = [], b
           {tableSearch ? 'No matches found.' : 'No records found.'}
         </p>
       ) : (
-        <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid var(--border-color)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-card)' }}>
+        <div className="table-responsive" style={{ borderRadius: 12, border: '1px solid var(--border-color)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-card)', minWidth: 600 }}>
             <thead>
               <tr style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
                 {Object.keys(data[0]).map(key => (
-                  <th key={key} onClick={() => handleSort(key)} style={{ padding: '12px 10px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', whiteSpace: 'nowrap', cursor: 'pointer', userSelect: 'none' }}>
+                  <th key={key} onClick={() => handleSort(key)} style={{ padding: '12px 10px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', whiteSpace: 'nowrap', cursor: 'pointer', userSelect: 'none', minWidth: 100 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       {key.replace(/_/g, ' ')}
                       {sortConfig.key === key ? (sortConfig.direction === 'asc' ? <ArrowUp size={12}/> : <ArrowDown size={12}/>) : <ArrowUpDown size={12} style={{ opacity: 0.3 }}/>}

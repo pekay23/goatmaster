@@ -22,8 +22,9 @@ export function MobileBottomNav({ items, pathname, onNavigate }: MobileBottomNav
 
   return (
     <nav
-      className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex items-stretch border-t border-border bg-bg-nav/95 supports-backdrop-filter:bg-bg-nav/80 supports-backdrop-filter:backdrop-blur"
+      className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex items-stretch border-t border-border bg-bg-nav/95 supports-backdrop-filter:bg-bg-nav/80 supports-backdrop-filter:backdrop-blur pb-safe"
       aria-label="Admin primary navigation"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0)' }}
     >
       {items.slice(0, 4).map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -33,23 +34,23 @@ export function MobileBottomNav({ items, pathname, onNavigate }: MobileBottomNav
             href={item.href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'flex min-h-12 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 mx-1 my-1 rounded-2xl text-[10px] font-medium leading-tight transition-colors',
+              'flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 px-2 py-2 mx-1 my-1 rounded-xl text-[10px] font-medium leading-tight transition-colors',
               active
                 ? 'bg-primary-bg text-primary'
                 : 'text-text-sub hover:text-text-main hover:bg-bg-elevated'
             )}
           >
-            <item.icon size={20} className="shrink-0" />
+            <item.icon size={22} className="shrink-0" />
             <span className="max-w-full truncate">{item.label}</span>
           </Link>
         );
       })}
       <button
         type="button"
-        className="flex min-h-12 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 mx-1 my-1 rounded-2xl text-[10px] font-medium leading-tight text-text-sub transition-colors hover:text-text-main hover:bg-bg-elevated"
+        className="flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 px-2 py-2 mx-1 my-1 rounded-xl text-[10px] font-medium leading-tight text-text-sub transition-colors hover:text-text-main hover:bg-bg-elevated"
         aria-label="Open full menu"
       >
-        <Menu size={20} className="shrink-0" />
+        <Menu size={22} className="shrink-0" />
         <span>More</span>
       </button>
     </nav>

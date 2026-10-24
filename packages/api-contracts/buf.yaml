@@ -1,0 +1,8 @@
+version: v2
+name: buf.build/goatmaster/api-contracts
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

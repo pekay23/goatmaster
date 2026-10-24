@@ -58,7 +58,7 @@ export function Tooltip({ children, delayDuration = 100 }: TooltipProps) {
 
 export function TooltipTrigger({ asChild = false, children, ...props }: TooltipTriggerProps) {
   const context = React.useContext(TooltipContext);
-  const tooltipIdRef = useRef(`tooltip-${Math.random().toString(36).slice(2)}`);
+  const tooltipIdRef = useRef(`tooltip-${Math.random().toString(36).slice(2)}`); // eslint-disable-line react-hooks/purity
   
   if (!context) throw new Error('TooltipTrigger must be used within TooltipProvider');
 

@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import psycopg2
 from psycopg2.pool import ThreadedConnectionPool
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Header, Depends
 from pydantic import BaseModel
 from PIL import Image
@@ -13,10 +13,66 @@ from ultralytics import YOLO
 from torchvision import models, transforms
 from torchvision.models import ResNet50_Weights
 from dotenv import load_dotenv
+import threading
+import grpc
+from concurrent import futures
+
+from gen.py.goatmaster.ml.v1 import ml_service_pb2_grpc
+from grpc_server import MlServiceServicer
 
 load_dotenv()
 
-app = FastAPI(title="Goat Master ML Service")
+# ── gRPC SERVER ──
+grpc_server = None
+
+def start_grpc_server():
+    global grpc_server
+    grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    ml_service_pb2_grpc.add_MlServiceServicer_to_server(MlServiceServicer(), grpc_server)
+    
+    grpc_port = os.getenv("GRPC_PORT", "50051")
+    grpc_server.add_insecure_port(f"[::]:{grpc_port}")
+    grpc_server.start()
+    print(f"gRPC server started on port {grpc_port}")
+
+# ── FASTAPI LIFESPAN ──
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print("Starting ML Service...")
+    _finetuned_path = os.path.join(os.path.dirname(__file__), "resnet_reid_finetuned.pt")
+    if os.path.exists(_finetuned_path):
+        try:
+            resnet.load_state_dict(torch.load(_finetuned_path, map_location="cpu"))
+            resnet.eval()
+            print(f"Loaded fine-tuned Re-ID weights from {_finetuned_path}")
+        except Exception as e:
+            print(f"WARNING: Could not load fine-tuned weights: {e}")
+    
+    # Start gRPC server in background thread
+    grpc_thread = threading.Thread(target=start_grpc_server, daemon=True)
+    grpc_thread.start()
+    print("gRPC server starting in background...")
+    
+    yield
+    
+    # Shutdown
+    if grpc_server:
+        grpc_server.stop(5)
+        print("gRPC server stopped")
+
+app = FastAPI(title="Goat Master ML Service", lifespan=lifespan)
+    grpc_thread.start()
+    print("gRPC server starting in background...")
+    
+    yield
+    
+    # Shutdown
+    if grpc_server:
+        grpc_server.stop(5)
+        print("gRPC server stopped")
+
+app = FastAPI(title="Goat Master ML Service", lifespan=lifespan)
 
 # ── SECURITY ──
 async def verify_key(x_ml_key: str = Header(None)):
@@ -24,6 +80,9 @@ async def verify_key(x_ml_key: str = Header(None)):
     if not expected: return # Development mode
     if x_ml_key != expected:
         raise HTTPException(status_code=403, detail="Invalid API Key")
+
+# Import gRPC service (defined at bottom of file)
+from grpc_server import MlServiceServicer
 
 # ── MODEL LOADING ──
 # Detection: Use custom-trained YOLO weights if available, else Roboflow API, else COCO fallback
@@ -441,6 +500,14 @@ if os.path.exists(_finetuned_path):
     except Exception as e:
         print(f"WARNING: Could not load fine-tuned weights: {e}")
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+@app.post("/goatmaster.ml.v1.MlService/Scan")
+async def connect_scan(request: ScanRequest):
+    return await scan_goat(request)
+
+@app.post("/goatmaster.ml.v1.MlService/Embed")
+async def connect_embed(request: EmbedRequest):
+    return await embed_image(request)
+
+@app.post("/goatmaster.ml.v1.MlService/Enroll")
+async def connect_enroll(request: EnrollRequest):
+    return await enroll_goat(request)

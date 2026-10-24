@@ -116,6 +116,18 @@ export default function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <script
+          id="sw-registration"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
+                  console.warn('Service worker registration failed:', err);
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body suppressHydrationWarning>
         {children}

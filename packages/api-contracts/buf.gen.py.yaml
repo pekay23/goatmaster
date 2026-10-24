@@ -1,0 +1,6 @@
+version: v2
+plugins:
+  - local: protoc-gen-python
+    out: gen/py
+  - local: grpc_python_plugin
+    out: gen/py

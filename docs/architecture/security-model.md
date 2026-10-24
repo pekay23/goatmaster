@@ -5,7 +5,7 @@
 - **JWT-based** using `jose` library (HS256 algorithm)
 - Tokens stored in **httpOnly cookies** (`jwt`) — not accessible from JavaScript
 - Token expiry: 7 days
-- Passwords hashed with **bcrypt** (salt rounds: 10)
+- Passwords hashed with **bcrypt** (salt rounds: 12)
 - **Rate limiting** on login: 5 attempts per 15-minute window per email (via `lib/rate-limit.ts`)
 
 ## Authorization

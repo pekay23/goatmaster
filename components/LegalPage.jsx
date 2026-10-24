@@ -16,19 +16,24 @@ export default function LegalPage({ title, lastUpdated, children }) {
         position: 'sticky', top: 0, zIndex: 100,
         background: 'var(--bg-card)',
         borderBottom: '1px solid var(--border-color)',
-        padding: '14px 18px',
+        padding: '14px 16px',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
+        minHeight: '56px',
       }}>
         <Link href="/" style={{
           background: 'var(--bg-app)',
           border: '1px solid var(--border-color)',
           borderRadius: 10,
-          padding: 8,
+          padding: '10px',
           color: 'var(--text-sub)',
           textDecoration: 'none',
           display: 'flex',
+          minHeight: '44px',
+          minWidth: '44px',
+          alignItems: 'center',
+          justifyContent: 'center',
         }} aria-label="Back">
           <ArrowLeft size={18} />
         </Link>
@@ -41,7 +46,7 @@ export default function LegalPage({ title, lastUpdated, children }) {
       <main style={{
         maxWidth: 720,
         margin: '0 auto',
-        padding: '24px 20px',
+        padding: '24px 16px',
       }}>
         {lastUpdated && (
           <p style={{
@@ -63,9 +68,9 @@ export default function LegalPage({ title, lastUpdated, children }) {
       </main>
 
       <style>{`
-        .legal-content { font-size: 15px; line-height: 1.7; color: var(--text-main); }
+        .legal-content { font-size: clamp(14px, 1.5vw, 16px); line-height: 1.7; color: var(--text-main); }
         .legal-content h2 {
-          font-size: 22px;
+          font-size: clamp(20px, 2vw, 24px);
           font-weight: 800;
           margin: 36px 0 12px;
           color: var(--text-main);
@@ -74,19 +79,19 @@ export default function LegalPage({ title, lastUpdated, children }) {
         }
         .legal-content h2:first-child { margin-top: 8px; }
         .legal-content h3 {
-          font-size: 17px;
+          font-size: clamp(16px, 1.8vw, 18px);
           font-weight: 700;
           margin: 24px 0 10px;
           color: var(--text-main);
         }
         .legal-content h4 {
-          font-size: 15px;
+          font-size: clamp(14px, 1.5vw, 16px);
           font-weight: 700;
           margin: 20px 0 8px;
           color: var(--text-main);
         }
         .legal-content p { margin: 12px 0; color: var(--text-main); }
-        .legal-content ul, .legal-content ol { padding-left: 24px; margin: 12px 0; }
+        .legal-content ul, .legal-content ol { padding-left: clamp(20px, 3vw, 24px); margin: 12px 0; }
         .legal-content li { margin: 8px 0; }
         .legal-content strong { color: var(--text-main); font-weight: 700; }
         .legal-content a { color: var(--primary); text-decoration: underline; }
@@ -103,7 +108,7 @@ export default function LegalPage({ title, lastUpdated, children }) {
           width: 100%;
           border-collapse: collapse;
           margin: 16px 0;
-          font-size: 14px;
+          font-size: clamp(13px, 1.4vw, 15px);
         }
         .legal-content th, .legal-content td {
           padding: 10px 12px;
@@ -134,6 +139,15 @@ export default function LegalPage({ title, lastUpdated, children }) {
         .legal-toc ol { padding-left: 20px; margin: 0; font-size: 14px; }
         .legal-toc li { margin: 4px 0; }
         .legal-toc a { color: var(--primary); text-decoration: none; }
+        
+        /* Table responsive */
+        @media (max-width: 768px) {
+          .legal-content table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+          }
+        }
       `}</style>
     </div>
   );

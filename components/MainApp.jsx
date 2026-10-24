@@ -378,12 +378,12 @@ export default function MainApp() {
         </div>
         {/* Sub-tab pills (only for groups with sub-tabs) */}
         {!showForm && NAV_GROUPS.find(g => g.id === activeGroup)?.subs?.length > 0 && (
-          <div style={{ display: 'flex', gap: 4, padding: '0 16px 10px', overflowX: 'auto', width: '100%', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', gap: 4, padding: '0 16px 10px', overflowX: 'auto', width: '100%', boxSizing: 'border-box', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
             {NAV_GROUPS.find(g => g.id === activeGroup).subs.map(sub => (
               <button key={sub.id}
                 onClick={() => { setActiveTab(sub.id); setShowForm(false); }}
                 style={{
-                  padding: '5px 12px', borderRadius: 16, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit',
+                  padding: '8px 14px', borderRadius: 20, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', minHeight: 44,
                   background: activeTab === sub.id ? 'var(--primary)' : 'var(--bg-app)',
                   color: activeTab === sub.id ? 'white' : 'var(--text-sub)',
                   transition: 'all 0.15s',
@@ -391,6 +391,9 @@ export default function MainApp() {
                 {sub.label}
               </button>
             ))}
+            <style>{`
+              .app-header div[style*="overflowX"]::-webkit-scrollbar { display: none; }
+            `}</style>
           </div>
         )}
       </header>
@@ -450,13 +453,13 @@ export default function MainApp() {
             {activeTab === 'scan' && (
               <ErrorBoundary>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div className="form-grid" style={{ gap: 12 }}>
                     <button onClick={() => setScanMode('identify')}
-                      style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: scanMode === 'identify' ? '#6366f1' : 'var(--bg-app)', color: scanMode === 'identify' ? 'white' : 'var(--text-sub)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}>
+                      style={{ flex: 1, padding: '14px 0', borderRadius: 12, border: 'none', background: scanMode === 'identify' ? '#6366f1' : 'var(--bg-app)', color: scanMode === 'identify' ? 'white' : 'var(--text-sub)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', minHeight: 44 }}>
                       <ScanLine size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Identify
                     </button>
                     <button onClick={() => setScanMode('bulk')}
-                      style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: scanMode === 'bulk' ? '#6366f1' : 'var(--bg-app)', color: scanMode === 'bulk' ? 'white' : 'var(--text-sub)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}>
+                      style={{ flex: 1, padding: '14px 0', borderRadius: 12, border: 'none', background: scanMode === 'bulk' ? '#6366f1' : 'var(--bg-app)', color: scanMode === 'bulk' ? 'white' : 'var(--text-sub)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', minHeight: 44 }}>
                       <Sparkles size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Bulk Discovery
                     </button>
                   </div>
@@ -486,13 +489,13 @@ export default function MainApp() {
             {/* SETTINGS (includes admin panel for admin users) */}
             {activeTab === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 15, maxWidth: 600 }}>
-                <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 20, borderRadius: 18 }}>
+                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16, padding: 20, borderRadius: 18 }}>
                   <div style={{ width: 58, height: 58, borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 800, flexShrink: 0 }}>
                     {user.username.charAt(0).toUpperCase()}
                   </div>
-                  <div>
+                  <div style={{ textAlign: 'center', width: '100%' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>Logged in as</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-main)' }}>{user.username}</span>
                       <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
                         background: user.tier === 'pro' ? '#fff3cd' : user.tier === 'basic' ? '#d4edff' : '#e8e8e8',
@@ -504,9 +507,9 @@ export default function MainApp() {
                   </div>
                 </div>
 
-                <div className="glass-panel" style={{ padding: 20, borderRadius: 18, display: 'flex', gap: 16 }}>
+                <div className="glass-panel card-grid" style={{ padding: 0, borderRadius: 18 }}>
                   {[['Total',goats.length,'🐐'],['Does',goats.filter(g=>g.sex==='F').length,'♀'],['Bucks',goats.filter(g=>g.sex==='M').length,'♂'],['Wethers',goats.filter(g=>g.sex==='W').length,'⚥']].map(([l,v,e]) => (
-                    <div key={l} style={{ flex: 1, textAlign: 'center' }}>
+                    <div key={l} style={{ textAlign: 'center', padding: 16 }}>
                       <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary)' }}>{v}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 2 }}>{e} {l}</div>
                     </div>

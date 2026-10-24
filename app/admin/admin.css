@@ -1,5 +1,5 @@
 /* ============================================================
-   ADMIN PORTAL STYLES v3.1 — Tailwind v4
+   ADMIN PORTAL STYLES v3.2 — Tailwind v4
    Responsive: Mobile → Tablet (sm: 640px) → Desktop (lg: 1024px)
    Tokens defined in globals.css @theme block
    ============================================================ */
@@ -42,6 +42,7 @@
   padding: 6px 10px;
   border-radius: 0.5rem;
   transition: background 0.15s;
+  min-height: 44px; /* Touch target */
 }
 
 @utility adminUserBadge {
@@ -116,6 +117,7 @@
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   position: relative;
   overflow: hidden;
+  min-height: 44px; /* Touch target */
 }
 
 @utility statCardIcon {
@@ -166,6 +168,7 @@
   padding: 0.625rem 0.875rem;
   margin-bottom: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
+  min-height: 44px; /* Touch target */
 }
 
 @utility modalOverlay {
@@ -193,6 +196,96 @@
   animation: modalSlideUp 0.2s ease;
 }
 
+/* ── Responsive utilities using Tailwind v4 breakpoints ── */
+/* sm: 640px, md: 768px, lg: 1024px, xl: 1280px */
+
+@utility statGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .statGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .statGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@utility tierGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .tierGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .tierGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Admin content responsive padding */
+@media (min-width: 640px) {
+  .adminContent { padding: 1.5rem; }
+}
+
+@media (min-width: 1024px) {
+  .adminContent { padding: 2rem; }
+}
+
+/* Modal responsive */
+@media (min-width: 640px) {
+  .modalContent { max-width: 32rem; padding: 2rem; }
+}
+
+/* Admin section hover effects (desktop only) */
+@media (min-width: 1024px) {
+  .adminSection:hover { box-shadow: var(--shadow); }
+  .statCard:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .tierCard:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .userCard:hover { border-color: var(--border-strong); box-shadow: var(--shadow); transform: translateY(-1px); }
+}
+
+/* Mobile-first form inputs */
+@media (max-width: 639px) {
+  .adminSearch input,
+  .tierCard input,
+  .tierCard select,
+  .UserCard select {
+    font-size: 16px; /* Prevents iOS zoom */
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Touch target improvements for mobile */
+@media (pointer: coarse) {
+  .adminBack,
+  .admin-btn,
+  .btn-filter,
+  .nav-item,
+  .userCard,
+  .statCard,
+  .tierCard,
+  button,
+  select,
+  input {
+    min-height: 44px;
+  }
+  
+  .admin-btn-sm { padding: 0.75rem 1rem; }
+  .admin-btn-ghost { padding: 0.75rem 1rem; }
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 /* ── Animations ──────────────────────────────────────────── */
 @keyframes adminFadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -208,9 +301,6 @@
   from { opacity: 0; transform: translateY(1.25rem); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* ── Responsive breakpoints handled via Tailwind v4 sm:/lg: prefixes in JSX ── */
-/* Custom @media queries with CSS variables are not valid; use utility prefixes instead */
 
 /* ── Legacy class support (gradual migration) ── */
 .admin-layout { @apply adminLayout; }
@@ -232,7 +322,3 @@
 .admin-search { @apply adminSearch; }
 .modal-overlay { @apply modalOverlay; }
 .modal-content { @apply modalContent; }
-
-/* ── Deprecated custom media queries (migrated to Tailwind tokens above) ── */
-/* @media (min-width: 640px) → use sm: prefix */
-/* @media (min-width: 1024px) → use lg: prefix */

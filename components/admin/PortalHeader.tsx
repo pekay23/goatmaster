@@ -35,7 +35,7 @@ function renderNotification(notification: Notification) {
     <button
       key={notification.id}
       type="button"
-      className="flex min-h-20 w-full gap-3 border-b border-border/60 px-4 py-3 text-left transition-colors duration-150 hover:bg-bg-elevated"
+      className="flex min-h-11 w-full gap-3 border-b border-border/60 px-4 py-3 text-left transition-colors duration-150 hover:bg-bg-elevated"
       onClick={() => {
         if (notification.link) window.location.href = notification.link;
       }}
@@ -115,20 +115,32 @@ export function PortalHeader({ onMenuClick, userName }: PortalHeaderProps) {
 
   useEffect(() => {
     if (!searchQuery || searchQuery.length < 2) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
+      const delay = setTimeout(() => {
+        setSearchResults([]);
+        setIsSearching(false);
+      }, 0);
+      return () => clearTimeout(delay);
     }
-    setIsSearching(true);
     const delay = setTimeout(async () => {
+      setIsSearching(true);
       try {
         const res = await fetch(`/api/admin/search?q=${encodeURIComponent(searchQuery)}`);
-        if (res.ok) setSearchResults(await res.json());
-      } catch {}
-      setIsSearching(false);
+        if (res.ok) {
+          setSearchResults(await res.json());
+        } else {
+          setSearchResults([]);
+        }
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
     }, 250);
     return () => clearTimeout(delay);
   }, [searchQuery]);
+
+  const displaySearchResults = (searchQuery.length >= 2) ? searchResults : [];
+  const displayIsSearching = (searchQuery.length >= 2) ? isSearching : false;
 
   // Notifications
   useEffect(() => {
@@ -161,11 +173,11 @@ export function PortalHeader({ onMenuClick, userName }: PortalHeaderProps) {
   return (
     <TooltipProvider>
       <header className="sticky top-0 z-30 flex w-full flex-col border-b border-border/70 bg-bg-nav/95 supports-backdrop-filter:bg-bg-nav/85 supports-backdrop-filter:backdrop-blur">
-        <div className="flex min-h-16 w-full items-center justify-between px-4 lg:px-6">
+        <div className="flex min-h-14 w-full items-center justify-between px-4 lg:px-6">
           <div className="flex min-w-0 items-center gap-2 overflow-hidden sm:gap-3">
             <button
               type="button"
-              className="lg:hidden p-2 rounded-lg text-text-sub hover:bg-bg-elevated hover:text-text-main"
+              className="lg:hidden p-3 rounded-lg text-text-sub hover:bg-bg-elevated hover:text-text-main min-h-11 min-w-11 flex items-center justify-center"
               onClick={() => router.back()}
               aria-label="Go back"
             >
@@ -179,7 +191,7 @@ export function PortalHeader({ onMenuClick, userName }: PortalHeaderProps) {
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="hidden h-9 min-w-[14rem] justify-start gap-2 bg-bg-app px-3 text-text-sub md:inline-flex"
+                  className="hidden h-9 min-w-56 justify-start gap-2 bg-bg-app px-3 text-text-sub md:inline-flex"
                   onClick={() => setShowCommand(true)}
                   aria-label="Open command palette"
                 >
@@ -195,7 +207,7 @@ export function PortalHeader({ onMenuClick, userName }: PortalHeaderProps) {
 
             <button
               type="button"
-              className="md:hidden p-2 rounded-lg text-text-sub hover:bg-bg-elevated hover:text-text-main"
+              className="md:hidden p-3 rounded-lg text-text-sub hover:bg-bg-elevated hover:text-text-main min-h-11 min-w-11 flex items-center justify-center"
               onClick={() => setShowCommand(true)}
               aria-label="Open command palette"
             >
@@ -206,7 +218,7 @@ export function PortalHeader({ onMenuClick, userName }: PortalHeaderProps) {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="relative p-2 rounded-lg text-text-sub hover:bg-bg-elevated hover:text-text-main"
+                  className="relative p-3 rounded-lg text-text-sub hover:bg-bg-elevated hover:text-text-main min-h-11 min-w-11 flex items-center justify-center"
                   aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
                 >
                   <Bell size={20} />
@@ -233,7 +245,7 @@ export function PortalHeader({ onMenuClick, userName }: PortalHeaderProps) {
                     </button>
                   )}
                 </div>
-                <div className="max-h-[28rem] overflow-y-auto">
+                <div className="max-h-112 overflow-y-auto">
                   {renderNotificationList(notifications)}
                 </div>
               </PopoverContent>

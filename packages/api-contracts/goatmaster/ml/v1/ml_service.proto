@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package goatmaster.ml.v1;
+
+option go_package = "github.com/goatmaster/api-contracts/gen/go/goatmaster/ml/v1";
+option java_package = "com.goatmaster.ml.v1";
+option java_outer_classname = "MlServiceProto";
+option java_multiple_files = true;
+option objc_class_prefix = "GM";
+
+// ── Detection / Match ──────────────────────────────────────────────
+// Mirrors POST /scan : decode image, detect goat, embed, vector-search match.
+
+message Goat {
+  int64 id = 1;
+  string name = 2;
+  string breed = 3;
+  string sex = 4;
+  string image_url = 5;
+}
+
+message ScanRequest {
+  // Base64-encoded JPEG/PNG image (data URI prefix is stripped server-side).
+  string image_b64 = 1;
+  int64 user_id = 2;
+}
+
+message ScanResponse {
+  Goat goat = 1;
+  float confidence = 2;
+  string method = 3;
+  bool detected = 4;
+}
+
+// ── Embedding ──────────────────────────────────────────────────────
+// Mirrors POST /embed : extract ResNet50 embedding only, no DB search.
+
+message EmbedRequest {
+  string image_b64 = 1;
+}
+
+message EmbedResponse {
+  repeated float embedding = 1;
+  bool detected = 2;
+}
+
+// ── Enrollment ─────────────────────────────────────────────────────
+// Mirrors POST /enroll : extract embeddings for multiple images.
+
+message EnrollRequest {
+  repeated string images = 1; // base64-encoded images
+}
+
+message EnrollResponse {
+  repeated EmbeddingVector embeddings = 1;
+  int32 count = 2;
+}
+
+message EmbeddingVector {
+  repeated float values = 1;
+}
+
+// ── Re-ID training ─────────────────────────────────────────────────
+// Mirrors POST /train/reid and GET /train/status.
+
+message TrainReidRequest {
+  int32 epochs = 1;
+  float lr = 2;
+  float margin = 3;
+  int32 min_photos_per_goat = 4;
+}
+
+message TrainReidResponse {
+  string status = 1;
+  int32 goats_used = 2;
+  int32 triplets = 3;
+  int32 epochs = 4;
+  float final_loss = 5;
+  repeated float loss_history = 6;
+  float train_time_sec = 7;
+  string weights_saved = 8;
+}
+
+message TrainStatusRequest {}
+
+message TrainStatusResponse {
+  bool has_finetuned_weights = 1;
+  int32 goats_in_db = 2;
+  int32 embeddings_in_db = 3;
+  bool ready_to_train = 4;
+}
+
+service MlService {
+  rpc Scan(ScanRequest) returns (ScanResponse);
+  rpc Embed(EmbedRequest) returns (EmbedResponse);
+  rpc Enroll(EnrollRequest) returns (EnrollResponse);
+  rpc TrainReid(TrainReidRequest) returns (TrainReidResponse);
+  rpc TrainStatus(TrainStatusRequest) returns (TrainStatusResponse);
+}

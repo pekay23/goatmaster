@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700&family=DM+Sans:wght@400;500;700&display=swap');
+
+:root {
+  --color-pasture: #2D7D46;
+  --color-pasture-light: #3AA055;
+  --color-pasture-dark: #1E5C33;
+  --color-cream: #F5F0E1;
+  --color-cream-dark: #E8E0D0;
+  --color-slate: #1A1F2E;
+  --color-slate-light: #3D4450;
+  --color-terracotta: #C65D3B;
+  --color-terracotta-light: #D4724A;
+  --color-yellow: #F4C542;
+  --color-yellow-light: #F7D47A;
+}
+
+.marketing-root {
+  --color-pasture: #2D7D46;
+  --color-cream: #F5F0E1;
+  --color-slate: #1A1F2E;
+  --color-terracotta: #C65D3B;
+}
+
+.marketing-root .font-display { font-family: 'Fraunces', serif; }
+.marketing-root .font-sans { font-family: 'DM Sans', sans-serif; }
+
+/* Custom scrollbar hiding */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Color utilities */
+.text-pasture { color: var(--color-pasture); }
+.text-cream { color: var(--color-cream); }
+.text-slate { color: var(--color-slate); }
+.text-terracotta { color: var(--color-terracotta); }
+.text-yellow { color: var(--color-yellow); }
+
+.bg-pasture { background-color: var(--color-pasture); }
+.bg-cream { background-color: var(--color-cream); }
+.bg-slate { background-color: var(--color-slate); }
+.bg-terracotta { background-color: var(--color-terracotta); }
+.bg-yellow { background-color: var(--color-yellow); }
+
+/* Gradient utilities */
+.bg-gradient-hero {
+  background: linear-gradient(135deg, var(--color-cream) 0%, #E8F5E9 100%);
+}
+
+.bg-gradient-cta {
+  background: linear-gradient(135deg, var(--color-pasture) 0%, var(--color-pasture-dark) 50%, #1E3A2B 100%);
+}
+
+/* Animations */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Focus visible */
+.focus-visible:focus-visible {
+  outline: 2px solid var(--color-pasture);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-pasture);
+  color: white;
+}
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+}

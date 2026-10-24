@@ -7,6 +7,7 @@ import {
   BarChart3,
   Users,
   Layers,
+  Activity,
   ArrowLeft,
   Shield,
   Menu,
@@ -18,12 +19,16 @@ import { PortalHeader } from '@/components/admin/PortalHeader';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { MobileBottomNav } from '@/components/admin/MobileBottomNav';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
+import { AdminQueryProvider } from '@/components/admin/AdminQueryProvider';
 import './admin.css';
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: BarChart3 },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/tiers', label: 'Tiers', icon: Layers },
+  { href: '/admin/audit-logs', label: 'Audit Logs', icon: Activity },
+  { href: '/admin/billing', label: 'Billing', icon: Shield },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -31,22 +36,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [user, setUser] = useState<{ username: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('admin-sidebar-collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const mountedRef = useRef(false);
 
-  // Hydrate user from localStorage on the client only.
+  // Fetch user info from JWT cookie via API
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('goat_user');
-      if (stored) setUser(JSON.parse(stored));
-    } catch {}
+    fetch('/api/admin/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setUser({ username: data.username });
+      })
+      .catch(() => {});
   }, []);
 
-  // Hydrate sidebar collapsed state
-  useEffect(() => {
-    const saved = localStorage.getItem('admin-sidebar-collapsed');
-    setSidebarCollapsed(saved === 'true');
-  }, []);
+  // Hydrate sidebar collapsed state is handled by lazy initializer above
 
   useEffect(() => {
     localStorage.setItem('admin-sidebar-collapsed', String(sidebarCollapsed));
@@ -64,6 +73,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin', label: 'Dashboard', icon: BarChart3 },
     { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/tiers', label: 'Tiers', icon: Layers },
+    { href: '/admin/audit-logs', label: 'Audit Logs', icon: Activity },
+    { href: '/admin/billing', label: 'Billing', icon: Shield },
   ];
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -109,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               setSidebarCollapsed(!sidebarCollapsed);
               setSidebarOpen(false);
             }}
-            className={`p-1.5 rounded-lg text-text-sub/30 hover:text-primary hover:bg-primary-bg transition-colors ${sidebarCollapsed ? 'mt-2' : 'ml-auto'}`}
+            className={`p-2 rounded-lg text-text-sub/30 hover:text-primary hover:bg-primary-bg transition-colors ${sidebarCollapsed ? 'mt-2' : 'ml-auto'} min-h-[44px] min-w-[44px] flex items-center justify-center`}
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -125,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+                  className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-150 min-h-[44px] ${
                     active
                       ? 'bg-primary-bg text-primary font-semibold'
                       : 'text-text-sub hover:bg-primary-bg hover:text-primary'
@@ -167,25 +178,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile Sidebar Toggle Button */}
       <button
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-bg-nav shadow-lg border border-border"
+        className="fixed top-4 left-4 z-50 lg:hidden p-3 rounded-lg bg-bg-nav shadow-lg border border-border min-h-[44px] min-w-[44px] flex items-center justify-center"
         onClick={() => setSidebarOpen(true)}
         aria-label="Open sidebar"
       >
         <Menu size={24} className="text-text-main" />
       </button>
 
-      {/* Main Content Area */}
-      <div className={`flex flex-1 min-w-0 flex-col h-screen transition-[margin-left] duration-200 ease-out ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-[17rem]'}`}>
-        {/* Portal Header (sticky top) */}
-        <PortalHeader
-          onMenuClick={() => setSidebarOpen(true)}
-          userName={user?.username}
-        />
+{/* Main Content Area */}
+        <div className={`flex flex-1 min-w-0 flex-col h-screen transition-[margin-left] duration-200 ease-out ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-[17rem]'}`}>
+          {/* Portal Header (sticky top) */}
+          <PortalHeader
+            onMenuClick={() => setSidebarOpen(true)}
+            userName={user?.username}
+          />
 
-        {/* Main Content */}
-        <main id="main-content" className="flex-1 overflow-y-auto overflow-x-clip no-scrollbar p-4 lg:p-6 lg:pb-8">
-          {children}
-        </main>
+          {/* Main Content */}
+          <main id="main-content" className="flex-1 overflow-y-auto overflow-x-clip no-scrollbar p-4 sm:p-5 lg:p-6 lg:pb-8">
+            <ImpersonationBanner />
+            <AdminQueryProvider>
+              {children}
+            </AdminQueryProvider>
+          </main>
 
         {/* Footer inside portal — hidden on mobile where bottom nav owns the bottom edge */}
         <footer className="hidden border-t border-border/60 p-5 text-center lg:block">

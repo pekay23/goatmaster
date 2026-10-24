@@ -50,4 +50,5 @@ pnpm-debug.log*
 .env*
 .flaskenv*
 !.env.project
-!.env.vault
+!.env.vaultdocs/
+/docs/
