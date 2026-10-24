@@ -40,6 +40,19 @@ export function AppProviders({ children, orgId }: { children: ReactNode; orgId: 
     },
   }));
 
+  // Register service worker for offline support
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/app/' })
+        .then((registration) => {
+          console.log('SW registered for /app/:', registration.scope);
+        })
+        .catch((error) => {
+          console.warn('SW registration failed:', error);
+        });
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TierProvider orgId={orgId}>

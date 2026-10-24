@@ -14,11 +14,12 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
+  FileText,
 } from 'lucide-react';
 import { PortalHeader } from '@/components/admin/PortalHeader';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { MobileBottomNav } from '@/components/admin/MobileBottomNav';
-import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import { AdminQueryWrapper } from '@/components/app/AdminQueryWrapper';
 import './admin.css';
@@ -26,17 +27,10 @@ import './admin.css';
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: BarChart3 },
   { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/organizations', label: 'Organizations', icon: Shield },
   { href: '/admin/tiers', label: 'Tiers', icon: Layers },
-  { href: '/admin/audit-logs', label: 'Audit Logs', icon: Activity },
-  { href: '/admin/billing', label: 'Billing', icon: Shield },
-];
-
-const navItems = [
-  { href: '/admin', label: 'Dashboard', icon: BarChart3 },
-  { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/tiers', label: 'Tiers', icon: Layers },
-  { href: '/admin/audit-logs', label: 'Audit Logs', icon: Activity },
-  { href: '/admin/billing', label: 'Billing', icon: Shield },
+  { href: '/admin/billing', label: 'Billing', icon: CreditCard },
+  { href: '/admin/audit-logs', label: 'Audit Logs', icon: FileText },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
