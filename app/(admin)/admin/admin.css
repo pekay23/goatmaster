@@ -101,11 +101,32 @@
   transition: box-shadow 0.2s;
 }
 
+/* â”€â”€ Responsive utilities using Tailwind v4 breakpoints â”€â”€ */
+/* sm: 640px, md: 768px, lg: 1024px, xl: 1280px */
+
 @utility statGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .statGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .statGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@utility tierGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .tierGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @utility statCard {

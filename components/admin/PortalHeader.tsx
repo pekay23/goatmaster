@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Bell, Search, Menu, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Bell, Search, Menu, X, Loader2, Bell as BellIcon } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -30,14 +30,33 @@ function formatNotificationTime(value: string): string {
   return date.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function renderNotification(notification: Notification) {
-  return (
+export function PortalHeader({ onMenuClick, userName }: PortalHeaderProps) {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showCommand, setShowCommand] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const isRootPage = pathname === '/admin' || pathname === '/admin/users' || pathname === '/admin/tiers';
+  const showBack = !isRootPage && pathname.split('/').filter(Boolean).length > 1;
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // Render notification helper
+  const renderNotification = (notification: Notification) => (
     <button
       key={notification.id}
       type="button"
       className="flex min-h-11 w-full gap-3 border-b border-border/60 px-4 py-3 text-left transition-colors duration-150 hover:bg-bg-elevated"
       onClick={() => {
-        if (notification.link) window.location.href = notification.link;
+        if (notification.link) {
+          router.push(notification.link);
+          setShowNotifications(false);
+        }
       }}
     >
       <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-primary-bg text-primary">
@@ -57,38 +76,22 @@ function renderNotification(notification: Notification) {
       </span>
     </button>
   );
-}
 
-function renderNotificationList(notifications: Notification[]) {
-  if (notifications.length === 0) {
-    return (
-      <div className="flex flex-col items-center gap-3 p-8 text-center">
-        <div className="size-8 text-text-sub/40">🔔</div>
-        <div>
-          <p className="text-sm font-bold text-text-main">No notifications</p>
-          <p className="mt-1 text-xs text-text-sub">New work, requests, and system updates will land here.</p>
+  // Render notification list helper
+  const renderNotificationList = (notifications: Notification[]) => {
+    if (notifications.length === 0) {
+      return (
+        <div className="flex flex-col items-center gap-3 p-8 text-center">
+          <BellIcon className="size-8 text-text-sub/40" />
+          <div>
+            <p className="text-sm font-bold text-text-main">No notifications</p>
+            <p className="mt-1 text-xs text-text-sub">New work, requests, and system updates will land here.</p>
+          </div>
         </div>
-      </div>
-    );
-  }
-  return notifications.map(renderNotification);
-}
-
-export function PortalHeader({ onMenuClick, userName }: PortalHeaderProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showCommand, setShowCommand] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const isRootPage = pathname === '/admin' || pathname === '/admin/users' || pathname === '/admin/tiers';
-  const showBack = !isRootPage && pathname.split('/').filter(Boolean).length > 1;
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
+      );
+    }
+    return notifications.map(renderNotification);
+  };
 
   // Keyboard shortcut: Cmd/Ctrl + K
   useEffect(() => {

@@ -1,15 +1,21 @@
-@import "tailwindcss";\r\n\r\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:wght@400;600;700;900&display=swap');\r\n\r\n@theme {
+﻿@import "tailwindcss";
+
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:wght@400;600;700;900&display=swap');
+
+@theme {
   /* Fonts */
   --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: 'Fraunces', Georgia, serif;
 
-  /* ── Breakpoints (Tailwind v4) ── */
+  /* â”€â”€ Breakpoints (Tailwind v4) â”€â”€ */
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
 
-  /* ── Colors ── */
+  /* â”€â”€ Colors â”€â”€ */
   --color-pasture-50:  hsl(var(--pasture-50));
   --color-pasture-100: hsl(var(--pasture-100));
   --color-pasture-200: hsl(var(--pasture-200));
@@ -50,7 +56,7 @@
   --color-slate-900: hsl(var(--slate-900));
   --color-slate-950: hsl(var(--slate-950));
 
-  /* ── Semantic tokens ── */
+  /* â”€â”€ Semantic tokens â”€â”€ */
   --color-bg-app:        hsl(var(--slate-100));
   --color-bg-card:       hsl(var(--slate-0));
   --color-bg-nav:        hsl(var(--slate-0));
@@ -71,21 +77,21 @@
   --color-info:          hsl(var(--sky-500));
   --color-info-bg:       hsl(199 89% 96%);
 
-  /* ── Shadows ── */
+  /* â”€â”€ Shadows â”€â”€ */
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow:    0 4px 20px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 8px 30px rgba(15, 23, 42, 0.10);
   --shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.14);
 
-  /* ── Layout tokens ── */
+  /* â”€â”€ Layout tokens â”€â”€ */
   --nav-height: 70px;
   --sidebar-width: 240px;
   --content-max: 1200px;
 }
 
 /* ============================================================
-   GOAT MASTER — APP.CSS v2.0
-   Responsive: Mobile → Tablet (640px) → Desktop (1024px)
+   GOAT MASTER â€” APP.CSS v2.0
+   Responsive: Mobile â†’ Tablet (640px) â†’ Desktop (1024px)
 
    COLOR SYSTEM
    - Two-layer palette: brand ("Pasture") + UI neutrals ("Slate")
@@ -94,7 +100,7 @@
    ============================================================ */
 
 :root {
-  /* ===== PASTURE · Brand green scale ===== */
+  /* ===== PASTURE Â· Brand green scale ===== */
   --pasture-50:  140 60% 96%;
   --pasture-100: 140 55% 90%;
   --pasture-200: 140 50% 80%;
@@ -106,7 +112,7 @@
   --pasture-800: 140 60% 16%;
   --pasture-900: 140 55% 10%;
 
-  /* ===== SUN · Warm accent (gold) ===== */
+  /* ===== SUN Â· Warm accent (gold) ===== */
   --sun-50:  42 100% 96%;
   --sun-100: 42 100% 88%;
   --sun-300: 42 95% 70%;
@@ -114,18 +120,18 @@
   --sun-600: 32 90% 42%;
   --sun-700: 28 85% 32%;
 
-  /* ===== BARN · Danger red ===== */
+  /* ===== BARN Â· Danger red ===== */
   --barn-50:  0 85% 96%;
   --barn-100: 0 80% 90%;
   --barn-500: 0 72% 51%;
   --barn-600: 0 70% 42%;
   --barn-700: 0 65% 32%;
 
-  /* ===== SKY · Cool info blue ===== */
+  /* ===== SKY Â· Cool info blue ===== */
   --sky-500: 199 89% 48%;
   --sky-600: 200 80% 40%;
 
-  /* ===== SLATE · Neutral UI grey scale ===== */
+  /* ===== SLATE Â· Neutral UI grey scale ===== */
   --slate-0:   210 20% 100%;
   --slate-50:  210 20% 98%;
   --slate-100: 210 16% 95%;
@@ -139,7 +145,7 @@
   --slate-900: 210 22% 8%;
   --slate-950: 210 28% 5%;
 
-  /* ===== Semantic tokens — LIGHT MODE (default) ===== */
+  /* ===== Semantic tokens â€” LIGHT MODE (default) ===== */
   --bg-app:        hsl(var(--slate-100));
   --bg-card:       hsl(var(--slate-0));
   --bg-nav:        hsl(var(--slate-0));
@@ -191,7 +197,7 @@
   --tier-pro-fg:    hsl(var(--sun-700));
 }
 
-/* ===== Semantic tokens — DARK MODE ===== */
+/* ===== Semantic tokens â€” DARK MODE ===== */
 [data-theme="dark"] {
   --bg-app:        hsl(var(--slate-950));
   --bg-card:       hsl(var(--slate-900));
@@ -370,7 +376,7 @@ html, body {
 .nav-item.active { color: var(--primary); font-weight: 600; }
 .nav-item span { font-size: 10px; }
 
-/* === Tablet (640px – 1023px) === */
+/* === Tablet (640px â€“ 1023px) === */
 @media (min-width: 640px) {
   .app-layout { max-width: 768px; }
   .nav-bar { max-width: 768px; border-radius: 28px 28px 0 0; padding: 12px 20px; padding-bottom: env(safe-area-inset-bottom, 12px); }
@@ -408,7 +414,7 @@ html, body {
   }
 
   .nav-bar::before {
-    content: "🐐 Goat Master";
+    content: "ðŸ Goat Master";
     display: flex;
     align-items: center;
     font-size: 16px;
@@ -905,6 +911,18 @@ html, body {
 @keyframes shimmerEffect { 100% { left: 200%; } }
 @keyframes loadProgress { 0% { width: 0; } 30% { width: 40%; } 60% { width: 45%; } 100% { width: 100%; } }
 @keyframes fadeOut     { to { opacity: 0; visibility: hidden; } }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 @keyframes slowZoom    { 0% { transform: scale(1.0); } 100% { transform: scale(1.05); } }
 @keyframes slideUpFade { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes scaleIn     { from { transform: scale(0.92); opacity: 0; }      to { transform: scale(1); opacity: 1; } }
@@ -1006,7 +1024,9 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 /* === Smooth theme transitions === */
-* { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease; }
+button, a, input, select, textarea, [role="button"] {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+}
 
 /* === Empty state === */
 .empty-state { text-align: center; padding: 50px 20px; color: var(--text-sub); }

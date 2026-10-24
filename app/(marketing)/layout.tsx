@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import './marketing.css';
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: 'GoatMaster — AI-Powered Goat Farm Management',
     template: '%s | GoatMaster',
@@ -15,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_GH',
-    url: 'https://goatmaster.com',
+    url: siteUrl,
     siteName: 'GoatMaster',
     title: 'GoatMaster — AI-Powered Goat Farm Management',
     description: 'From pasture to precision. Offline-first herd management, AI health scanning, lineage tracking.',

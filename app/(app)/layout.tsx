@@ -4,7 +4,10 @@ import { verifyToken } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { AppLayout } from '@/components/app/AppLayout';
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: 'GoatMaster — Herd Management',
     template: '%s | GoatMaster',
