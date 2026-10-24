@@ -65,6 +65,7 @@ export const config = {
     '/admin/:path*',
     '/app/:path*',
     '/api/:path*',
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.png$).*)',
+    // Exclude marketing routes: root, static pages, auth pages
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.png$|offline|about|blog|pricing|features|contact|legal|login|signup|_|/|$).*)',
   ],
 };
