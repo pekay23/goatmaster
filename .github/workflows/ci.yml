@@ -46,6 +46,10 @@ jobs:
       - name: Run regression tests
         run: bun run test
         timeout-minutes: 5
+        env:
+          APP_DATABASE_URL: postgresql://test_app:test@127.0.0.1:1/test
+          DATABASE_URL: postgresql://test_owner:test@127.0.0.1:1/test
+          JWT_SECRET: goatmaster-ci-test-only-not-for-production-12345
 
       - name: Check types
         run: bun run typecheck
@@ -72,6 +76,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           ML_SERVICE_KEY: ${{ secrets.ML_SERVICE_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
   # ---------------------------------------------------------------------
   # Deploy preview — the ONLY path to a Vercel preview deployment.
