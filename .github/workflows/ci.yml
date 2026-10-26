@@ -69,14 +69,6 @@ jobs:
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
           JWT_SECRET: goatmaster-ci-test-only-not-for-production-12345
-          PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
-          PAYSTACK_WEBHOOK_SECRET: ${{ secrets.PAYSTACK_WEBHOOK_SECRET }}
-          NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY }}
-          APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          ML_SERVICE_KEY: ${{ secrets.ML_SERVICE_KEY }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
   # ---------------------------------------------------------------------
   # Deploy preview — the ONLY path to a Vercel preview deployment.
