@@ -3,13 +3,13 @@
 import { ReactNode, useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Home, 
-  Users, 
-  Heart, 
-  Baby, 
-  Package, 
-  Camera, 
+import {
+  Home,
+  Users,
+  Heart,
+  Baby,
+  Package,
+  Camera,
   Settings,
   Menu,
   X,
@@ -20,6 +20,7 @@ import { SyncIndicator } from '@/lib/context/SyncContext';
 import { TierProvider } from '@/lib/context/TierContext';
 import { SyncProvider } from '@/lib/context/SyncContext';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { track, identify } from '@/lib/analytics';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
@@ -60,6 +61,11 @@ export function AppProviders({ children, orgId, userId }: { children: ReactNode;
     }
   }, []);
 
+  // Identify user in PostHog
+  useEffect(() => {
+    identify(userId, { orgId });
+  }, [userId, orgId]);
+
   if (!scopeReady) return <p role="status">Opening your farm…</p>;
   return (
     <QueryClientProvider client={queryClient}>
@@ -76,6 +82,11 @@ export function AppLayout({ children, orgId, userId }: { children: ReactNode; or
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Track page views on SPA navigation
+  useEffect(() => {
+    track('page_view', { path: pathname });
+  }, [pathname]);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 

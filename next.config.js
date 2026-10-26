@@ -1,5 +1,9 @@
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const { withSentryConfig } = require('@sentry/nextjs/config')
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -44,4 +48,13 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  org: 'goat-master',
+  project: 'goatmaster',
+  silent: true,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  distDir: process.env.NEXT_DIST_DIR || (process.env.NODE_ENV === 'production' ? '.next-build' : '.next'),
+  sourcemaps: {
+    disable: process.env.NODE_ENV !== 'production',
+  },
+})
