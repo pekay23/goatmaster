@@ -2,236 +2,74 @@ import LegalPage from '@/components/LegalPage';
 
 export const metadata = {
   title: 'Privacy Policy — GoatMaster',
-  description: 'How GoatMaster collects, uses, and protects your data.',
+  description: 'How GoatMaster handles account, farm, scan, and payment information.',
   openGraph: {
     title: 'Privacy Policy — GoatMaster',
-    description: 'How GoatMaster collects, uses, and protects your data.',
+    description: 'How GoatMaster handles account, farm, scan, and payment information.',
     url: 'https://goatmaster-tau.vercel.app/legal/privacy',
     siteName: 'GoatMaster',
-    locale: 'en_US',
+    locale: 'en_GH',
     type: 'website',
-    images: [{
-      url: 'https://goatmaster-tau.vercel.app/icon-512.png',
-      width: 512,
-      height: 512,
-      alt: 'GoatMaster',
-    }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Privacy Policy — GoatMaster',
-    description: 'How GoatMaster collects, uses, and protects your data.',
-    images: ['https://goatmaster-tau.vercel.app/icon-512.png'],
   },
 };
 
 export default function PrivacyPolicy() {
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="May 2, 2026">
-
-      <div className="legal-toc">
-        <h3>Contents</h3>
-        <ol>
-          <li><a href="#summary">Privacy at a Glance</a></li>
-          <li><a href="#scope">Who This Policy Applies To</a></li>
-          <li><a href="#data-we-collect">Data We Collect</a></li>
-          <li><a href="#how-we-use">How We Use Your Data</a></li>
-          <li><a href="#sharing">Data Sharing & Third Parties</a></li>
-          <li><a href="#camera-photos">Camera, Photos & On-Device AI</a></li>
-          <li><a href="#storage">Data Storage & Security</a></li>
-          <li><a href="#retention">Retention & Deletion</a></li>
-          <li><a href="#your-rights">Your Rights</a></li>
-          <li><a href="#children">Children's Privacy</a></li>
-          <li><a href="#international">International Data Transfers</a></li>
-          <li><a href="#changes">Changes to This Policy</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ol>
-      </div>
-
-      <h2 id="summary">1. Privacy at a Glance</h2>
+    <LegalPage title="Privacy Policy" lastUpdated="October 26, 2026">
       <p>
-        GoatMaster is a farm management app that helps you track your goat herd. We take your privacy
-        seriously and follow Apple App Store, Google Play Store, and GDPR guidelines. Here's the short version:
+        This policy explains what information GoatMaster processes when you use the GoatMaster web application,
+        why it is used, and how to contact us about it. The application is operated from Ghana. For privacy
+        questions or requests, contact <a href="mailto:samuel.hughes.23@outlook.com">samuel.hughes.23@outlook.com</a>.
       </p>
+
+      <h2 id="data-we-collect">Information processed</h2>
       <ul>
-        <li><strong>What we collect:</strong> a username and password, plus the goat data you create.</li>
-        <li><strong>What we do with it:</strong> we store it so you can use the app across devices.</li>
-        <li><strong>What we don't do:</strong> we don't sell your data, we don't show ads, and we don't track you across other apps or websites.</li>
-        <li><strong>Where it lives:</strong> on secure servers (Vercel, Neon PostgreSQL, Cloudinary).</li>
-        <li><strong>You're in control:</strong> you can export, edit, or permanently delete everything at any time from the Settings tab.</li>
+        <li><strong>Account details:</strong> email address, username, and a password hash. GoatMaster does not store your password in plain text. Email is used as your account identifier and for sign-in; account creation does not currently include an email verification step.</li>
+        <li><strong>Farm and herd records:</strong> farm or organization name, goat profiles and photo references, ear tags, health and treatment records, breeding details, events, inventory, and information you enter in notes or other fields.</li>
+        <li><strong>Scan information:</strong> when you use Smart Scan, the submitted image is sent from the app to the GoatMaster server and then to the configured machine-learning service. GoatMaster records scan time, result, match information, and confidence when available. The scan service must be configured for this feature to work.</li>
+        <li><strong>Billing records:</strong> when you start a paid-plan checkout, GoatMaster records the payment reference, email, plan, amount, and payment status. Payment details are handled through Paystack checkout; GoatMaster does not receive or store your full card number or security code.</li>
+        <li><strong>Security and diagnostic information:</strong> request and audit records may include IP address, user agent, account or organization identifiers, and actions taken in the service. IP addresses and user agents can therefore be retained in audit records, not only used for rate limiting.</li>
+        <li><strong>Optional product analytics:</strong> if analytics is enabled for the deployment, the app initializes PostHog for page-view measurement. The app can also send named events or identify a user when those functions are called. Analytics availability and host depend on deployment configuration.</li>
       </ul>
 
-      <h2 id="scope">2. Who This Policy Applies To</h2>
-      <p>
-        This Privacy Policy describes how GoatMaster ("we", "us", "our") collects, uses, and protects
-        information about you ("you", "your") when you use our application, available as a web application
-        and (in the future) as a mobile app on the Apple App Store and Google Play Store. By creating an
-        account or using the Service, you agree to this Policy.
-      </p>
+      <h2 id="use">How information is used</h2>
+      <p>GoatMaster uses this information to provide sign-in, farm records, plan entitlements, billing, Smart Scan, security controls, support, and service diagnostics. Analytics, if enabled, is used to understand product usage. GoatMaster does not sell personal information or use farm records for targeted advertising.</p>
 
-      <h2 id="data-we-collect">3. Data We Collect</h2>
-
-      <h3>3.1 Account Information</h3>
+      <h2 id="sharing">Service providers and sharing</h2>
+      <p>Information is processed by providers needed to run features you use. The current project configuration identifies these providers and regions:</p>
       <ul>
-        <li><strong>Username</strong> — chosen by you during signup. Used to log in and uniquely identify your account.</li>
-        <li><strong>Password</strong> — never stored as plain text. Hashed with bcrypt (12 rounds) before being saved.</li>
+        <li><strong>Vercel</strong> hosts the web application. Its server-side functions are configured for Washington, D.C., United States (region iad1). Requests may pass through Vercel’s global network.</li>
+        <li><strong>Neon</strong> provides the PostgreSQL database. The database connection configured in the local production environment points to AWS us-east-1 in the United States. The database region should be confirmed against the current Vercel production connection setting.</li>
+        <li><strong>Fly.io</strong> hosts the Smart Scan machine-learning service. Its deployment configuration sets the primary region to iad (Ashburn, Virginia, United States). The live machine placement could not be independently confirmed from the available account access.</li>
+        <li><strong>Paystack</strong> handles paid-plan checkout and payment processing. Its processing location was not confirmed during this review.</li>
+        <li><strong>PostHog</strong> is included for optional analytics and the local configuration points to its EU endpoint. It only runs when a public project key is configured; no such key is present in the Vercel production project settings checked for this review.</li>
       </ul>
+      <p>GoatMaster may also disclose information when required by law, to protect the service and its users, or as part of a business transfer. Provider terms and privacy notices apply to the services they operate. These deployment regions are not all in the EU; some providers may process information elsewhere.</p>
 
-      <h3>3.2 Goat & Farm Data (User-Generated Content)</h3>
-      <p>Information you create within the app to manage your herd, including:</p>
-      <ul>
-        <li>Goat names, breeds, sexes, dates of birth, ear tag numbers, QR codes, notes</li>
-        <li>Photos of goats (uploaded by you or captured via the in-app camera)</li>
-        <li>Health records: treatment dates, treatments given, due dates for follow-up care, notes</li>
-        <li>Breeding records: dam, sire, breeding date, expected and actual kidding dates</li>
-        <li>Visual fingerprints (numerical embedding vectors) extracted on-device from goat photos to enable AI-powered re-identification</li>
-        <li>Scan history: which goat was matched, when, and at what confidence</li>
-      </ul>
+      <h2 id="photos-and-scans">Photos, camera, and Smart Scan</h2>
+      <p>The browser asks for camera access only when you choose to use the camera. A submitted Smart Scan image is sent to GoatMaster’s server and forwarded to the configured machine-learning service for processing; the image is not processed entirely on your device. GoatMaster stores scan history and may store photo URLs that you add to farm records. The application code does not establish Cloudinary as the photo-storage provider.</p>
+      <p>Scan results are estimates for record keeping and should be reviewed. Do not submit an image unless you have the right to use it.</p>
 
-      <h3>3.3 Technical & Usage Data</h3>
-      <p>Collected automatically when you use the Service, used to keep the app running and to improve performance:</p>
-      <ul>
-        <li>IP address (used only for rate-limiting and abuse prevention; not stored long-term)</li>
-        <li>Browser type and version, operating system, device type</li>
-        <li>Pages visited, time of access, and basic interaction events (via Vercel Analytics — fully anonymised)</li>
-        <li>Performance metrics like load time and API response time (via Vercel Speed Insights — fully anonymised)</li>
-      </ul>
-      <p>
-        We do <strong>not</strong> collect: your real name, email address, phone number, location data, advertising IDs,
-        contacts, calendar, microphone audio, or any data from other apps on your device — unless you explicitly enter such data into a goat profile yourself.
-      </p>
+      <h2 id="security">Security</h2>
+      <p>GoatMaster uses password hashing, secure session cookies in production, access controls, and database row-level security. No online service can guarantee that information will always be secure. Do not share your password, and contact us if you believe your account has been accessed without permission.</p>
 
-      <h3>3.4 Permissions Requested</h3>
-      <p>The app may ask for the following device permissions, and only when needed for the relevant feature:</p>
-      <ul>
-        <li><strong>Camera</strong> — to take photos of goats for profiles, scanning, and breed identification.
-          You can deny this and instead upload photos from your gallery.</li>
-        <li><strong>Photo Library</strong> — to select existing photos to attach to a goat profile.</li>
-      </ul>
-      <p>
-        We do <strong>not</strong> request: location, contacts, microphone, calendar, Bluetooth, motion, health,
-        notifications (yet), or any other permission. You can revoke any granted permission from your device settings at any time.
-      </p>
+      <h2 id="retention">Retention and account deletion</h2>
+      <p>Account and farm information is retained while needed to provide the service. You can request account deletion through the account settings flow, which requires your current password. An organization owner must transfer ownership before deleting their account. The deletion route removes the user account; some related records, payment records, audit records, or backups may remain where needed to operate the service, meet legal obligations, prevent abuse, or restore the system. The application does not promise immediate removal from all backups or third-party systems.</p>
 
-      <h2 id="how-we-use">4. How We Use Your Data</h2>
-      <ul>
-        <li><strong>Provide the Service</strong> — let you log in, view your herd, save records, and recognise goats.</li>
-        <li><strong>Authenticate you</strong> — verify your password and keep your session active.</li>
-        <li><strong>Operate AI features</strong> — match the visual fingerprints of scanned goats against the ones you've enrolled.</li>
-        <li><strong>Send timely reminders</strong> — surface upcoming health treatments due within 7 days (in-app only; no email or push notifications are sent currently).</li>
-        <li><strong>Improve the Service</strong> — analyse anonymised usage data to find bugs, optimise performance, and prioritise new features.</li>
-        <li><strong>Comply with the law</strong> — respond to lawful legal requests if required.</li>
-      </ul>
-      <p>
-        We do <strong>not</strong> use your data for: targeted advertising, profile-based marketing, sale to third parties,
-        training of third-party AI models, or any purpose unrelated to running the app.
-      </p>
+      <h2 id="your-choices">Access, correction, and privacy requests</h2>
+      <p>You can view and edit available farm and account information in the app. Report exports are available in the app where the relevant feature is enabled for your plan. To ask about, correct, or request deletion of personal information, email <a href="mailto:samuel.hughes.23@outlook.com">samuel.hughes.23@outlook.com</a>. We will respond in the time required by applicable law. You may also contact the Data Protection Commission in Ghana or another supervisory authority applicable to you.</p>
 
-      <h2 id="sharing">5. Data Sharing & Third Parties</h2>
-      <p>
-        We share data only with the service providers that physically operate parts of the app. Each is bound
-        by a data processing agreement and processes data only to provide their service.
-      </p>
-      <table>
-        <thead>
-          <tr><th>Service</th><th>Purpose</th><th>Data Shared</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Vercel</td><td>App hosting, analytics, performance monitoring</td><td>App requests, anonymised usage</td></tr>
-          <tr><td>Neon</td><td>Managed PostgreSQL database</td><td>All app data (encrypted at rest)</td></tr>
-          <tr><td>Cloudinary</td><td>Image hosting & delivery</td><td>Photos uploaded by you</td></tr>
-        </tbody>
-      </table>
-      <p>
-        We do <strong>not</strong> share your data with advertisers, data brokers, or social media platforms.
-      </p>
+      <h2 id="children">Children</h2>
+      <p>GoatMaster is a farm-management service and is not designed for children. If you believe a child has provided personal information, contact us so we can review the request and take appropriate action under applicable law.</p>
 
-      <h2 id="camera-photos">6. Camera, Photos & On-Device AI</h2>
-      <p>
-        GoatMaster uses your device camera (with your permission) to scan goats for identification and breed detection.
-        Here's exactly what happens to a photo when you scan a goat:
-      </p>
-      <ol>
-        <li>The camera frame is captured locally on your device.</li>
-        <li>When you submit a scan, the captured image is sent to the configured recognition service for processing.</li>
-        <li>The service compares an image fingerprint with stored fingerprints for animals in your organization. Recognition can be incorrect and requires your review.</li>
-        <li>Scan results and usage may be stored with your organization’s records. Camera access ends when you close the scanner.</li>
-        <li>If you save a photo, it's uploaded to Cloudinary (encrypted in transit via HTTPS) and the URL is stored in your goat record.</li>
-      </ol>
-      <p>
-        <strong>Optical Character Recognition (OCR)</strong> for ear tag numbers also runs entirely on-device using Tesseract.js — no images are sent for OCR processing.
-      </p>
+      <h2 id="transfers">International processing</h2>
+      <p>Application functions and the configured Smart Scan service are in the eastern United States; the project’s local production database connection points to a United States region. Optional analytics is configured for an EU endpoint but is not enabled in the Vercel production project settings checked for this review. Paystack and provider support or operational systems may process information in other locations. Contact us if you need details about the providers used for your account.</p>
 
-      <h2 id="storage">7. Data Storage & Security</h2>
-      <p>We protect your data with industry-standard practices:</p>
-      <ul>
-        <li><strong>Encryption in transit:</strong> all communication uses HTTPS/TLS 1.3.</li>
-        <li><strong>Encryption at rest:</strong> the database is encrypted at the disk level by Neon.</li>
-        <li><strong>Password hashing:</strong> bcrypt with cost factor 12 — passwords are never stored or transmitted in clear text.</li>
-        <li><strong>Authentication tokens:</strong> JSON Web Tokens stored as <code>httpOnly</code> cookies — invisible to JavaScript and resistant to XSS.</li>
-        <li><strong>Multi-tenancy:</strong> every database query is scoped to your user ID. Other users cannot access your data.</li>
-        <li><strong>Rate limiting:</strong> repeated failed login attempts from one IP are throttled.</li>
-        <li><strong>Server location:</strong> data is stored in regional data centres operated by our service providers, generally in the EU or USA depending on the region nearest to you.</li>
-      </ul>
-      <p>
-        While we use commercially reasonable measures, no internet-based service can guarantee absolute security.
-        If we ever experience a breach affecting your data, we will notify you within 72 hours where practicable.
-      </p>
+      <h2 id="changes">Changes to this policy</h2>
+      <p>We may revise this policy as the service changes or legal requirements evolve. The date at the top indicates when this page was last revised. We will provide any notice or obtain any consent required by applicable law.</p>
 
-      <h2 id="retention">8. Retention & Deletion</h2>
-      <ul>
-        <li><strong>While your account is active</strong>, we retain all your data so the app remains usable.</li>
-        <li><strong>You can delete your account at any time</strong> from Settings → Account → Delete Account. This permanently and immediately removes your goats, photos, health logs, breeding logs, embeddings, and scan history.</li>
-        <li><strong>Inactive accounts</strong> are not auto-deleted, but you can email us to remove them.</li>
-        <li><strong>Backups</strong> are kept for up to 30 days for disaster recovery; deleted data is permanently removed from backups within 30 days.</li>
-      </ul>
-
-      <h2 id="your-rights">9. Your Rights</h2>
-      <p>You have the right to:</p>
-      <ul>
-        <li><strong>Access</strong> — view all your data within the app (Profiles tab, Reports tab).</li>
-        <li><strong>Export</strong> — download CSV or PDF reports of your herd, health, and breeding data from the Reports tab.</li>
-        <li><strong>Rectify</strong> — edit any goat profile, log entry, or your own profile at any time.</li>
-        <li><strong>Erase</strong> — permanently delete your account and all data via Settings.</li>
-        <li><strong>Restrict processing</strong> — stop using the app at any time. Email us if you'd like us to suspend rather than delete your account.</li>
-        <li><strong>Object</strong> — opt out of analytics by using a privacy-focused browser or extension. We honour browser DNT signals.</li>
-        <li><strong>Lodge a complaint</strong> — if you believe we've violated your privacy rights, you can complain to your local data protection authority (e.g. the ICO in the UK, the CNIL in France, or the Data Protection Commission in Ghana).</li>
-      </ul>
-
-      <h2 id="children">10. Children's Privacy</h2>
-      <p>
-        GoatMaster is not intended for children under <strong>13 years of age</strong> (or 16 in the European Economic Area, where local law sets a higher threshold). We do not knowingly collect data from children under these ages.
-      </p>
-      <p>
-        If you believe a child has created an account, please contact us at the address below and we will delete the account promptly.
-      </p>
-
-      <h2 id="international">11. International Data Transfers</h2>
-      <p>
-        Our service providers may store and process data in countries different from yours. Where transfers
-        happen, they are protected by Standard Contractual Clauses (SCCs) approved by the European
-        Commission, or equivalent safeguards. By using the Service, you consent to your data being processed in these jurisdictions.
-      </p>
-
-      <h2 id="changes">12. Changes to This Policy</h2>
-      <p>
-        We may update this Privacy Policy from time to time. We will notify you of material changes by:
-      </p>
-      <ul>
-        <li>Updating the "Last updated" date at the top of this page</li>
-        <li>Showing an in-app notice on your next sign-in</li>
-        <li>Where required by law, requesting your renewed consent</li>
-      </ul>
-      <p>Continued use of the Service after changes take effect means you accept the updated Policy.</p>
-
-      <h2 id="contact">13. Contact</h2>
-      <p>For privacy questions, data requests, or to exercise any of the rights listed above:</p>
-      <ul>
-        <li><strong>Email:</strong> <a href="mailto:samuel.hughes.23@outlook.com">samuel.hughes.23@outlook.com</a></li>
-        <li><strong>Phone:</strong> +233 55 441 6937</li>
-        <li><strong>Country:</strong> Ghana</li>
-      </ul>
-      <p>We respond to data requests within 30 days where required by law (e.g. GDPR, CCPA).</p>
+      <h2 id="contact">Contact</h2>
+      <p>For privacy questions and requests, contact GoatMaster at <a href="mailto:samuel.hughes.23@outlook.com">samuel.hughes.23@outlook.com</a>. The service is operated from Accra, Ghana.</p>
     </LegalPage>
   );
 }
