@@ -10,6 +10,7 @@ export async function PUT(request, { params }) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return NextResponse.json({ error: 'Invalid record ID' }, { status: 400 });
     if (!id || !UUID_REGEX.test(id)) {
       return NextResponse.json({ error: 'Valid UUID is required' }, { status: 400 });
     }
@@ -86,6 +87,7 @@ export async function DELETE(request, { params }) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return NextResponse.json({ error: 'Invalid record ID' }, { status: 400 });
     if (!id || !UUID_REGEX.test(id)) {
       return NextResponse.json({ error: 'Valid UUID is required' }, { status: 400 });
     }

@@ -1,4 +1,6 @@
 'use client';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Search, Loader2, ChevronDown, Users, Mail, CalendarDays,
@@ -6,6 +8,9 @@ import {
 } from 'lucide-react';
 
 export default function AdminUsers() {
+  const {data:session}=useQuery({queryKey:['admin-session'],queryFn:async()=>{const response=await fetch('/api/admin/auth/me');if(!response.ok)throw new Error('Unable to load permissions');return response.json();}});
+  const canWrite=session?.permissions?.includes('users:write')===true;
+  const [error,setError]=useState('');
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -24,10 +29,12 @@ export default function AdminUsers() {
       if (search) params.set('search', search);
       const res = await fetch(`/api/admin/users?${params}`);
       const data = await res.json();
+      if(!res.ok)throw new Error(data.error||'Unable to load users');
+      setError('');
       setUsers(data.users || []);
       setTotal(data.total || 0);
       setTotalPages(data.totalPages || 1);
-    } catch {}
+    } catch(cause) {setError(cause.message||'Unable to load users');}
     setLoading(false);
   }, [page, search]);
 
@@ -50,11 +57,12 @@ export default function AdminUsers() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
+      if(!res.ok){const body=await res.json();throw new Error(body.error||'Unable to update account');}
       if (res.ok) {
         const updated = await res.json();
         setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updated } : u));
       }
-    } catch {}
+    } catch(cause) {setError(cause.message||'Unable to update account');}
     setSaving(null);
   }
 
@@ -62,6 +70,7 @@ export default function AdminUsers() {
     setSaving(id);
     try {
       const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+      if(!res.ok){const body=await res.json();throw new Error(body.error||'Unable to delete account');}
       if (res.ok) {
         setUsers(prev => prev.filter(u => u.id !== id));
         setTotal(prev => prev - 1);
@@ -71,7 +80,7 @@ export default function AdminUsers() {
         const data = await res.json();
         alert(data.error || 'Failed to delete user');
       }
-    } catch {}
+    } catch(cause) {setError(cause.message||'Unable to delete account');setDeleteConfirm(null);}
     setSaving(null);
   }
 
@@ -82,60 +91,47 @@ export default function AdminUsers() {
   }
 
   return (
-    <>
-      {/* Page Title */}
-      <div className="admin-page-title flex items-center gap-2.5 mb-5">
-        <div className="admin-page-title-icon w-9 h-9 rounded-lg flex items-center justify-center bg-primary-bg text-primary">
-          <Users size={20} />
+    <div className="gm-admin-workspace gm-admin-users">
+      <header className="gm-admin-heading">
+        <div>
+          <p className="gm-admin-eyebrow">Access management</p>
+          <h1>Users</h1>
+          <p>Review account access, plans, and farm membership.</p>
         </div>
-        <h2 className="text-lg font-bold m-0">Users</h2>
-      </div>
+        {canWrite && <button type="button" className="gm-admin-button" onClick={() => setShowAddModal(true)}>
+          <Plus size={16} aria-hidden="true" /> Add user
+        </button>}
+      </header>
 
-      {/* Search + Add button */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 mb-4">
-        <div className="admin-search flex items-center gap-2.5 bg-bg-card border border-border rounded-lg p-2.5 mb-4 sm:mb-0 transition-colors duration-150 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary-bg w-full sm:w-auto">
-          <Search size={16} className="shrink-0 text-text-sub" />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            className="flex-1 border-none bg-transparent text-text-main outline-none text-sm"
-          />
-        </div>
-        <button
-          className="admin-btn admin-btn-primary px-4 py-2 rounded-lg text-sm font-bold bg-primary text-white hover:bg-primary-hover active:scale-[0.97] transition-colors duration-150 whitespace-nowrap"
-          onClick={() => setShowAddModal(true)}
-        >
-          <Plus size={16} className="shrink-0" /> Add User
-        </button>
-      </div>
+      {error && <p role="alert" className="gm-admin-error">{error}</p>}
 
-      {/* Results count */}
-      <div className="admin-results-count text-sm text-text-sub mb-3 font-medium">
-        {total} user{total !== 1 ? 's' : ''} found
-      </div>
+      <section className="gm-admin-panel" aria-label="Search users">
+        <label className="gm-admin-users-search">
+          <span>Find a user</span>
+          <span className="gm-admin-users-search-field"><Search size={17} aria-hidden="true" />
+            <input type="search" placeholder="Name or email address" value={searchInput} onChange={e => setSearchInput(e.target.value)} />
+          </span>
+        </label>
+      </section>
 
-      {/* Loading state */}
-      {loading ? (
-        <div className="admin-empty flex flex-col items-center justify-center p-3">
-          <Loader2 size={24} className="animate-[spin_1s_linear_infinite]" />
+      <section className="gm-admin-panel gm-admin-list-panel">
+        <div className="gm-admin-section-heading">
+          <h2>User accounts</h2>
+          <p role="status">{loading ? 'Loading users…' : `${total} ${total === 1 ? 'account' : 'accounts'}`}</p>
         </div>
-      ) : users.length === 0 ? (
-        <div className="admin-empty flex flex-col items-center justify-center p-3 text-text-sub text-sm">
-          <div className="admin-empty-icon w-12 h-12 rounded-full bg-bg-elevated flex items-center justify-center mb-1 text-text-muted">
-            <Users size={24} />
-          </div>
-          <p>No users found.</p>
-        </div>
-      ) : (
-        <>
-          {/* User Cards */}
-          <div className="space-y-2">
+        {loading ? (
+          <div className="gm-admin-loading" role="status"><Loader2 size={22} className="animate-spin" /> Loading user accounts…</div>
+        ) : users.length === 0 ? (
+          <div className="gm-admin-empty"><Users size={25} aria-hidden="true" /><h3>No users found</h3><p>{search ? 'Try a different name or email address.' : 'User accounts will appear here.'}</p></div>
+        ) : (
+          <>
+            <div className="gm-admin-user-list">
             {users.map(u => (
               <UserCard
                 key={u.id}
                 user={u}
+                canWrite={canWrite}
+                canManageRoles={session?.role==='super_admin'&&session?.id!==u.id}
                 expanded={expanded === u.id}
                 saving={saving === u.id}
                 onToggle={() => setExpanded(expanded === u.id ? null : u.id)}
@@ -143,32 +139,31 @@ export default function AdminUsers() {
                 onDelete={() => setDeleteConfirm(u)}
               />
             ))}
-          </div>
+            </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="admin-pagination flex items-center justify-center gap-2 mt-5">
+            <nav className="gm-admin-pagination" aria-label="User result pages">
               <button
-                className="admin-btn admin-btn-ghost admin-btn-sm disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded text-xs font-medium bg-bg-app text-text-main border border-border hover:bg-bg-elevated hover:border-border-strong transition-colors duration-150"
+                className="gm-admin-secondary"
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
               >
-                Prev
+                Previous
               </button>
-              <span className="admin-pagination-info text-xs text-text-sub px-2 font-medium">
-                {page} / {totalPages}
-              </span>
+              <span>{total} accounts · Page {page} of {totalPages}</span>
               <button
-                className="admin-btn admin-btn-ghost admin-btn-sm disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded text-xs font-medium bg-bg-app text-text-main border border-border hover:bg-bg-elevated hover:border-border-strong transition-colors duration-150"
+                className="gm-admin-secondary"
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
               >
                 Next
               </button>
-            </div>
+            </nav>
           )}
         </>
       )}
+      </section>
 
       {/* Add User Modal */}
       {showAddModal && (
@@ -207,18 +202,15 @@ export default function AdminUsers() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
-function UserCard({ user, expanded, saving, onToggle, onUpdate, onDelete }) {
+function UserCard({ user, expanded, saving, canWrite, canManageRoles, onToggle, onUpdate, onDelete }) {
   const initial = (user.username || 'U')[0].toUpperCase();
 
   return (
-    <div
-      className={`userCard ${expanded ? 'userCardExpanded' : ''} cursor-pointer`}
-      onClick={onToggle}
-    >
+    <article className={`gm-admin-user-row ${expanded ? 'is-expanded' : ''}`}>
       <div className="user-card-header flex items-center justify-between gap-3">
         <div className="user-card-avatar w-10 h-10 rounded-full flex items-center justify-center text-[16px] font-bold flex-shrink-0 bg-primary-bg text-primary">
           {initial}
@@ -238,57 +230,21 @@ function UserCard({ user, expanded, saving, onToggle, onUpdate, onDelete }) {
             <span className={`badge px-1.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-[0.3px] badge-${user.subscription_tier || 'free'}`}>
               {user.subscription_tier || 'free'}
             </span>
-            <span className={`badge px-1.5 py-0.5 rounded text-[11px] font-semibold ${user.is_active !== false ? 'badge-active' : 'badge-inactive'}`}>
-              {user.is_active !== false ? 'Active' : 'Inactive'}
-            </span>
             <span className="badge px-1.5 py-0.5 rounded text-[11px] font-semibold badge-free">{user.goat_count || 0} goats</span>
-            <span className="badge px-1.5 py-0.5 rounded text-[11px] font-semibold badge-free">{user.scan_count || 0} scans</span>
           </div>
         </div>
-        <ChevronDown size={18} className="user-card-chevron text-text-muted shrink-0 transition-transform duration-150 ${expanded ? 'rotate-180' : ''}" />
+        <button type="button" className="gm-admin-user-toggle" onClick={onToggle} aria-expanded={expanded} aria-label={`${expanded ? 'Hide' : 'Show'} details for ${user.username}`}>
+          <ChevronDown size={18} className={'user-card-chevron transition-transform duration-150 '+(expanded?'rotate-180':'')} />
+        </button>
       </div>
 
       {expanded && (
         <div className="user-card-actions pt-3.5 mt-3.5 border-t border-border flex flex-col gap-3 animate-[slideDown_0.2s_ease]">
-          <label className="flex items-center justify-between text-xs text-text-sub gap-3">
-            Role
-            <select
-              value={user.role || 'user'}
-              disabled={saving === user.id}
-              onChange={e => onUpdate({ role: e.target.value })}
-              className="px-2.5 py-1 rounded border border-border bg-bg-app text-text-main text-sm cursor-pointer transition-colors duration-75 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary-bg min-w-[3rem]"
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
+          {canManageRoles&&<label className="flex items-center justify-between gap-3 text-sm">Account role<select aria-label={'Role for '+user.username} value={user.role} disabled={saving} onChange={event=>onUpdate({role:event.target.value})} className="rounded border border-border bg-bg-app p-2">{['user','support','billing','admin','super_admin'].map(role=><option key={role} value={role}>{role.replace('_',' ')}</option>)}</select></label>}
 
           <label className="flex items-center justify-between text-xs text-text-sub gap-3">
             Tier
-            <select
-              value={user.subscription_tier || 'free'}
-              disabled={saving === user.id}
-              onChange={e => onUpdate({ subscription_tier: e.target.value })}
-              className="px-2.5 py-1 rounded border border-border bg-bg-app text-text-main text-sm cursor-pointer transition-colors duration-75 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary-bg min-w-[3rem]"
-            >
-              <option value="free">Free</option>
-              <option value="basic">Basic</option>
-              <option value="pro">Pro</option>
-            </select>
-          </label>
-
-          <label className="flex items-center justify-between text-xs text-text-sub gap-3">
-            Active
-            <div className="toggle relative w-11 h-6 shrink-0">
-              <input
-                type="checkbox"
-                checked={user.is_active !== false}
-                disabled={saving === user.id}
-                onChange={e => onUpdate({ is_active: e.target.checked })}
-                className="sr-only peer"
-              />
-              <span className="toggle-slider relative w-11 h-6 rounded-full bg-border-strong cursor-pointer transition-colors duration-150 peer-checked:bg-primary after:absolute after:inset-[3px] after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-transform after:translate-x-0 peer-checked:after:translate-x-[20px] after:bg-white after:shadow-sm" />
-            </div>
+            {user.organization_id ? <Link className="text-sm text-primary underline" href={'/admin/organizations/'+user.organization_id+'?tab=settings'}>Manage organization plan</Link> : <span className="text-xs text-text-sub">Platform account</span>}
           </label>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 1 }}>
@@ -302,7 +258,7 @@ function UserCard({ user, expanded, saving, onToggle, onUpdate, onDelete }) {
             )}
             <button
               className="admin-btn admin-btn-danger admin-btn-sm px-3 py-1 rounded text-xs font-bold bg-danger text-white hover:bg-hsl([var(--barn-600)]) active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
-              disabled={saving === user.id}
+              disabled={!canWrite||saving === true}
               onClick={onDelete}
             >
               <Trash2 size={14} className="shrink-0" /> Delete
@@ -310,7 +266,7 @@ function UserCard({ user, expanded, saving, onToggle, onUpdate, onDelete }) {
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }
 
@@ -319,11 +275,15 @@ function AddUserModal({ onClose, onCreated }) {
     email: '',
     password: '',
     username: '',
-    role: 'user',
-    tier: 'free',
+    organization_id: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [organizations, setOrganizations] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/admin/organizations?limit=100').then(response => response.json()).then(data => setOrganizations(data.organizations || [])).catch(() => setError('Unable to load organizations'));
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -337,7 +297,7 @@ function AddUserModal({ onClose, onCreated }) {
       });
       const data = await res.json();
       if (res.ok) {
-        onCreated({ ...data.data, is_active: true, goat_count: 0, scan_count: 0 });
+        onCreated({ ...data.data, subscription_tier: data.data.tier, goat_count: 0 });
       } else {
         setError(data.error || 'Failed to create user');
       }
@@ -384,10 +344,10 @@ function AddUserModal({ onClose, onCreated }) {
               <input
                 type="password"
                 required
-                minLength={6}
+                minLength={10}
                 value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="Min 6 characters"
+                placeholder="Min 10 characters"
                 className="px-2.5 py-2.5 rounded border border-border bg-bg-app text-text-main text-sm transition-colors duration-75 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary-bg"
               />
             </label>
@@ -403,28 +363,13 @@ function AddUserModal({ onClose, onCreated }) {
               />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-text-sub">
-              Role
-              <select
-                value={form.role}
-                onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
-                className="px-2.5 py-2.5 rounded border border-border bg-bg-app text-text-main text-sm cursor-pointer transition-colors duration-75 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary-bg"
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
+              Organization *
+              <select required value={form.organization_id} onChange={e => setForm(f => ({ ...f, organization_id: e.target.value }))} className="px-2.5 py-2.5 rounded border border-border bg-bg-app text-text-main text-sm">
+                <option value="">Select an organization</option>
+                {organizations.map(org => <option key={org.id} value={org.id}>{org.name}</option>)}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-text-sub">
-              Tier
-              <select
-                value={form.tier}
-                onChange={e => setForm(f => ({ ...f, tier: e.target.value }))}
-                className="px-2.5 py-2.5 rounded border border-border bg-bg-app text-text-main text-sm cursor-pointer transition-colors duration-75 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary-bg"
-              >
-                <option value="free">Free</option>
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-              </select>
-            </label>
+            <p className="text-xs text-text-sub">The account inherits the organization’s plan.</p>
           </div>
 
           <div className="modal-actions flex gap-2 justify-end mt-4">

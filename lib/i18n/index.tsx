@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSyncExternalStore, ReactNode } from 'react';
 
 type Locale = 'en' | 'tw';
 
@@ -463,14 +463,21 @@ const translations: Record<Locale, Record<string, string>> = {
   },
 };
 
+function getLocale(): Locale {
+  return typeof window === 'undefined' ? 'en' : window.localStorage.getItem('locale') === 'tw' ? 'tw' : 'en';
+}
+
+function subscribeLocale(callback: () => void) {
+  window.addEventListener('goatmaster:locale-change', callback);
+  window.addEventListener('storage', callback);
+  return () => {
+    window.removeEventListener('goatmaster:locale-change', callback);
+    window.removeEventListener('storage', callback);
+  };
+}
+
 export function useTranslation() {
-  const [locale, setLocale] = useState<Locale>('en');
-  
-  useEffect(() => {
-    // Load from localStorage or default to English
-    const saved = localStorage.getItem('locale') as Locale;
-    if (saved) setLocale(saved);
-  }, []);
+  const locale = useSyncExternalStore(subscribeLocale, getLocale, (): Locale => 'en');
 
   const t = (key: string, params?: Record<string, string>) => {
     let text = translations[locale][key] || translations.en[key] || key;
@@ -485,8 +492,8 @@ export function useTranslation() {
   };
 
   const changeLocale = (newLocale: Locale) => {
-    setLocale(newLocale);
     localStorage.setItem('locale', newLocale);
+    window.dispatchEvent(new Event('goatmaster:locale-change'));
   };
 
   return { t, locale, changeLocale };

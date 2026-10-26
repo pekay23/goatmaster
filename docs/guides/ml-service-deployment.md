@@ -71,7 +71,7 @@ cd ml_service
 fly launch --name goatmaster-ml --dockerfile Dockerfile --no-deploy
 
 # Set secrets
-fly secrets set DATABASE_URL="postgresql://..."
+fly secrets set APP_DATABASE_URL="postgresql://..." # restricted app role; must not have BYPASSRLS
 fly secrets set ML_SERVICE_KEY="your-key-here"
 
 # Deploy
@@ -129,7 +129,7 @@ curl https://goatmaster.fly.dev/health
 
 | Secret | Source | Required |
 |--------|--------|----------|
-| `DATABASE_URL` | Neon dashboard | ✅ |
+| `APP_DATABASE_URL` | Neon dashboard (restricted app role; no `BYPASSRLS`) | ✅ |
 | `ML_SERVICE_KEY` | Your `.env.local` | ✅ |
 | `ROBOFLOW_API_KEY` | Roboflow dashboard | Optional |
 | `ROBOFLOW_MODEL_ID` | Roboflow dashboard | Optional |

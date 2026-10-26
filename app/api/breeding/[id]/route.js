@@ -8,6 +8,7 @@ export async function PUT(request, { params }) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return NextResponse.json({ error: 'Invalid record ID' }, { status: 400 });
     const data = await request.json();
     const { dam_id, sire_id, mating_date, expected_kidding_date, actual_kidding_date, kids_count, notes, status } = data;
     
@@ -32,6 +33,7 @@ export async function DELETE(request, { params }) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return NextResponse.json({ error: 'Invalid record ID' }, { status: 400 });
     const { rowCount } = await query('DELETE FROM breeding_records WHERE id = $1 AND owner_id = $2', [id, user.sub]);
     
     if (rowCount === 0) return NextResponse.json({ error: 'Record not found or unauthorized' }, { status: 404 });

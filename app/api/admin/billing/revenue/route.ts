@@ -1,136 +1,19 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
-
-export async function GET(request: Request) {
-  const user = await getAuthUser(request);
-  if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    // Get MRR breakdown by tier
-    const mrrResult = await query(`
-      SELECT 
-        o.tier,
-        COUNT(*) as org_count,
-        SUM(t.price_cents) as mrr_cents
-      FROM organizations o
-      JOIN tiers t ON t.id = o.tier
-      WHERE o.subscription_status = 'active' AND o.tier != 'free'
-      GROUP BY o.tier
-      ORDER BY mrr_cents DESC
-    `);
-
-    // Get total MRR
-    const totalMrrResult = await query(`
-      SELECT 
-        SUM(t.price_cents) as total_mrr_cents,
-        COUNT(*) as active_subs
-      FROM organizations o
-      JOIN tiers t ON t.id = o.tier
-      WHERE o.subscription_status = 'active' AND o.tier != 'free'
-    `);
-
-    // Get ARR (annual)
-    const arrResult = await query(`
-      SELECT 
-        SUM(t.price_cents) * 12 as arr_cents
-      FROM organizations o
-      JOIN tiers t ON t.id = o.tier
-      WHERE o.subscription_status = 'active' AND o.tier != 'free'
-    `);
-
-    // Get failed payments last 7 days
-    const failedPaymentsResult = await query(`
-      SELECT COUNT(*) as count
-      FROM payments
-      WHERE status = 'failed' AND created_at >= NOW() - INTERVAL '7 days'
-    `);
-
-    // Get signup trend (last 30 days)
-    const signupTrendResult = await query(`
-      SELECT 
-        DATE(created_at) as date,
-        COUNT(*) as count,
-        COUNT(*) FILTER (WHERE tier != 'free') as paid_count
-      FROM organizations
-      WHERE created_at >= NOW() - INTERVAL '30 days'
-      GROUP BY DATE(created_at)
-      ORDER BY date ASC
-    `);
-
-    // Get revenue by month (last 12 months)
-    const monthlyRevenueResult = await query(`
-      SELECT 
-        DATE_TRUNC('month', p.created_at) as month,
-        SUM(p.amount) as revenue_cents
-      FROM payments p
-      WHERE p.status = 'success' AND p.created_at >= NOW() - INTERVAL '12 months'
-      GROUP BY DATE_TRUNC('month', p.created_at)
-      ORDER BY month ASC
-    `);
-
-    // Get cohort analysis - organizations by signup month and their retention
-    const cohortResult = await query(`
-      SELECT 
-        DATE_TRUNC('month', o.created_at) as cohort_month,
-        COUNT(*) as total_orgs,
-        COUNT(*) FILTER (WHERE o.subscription_status = 'active') as active_orgs,
-        COUNT(*) FILTER (WHERE o.tier != 'free') as paid_orgs
-      FROM organizations o
-      WHERE o.created_at >= NOW() - INTERVAL '12 months'
-      GROUP BY DATE_TRUNC('month', o.created_at)
-      ORDER BY cohort_month ASC
-    `);
-
-    // Get tier distribution
-    const tierDistResult = await query(`
-      SELECT 
-        tier,
-        COUNT(*) as count
-      FROM organizations
-      GROUP BY tier
-      ORDER BY count DESC
-    `);
-
-    return NextResponse.json({
-      mrr: {
-        total: parseInt(totalMrrResult.rows[0]?.total_mrr_cents || '0'),
-        activeSubs: parseInt(totalMrrResult.rows[0]?.active_subs || '0'),
-        byTier: mrrResult.rows.map((r: any) => ({
-          tier: r.tier,
-          orgCount: parseInt(r.org_count),
-          mrrCents: parseInt(r.mrr_cents || '0'),
-        })),
-      },
-      arr: {
-        total: parseInt(arrResult.rows[0]?.arr_cents || '0'),
-      },
-      failedPayments7d: parseInt(failedPaymentsResult.rows[0]?.count || '0'),
-      signupTrend: signupTrendResult.rows.map((r: any) => ({
-        date: r.date,
-        total: parseInt(r.count),
-        paid: parseInt(r.paid_count || '0'),
-      })),
-      monthlyRevenue: monthlyRevenueResult.rows.map((r: any) => ({
-        month: r.month,
-        revenueCents: parseInt(r.revenue_cents || '0'),
-      })),
-      cohorts: cohortResult.rows.map((r: any) => ({
-        cohortMonth: r.cohort_month,
-        totalOrgs: parseInt(r.total_orgs),
-        activeOrgs: parseInt(r.active_orgs),
-        paidOrgs: parseInt(r.paid_orgs),
-        retentionRate: r.total_orgs > 0 ? (parseInt(r.active_orgs) / parseInt(r.total_orgs)) * 100 : 0,
-      })),
-      tierDistribution: tierDistResult.rows.map((r: any) => ({
-        tier: r.tier,
-        count: parseInt(r.count),
-      })),
-    });
-  } catch (err) {
-    console.error('Admin revenue analytics error:', err);
-    return NextResponse.json({ error: 'Failed to load revenue analytics' }, { status: 500 });
-  }
+import { getAdminActor } from '@/lib/admin-auth';
+export async function GET(request:Request){
+ if(!await getAdminActor(request,'billing:read'))return NextResponse.json({error:'Billing access required'},{status:403});
+ const includeDemo=new URL(request.url).searchParams.get('include_demo')==='true';
+ try{const [mrr,failed,signups,revenue,cohorts,distribution]=await Promise.all([
+ query("SELECT o.tier,COUNT(*)::int AS org_count,COALESCE(SUM(t.price_cents),0)::bigint AS mrr_cents FROM organizations o JOIN tiers t ON t.id=o.tier WHERE o.subscription_status='active' AND o.tier<>'free' AND ($1 OR NOT o.is_demo) GROUP BY o.tier ORDER BY mrr_cents DESC",[includeDemo]),
+ query("SELECT COUNT(*)::int AS count FROM payments p WHERE p.status='failed' AND p.created_at>=NOW()-INTERVAL '7 days' AND ($1 OR NOT EXISTS(SELECT 1 FROM organizations o WHERE o.id=p.organization_id AND o.is_demo))",[includeDemo]),
+ query("SELECT DATE(created_at)::text AS date,COUNT(*)::int AS count,COUNT(*) FILTER(WHERE tier<>'free')::int AS paid_count FROM organizations WHERE created_at>=NOW()-INTERVAL '30 days' AND ($1 OR NOT is_demo) GROUP BY DATE(created_at) ORDER BY date",[includeDemo]),
+ query("SELECT DATE_TRUNC('month',p.created_at) AS month,SUM(p.amount)::bigint AS revenue_cents FROM payments p WHERE p.status='success' AND p.created_at>=NOW()-INTERVAL '12 months' AND ($1 OR NOT EXISTS(SELECT 1 FROM organizations o WHERE o.id=p.organization_id AND o.is_demo)) GROUP BY DATE_TRUNC('month',p.created_at) ORDER BY month",[includeDemo]),
+ query("SELECT DATE_TRUNC('month',created_at) AS cohort_month,COUNT(*)::int AS total_orgs,COUNT(*) FILTER(WHERE subscription_status='active')::int AS active_orgs,COUNT(*) FILTER(WHERE tier<>'free')::int AS paid_orgs FROM organizations WHERE created_at>=NOW()-INTERVAL '12 months' AND ($1 OR NOT is_demo) GROUP BY DATE_TRUNC('month',created_at) ORDER BY cohort_month",[includeDemo]),
+ query('SELECT tier,COUNT(*)::int AS count FROM organizations WHERE $1 OR NOT is_demo GROUP BY tier ORDER BY count DESC',[includeDemo]),
+ ]);
+ const byTier=mrr.rows.map((row:Record<string,unknown>)=>({tier:row.tier,orgCount:Number(row.org_count),mrrCents:Number(row.mrr_cents)}));
+ const total=byTier.reduce((sum:number,row:{mrrCents:number})=>sum+row.mrrCents,0);
+ return NextResponse.json({mrr:{total,activeSubs:byTier.reduce((sum:number,row:{orgCount:number})=>sum+row.orgCount,0),byTier},arr:{total:total*12},failedPayments7d:failed.rows[0].count,signupTrend:signups.rows.map((row:Record<string,unknown>)=>({date:row.date,total:row.count,paid:row.paid_count})),monthlyRevenue:revenue.rows.map((row:Record<string,unknown>)=>({month:row.month,revenueCents:Number(row.revenue_cents)})),cohorts:cohorts.rows.map((row:Record<string,unknown>)=>({cohortMonth:row.cohort_month,totalOrgs:row.total_orgs,activeOrgs:row.active_orgs,paidOrgs:row.paid_orgs,retentionRate:Number(row.total_orgs)>0?Number(row.active_orgs)/Number(row.total_orgs)*100:0})),tierDistribution:distribution.rows,includeDemo});
+ }catch(error){console.error('Revenue reporting failed:',error);return NextResponse.json({error:'Unable to load revenue records'},{status:500});}
 }

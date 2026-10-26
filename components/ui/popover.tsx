@@ -86,7 +86,7 @@ export function PopoverContent({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [context.isOpen]);
+  }, [context]);
 
   if (!context.isOpen) return null;
 

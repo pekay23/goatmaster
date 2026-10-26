@@ -1,69 +1,20 @@
+import { featureAccessError } from '@/lib/plan-access';
+import { listRecords } from '../_listing';
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
 import { query } from '@/lib/db';
+import { apiError } from '../_records';
 
 export async function GET(request: Request) {
+  const denied = await featureAccessError(request, 'health_records'); if (denied) return denied;
   const user = await getAuthUser(request);
-  if (!user || !user.orgId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
-    const type = searchParams.get('type') || '';
-    const page = Math.max(parseInt(searchParams.get('page') || '1'), 1);
-    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50'), 1), 100);
-    const offset = (page - 1) * limit;
-
-    let whereClause = 'WHERE hr.organization_id = $1';
-    const params: any[] = [user.orgId];
-    let paramIndex = 2;
-
-    if (search) {
-      whereClause += ` AND (g.name ILIKE $${paramIndex} OR hr.treatment ILIKE $${paramIndex} OR hr.notes ILIKE $${paramIndex})`;
-      params.push(`%${search}%`);
-      paramIndex++;
-    }
-    if (type) {
-      whereClause += ` AND hr.type = $${paramIndex}`;
-      params.push(type);
-      paramIndex++;
-    }
-
-    const countResult = await query(
-      `SELECT COUNT(*) as count FROM health_records hr 
-       JOIN goats g ON g.id = hr.goat_id 
-       ${whereClause}`, 
-      params
-    );
-    const total = parseInt(countResult.rows[0]?.count || '0');
-
-    params.push(limit, offset);
-    const result = await query(
-      `SELECT hr.*, g.name as goat_name 
-       FROM health_records hr
-       JOIN goats g ON g.id = hr.goat_id
-       ${whereClause} 
-       ORDER BY hr.record_date DESC 
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-      params
-    );
-
-    return NextResponse.json({
-      records: result.rows,
-      total,
-      totalPages: Math.ceil(total / limit),
-      page,
-      limit,
-    });
-  } catch (err) {
-    console.error('Health records error:', err);
-    return NextResponse.json({ error: 'Failed to load records' }, { status: 500 });
-  }
+  if (typeof user?.orgId !== 'string') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try { return NextResponse.json(await listRecords(request, user.orgId, 'health')); }
+  catch (error) { return apiError(error, 'Unable to load records'); }
 }
 
 export async function POST(request: Request) {
+  const denied = await featureAccessError(request, 'health_records'); if (denied) return denied;
   const user = await getAuthUser(request);
   if (!user || !user.orgId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -77,16 +28,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Goat and type are required' }, { status: 400 });
     }
 
+    const goat = await query('SELECT id FROM goats WHERE id = $1 AND organization_id = $2', [goat_id, user.orgId]);
+    if (!goat.rows.length) return NextResponse.json({ error: 'Goat not found in this organization' }, { status: 404 });
+
     const result = await query(
-      `INSERT INTO health_records (organization_id, goat_id, type, notes, treatment, cost, record_date, next_due_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO health_records (owner_id, organization_id, goat_id, type, notes, treatment, cost, record_date, next_due_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [user.orgId, goat_id, type, notes, treatment, cost || 0, record_date || new Date().toISOString(), next_due_date]
+      [user.sub, user.orgId, goat_id, type, notes, treatment, cost || 0, record_date || new Date().toISOString(), next_due_date || null]
     );
 
     return NextResponse.json(result.rows[0]);
   } catch (err) {
-    console.error('Create health record error:', err);
-    return NextResponse.json({ error: 'Failed to create record' }, { status: 500 });
+    return apiError(err, 'Failed to create record');
   }
 }

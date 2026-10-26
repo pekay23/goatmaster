@@ -1,4 +1,5 @@
 'use client';
+import SmartImage from '@/components/SmartImage';
 import React, { useState, useEffect } from 'react';
 import { Calendar, Camera, AlertCircle, ChevronRight, X } from 'lucide-react';
 
@@ -53,7 +54,7 @@ export default function MaturationHelper({ goats = [], onSelectGoat, onDismiss }
           <button key={g.id} onClick={() => onSelectGoat?.(g)}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'var(--bg-app)', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
             {g.image_url
-              ? <img src={g.image_url} style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} alt="" />
+              ? <SmartImage src={g.image_url} style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} alt="" />
               : <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🐐</div>
             }
             <div style={{ flex: 1, minWidth: 0 }}>

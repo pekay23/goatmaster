@@ -1,4 +1,5 @@
 'use client';
+import SmartImage from '@/components/SmartImage';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, Upload, RefreshCw, Zap, AlertCircle, Award, X, Info } from 'lucide-react';
 import { identifyBreed, analyseImageColours, BREED_BY_ID } from '@/lib/breeds';
@@ -91,7 +92,7 @@ export default function BreedIdentifier() {
     streamRef.current = null;
   };
 
-  const runIdentify = async (canvas) => {
+  const runIdentify = useCallback(async (canvas) => {
     if (!modelsReady) return;
     setPhase(STATE.LOADING);
     try {
@@ -105,7 +106,7 @@ export default function BreedIdentifier() {
       setError('Identification failed: ' + err.message);
       setPhase(STATE.IDLE);
     }
-  };
+  }, [modelsReady]);
 
   useEffect(() => {
     loadModels().then(() => setModelsReady(true)).catch(console.error);
@@ -139,7 +140,7 @@ export default function BreedIdentifier() {
     ctx.drawImage(v, 0, 0);
     await runIdentify(c);
     stopCamera();
-  }, []);
+  }, [runIdentify]);
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -253,7 +254,7 @@ export default function BreedIdentifier() {
         <>
           {result.thumb && (
             <div style={{ borderRadius: 20, overflow: 'hidden', width: '100%', aspectRatio: '4/3' }}>
-              <img src={result.thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <SmartImage src={result.thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           )}
 

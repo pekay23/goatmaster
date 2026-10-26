@@ -1,4 +1,5 @@
 'use client';
+import SmartImage from '@/components/SmartImage';
 import { Camera, CalendarDays } from 'lucide-react';
 import { BREEDS } from '@/lib/breeds';
 
@@ -11,7 +12,7 @@ export default function AddGoatView({ formData, setFormData, goats, isSubmitting
         <label style={{ cursor: 'pointer' }}>
           <input type="file" hidden onChange={handleImageChange} accept="image/*" />
           {formData.image_url
-            ? <img src={formData.image_url} style={{ height: 140, borderRadius: 12, objectFit: 'cover' }} alt="" />
+            ? <SmartImage src={formData.image_url} style={{ height: 140, borderRadius: 12, objectFit: 'cover' }} alt="" />
             : <div><Camera size={32} style={{ color: 'var(--text-sub)' }} /><p style={{ color: 'var(--text-sub)', margin: '8px 0 0', fontSize: 14 }}>{isEditing ? 'Change Photo' : 'Add Photo'}</p></div>}
         </label>
       </div>

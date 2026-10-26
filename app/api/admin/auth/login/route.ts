@@ -1,3 +1,4 @@
+import { allowAuthAttempt } from '@/lib/auth-rate-limit';
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { verifyPassword, signToken } from '@/lib/auth';
@@ -6,12 +7,13 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    if (!email || !password) {
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || typeof password !== 'string' || !password || new TextEncoder().encode(password).length > 72) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
+    if (!await allowAuthAttempt(email, 'login')) return NextResponse.json({ error: 'Too many attempts. Try again in 15 minutes.' }, { status: 429, headers: { 'Retry-After': '900' } });
     const result = await query(
-      'SELECT id, email, password_hash, username, role, organization_id FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, username, role, organization_id, auth_version FROM users WHERE LOWER(email) = $1',
       [email]
     );
 
@@ -26,7 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    if (user.role !== 'admin' && user.role !== 'super_admin') {
+    if (!['admin', 'super_admin', 'support', 'billing'].includes(user.role)) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
       sub: user.id,
       email: user.email,
       role: user.role,
-      orgId: user.organization_id,
+      sessionVersion: user.auth_version, orgId: user.organization_id,
     });
 
     const response = NextResponse.json({
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    response.cookies.set('jwt', token, {
+    response.cookies.set('admin_jwt', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

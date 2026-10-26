@@ -1,178 +1,27 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { Users, Gift, ScanLine, Camera, Loader2, BarChart3, TrendingUp, CalendarDays } from 'lucide-react';
-
-const TIER_COLORS = {
-  free: '#888',
-  basic: '#0066cc',
-  pro: '#ffc107',
-};
-
-const STAT_ICONS = [
-  { icon: Users, bg: 'bg-[var(--primary-bg)]', color: 'text-[var(--primary)]' },
-  { icon: Gift, bg: 'bg-[var(--accent-bg)]', color: 'text-[var(--accent)]' },
-  { icon: ScanLine, bg: 'bg-[var(--info-bg)]', color: 'text-[var(--info)]' },
-  { icon: Camera, bg: 'bg-hsl([var(--pasture-300)])', color: 'text-hsl([var(--pasture-300)])' },
-];
-
+import Link from 'next/link';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { adminRequest, currency, formatDate, number, object, records, text } from '@/components/admin/contracts';
 export default function AdminDashboard() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/admin/stats')
-      .then(r => r.json())
-      .then(setStats)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
-
-  if (!stats) {
-    return (
-      <div className="admin-empty flex flex-col items-center justify-center p-3 text-text-sub text-sm">
-        <div className="admin-empty-icon w-12 h-12 rounded-full bg-bg-elevated flex items-center justify-center mb-1 text-text-muted">
-          <BarChart3 size={20} />
-        </div>
-        <p>Failed to load dashboard stats.</p>
-        <button className="admin-btn admin-btn-primary mt-2" onClick={() => window.location.reload()}>
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  const totalByTier = stats.usersByTier.reduce((s, t) => s + t.count, 0) || 1;
-
-  return (
-    <>
-      {/* Page Title */}
-      <div className="admin-page-title flex items-center gap-2.5 mb-5">
-        <div className="admin-page-title-icon w-9 h-9 rounded-lg flex items-center justify-center bg-primary-bg text-primary">
-          <BarChart3 size={20} />
-        </div>
-        <h2 className="text-lg font-bold m-0">Dashboard</h2>
-      </div>
-
-      {/* Stat Cards — 1 col mobile, 2 col sm, 4 col lg */}
-      <div className="stat-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {[
-          { icon: Users, value: stats.totalUsers, label: 'Users' },
-          { icon: Gift, value: stats.totalGoats, label: 'Goats' },
-          { icon: ScanLine, value: stats.totalScans, label: 'Scans' },
-          { icon: Camera, value: stats.totalEmbeddings, label: 'Embeddings' },
-        ].map((item, i) => (
-          <StatCard key={item.label} {...item} iconConfig={STAT_ICONS[i]} />
-        ))}
-      </div>
-
-      {/* Users by Tier */}
-      <div className="admin-section bg-bg-card border border-border rounded-xl p-5 mb-4 shadow-sm transition-shadow duration-150 hover:shadow">
-        <h2 className="text-sm font-semibold m-0 mb-4 flex items-center gap-2">
-          <TrendingUp size={16} className="text-primary" /> Users by Tier
-        </h2>
-        <div className="tier-bar flex h-[10px] rounded-lg overflow-hidden mb-0.5 bg-bg-app">
-          {stats.usersByTier.map(t => (
-            <div
-              key={t.tier}
-              className="tier-bar-segment transition-width duration-300 ease-in-out first:rounded-l-lg last:rounded-r-lg"
-              style={{
-                width: `${(t.count / totalByTier) * 100}%`,
-                background: TIER_COLORS[t.tier] || '#888',
-              }}
-            />
-          ))}
-        </div>
-        <div className="tier-legend flex gap-4 flex-wrap mt-0.625rem">
-          {stats.usersByTier.map(t => (
-            <div key={t.tier} className="tier-legend-item flex items-center gap-1.5 text-sm">
-              <span
-                className="tier-legend-dot w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ background: TIER_COLORS[t.tier] || '#888' }}
-              />
-              <span style={{ textTransform: 'capitalize' }}>{t.tier || 'free'}</span>
-              <span style={{ color: 'var(--text-sub)' }}>( {t.count} )</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Signups Chart */}
-      {stats.signupsLast30d && stats.signupsLast30d.length > 0 && (
-        <div className="admin-section bg-bg-card border border-border rounded-xl p-5 shadow-sm transition-shadow duration-150 hover:shadow">
-          <h2 className="text-sm font-semibold m-0 mb-4 flex items-center gap-2">
-            <CalendarDays size={16} className="text-primary" /> Signups (Last 30 Days)
-          </h2>
-          <div className="signup-chart flex items-end gap-0.5 h-[100px] p-1">
-            {stats.signupsLast30d.map(d => {
-              const max = Math.max(...stats.signupsLast30d.map(x => x.count));
-              const h = max > 0 ? (d.count / max) * 100 : 0;
-              return (
-                <div
-                  key={d.date}
-                  className="signup-bar flex-1 min-w-[4px] rounded-t-[3px] transition-all duration-150 cursor-pointer relative"
-                  data-tooltip={`${d.date}: ${d.count}`}
-                  style={{
-                    height: `${Math.max(h, 4)}%`,
-                    background: 'var(--primary)',
-                  }}
-                />
-              );
-            })}
-          </div>
-          <div className="signup-total flex items-center gap-1.5 mt-2 text-xs text-text-sub">
-            <TrendingUp size={14} />
-            Total: {stats.signupsLast30d.reduce((s, d) => s + d.count, 0)} signups
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function StatCard({ icon: Icon, value, label, iconConfig }) {
-  return (
-    <div className="statCard">
-      <div className={`stat-card-icon ${iconConfig.bg} ${iconConfig.color}`}>
-        <Icon size={18} className="shrink-0" />
-      </div>
-      <div className="stat-value text-[28px] font-bold text-text-main leading-1.2">
-        {value?.toLocaleString() ?? '—'}
-      </div>
-      <div className="stat-label text-[12px] text-text-sub mt-1 uppercase tracking-[0.5px] font-medium">
-        {label}
-      </div>
-    </div>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <>
-      <div className="admin-page-title flex items-center gap-2.5 mb-5">
-        <div className="admin-page-title-icon w-9 h-9 rounded-lg flex items-center justify-center bg-primary-bg text-primary">
-          <BarChart3 size={20} />
-        </div>
-        <h2 className="text-lg font-bold m-0">Dashboard</h2>
-      </div>
-      <div className="stat-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="skeleton-stat h-24 rounded-xl animate-[shimmer_1.5s_infinite]" />
-        ))}
-      </div>
-      <div className="admin-skeleton bg-bg-card border border-border rounded-lg p-5 mb-2">
-        <div className="skeleton-line w-full h-[14px] mb-2 w-60 animate-[shimmer_1.5s_infinite]" />
-        <div className="skeleton-line w-full h-[14px] mb-2 animate-[shimmer_1.5s_infinite]" />
-        <div className="skeleton-line w-[30%] h-[10px] animate-[shimmer_1.5s_infinite]" />
-      </div>
-      <div className="admin-skeleton bg-bg-card border border-border rounded-lg p-5">
-        <div className="skeleton-line w-full h-[14px] mb-2 w-40 animate-[shimmer_1.5s_infinite]" />
-        <div className="skeleton-line w-full h-[14px] mb-2 animate-[shimmer_1.5s_infinite]" />
-        <div className="skeleton-line w-[30%] h-[10px] animate-[shimmer_1.5s_infinite]" />
-      </div>
-    </>
-  );
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: ['admin-operations'], queryFn: () => adminRequest('/api/admin/stats'), refetchInterval: 60000 });
+  const retry = useMutation({ mutationFn: id => adminRequest('/api/admin/billing/webhooks/' + id + '/retry', { method: 'POST' }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-operations'] }) });
+  if (query.isPending) return <div className="gm-admin-loading" role="status">Loading operational overview…</div>;
+  if (query.error || !query.data) return <div className="gm-admin-error" role="alert"><p>{query.error?.message || 'Unable to load dashboard'}</p><button className="gm-admin-button" onClick={() => void query.refetch()}>Try again</button></div>;
+  const stats = query.data;
+  const attention = object(stats.attention);
+  const queues = object(stats.queues);
+  const access = object(stats.permissions);
+  const deliveries = records(queues.failedWebhooks);
+  const payments = records(queues.failedPayments);
+  const sync = records(queues.syncBacklog);
+  const issueCount = number(attention.failedWebhooks) + number(attention.failedPayments) + number(attention.pendingSync);
+  return <div className="gm-admin-workspace"><header className="gm-admin-heading"><div><p className="gm-admin-eyebrow">Operations desk</p><h1>Farm accounts, in view.</h1><p>{issueCount ? issueCount + ' records need attention across billing and synchronization.' : 'No failed billing deliveries, failed payments, or pending sync records.'}</p></div><button className="gm-admin-button" onClick={() => void query.refetch()} disabled={query.isFetching}>{query.isFetching ? 'Refreshing…' : 'Refresh overview'}</button></header>
+  <div className="gm-admin-metrics">{[['Organizations',stats.totalOrganizations,'/admin/organizations'],['Members',stats.totalUsers,'/admin/users'],['Goat profiles',stats.totalGoats,'/admin/organizations'],['Completed scans',stats.totalScans,'/admin/organizations']].map(([label,value,href]) => <Link key={label} className="gm-admin-metric" href={href}><span>{label}</span><strong>{number(value).toLocaleString()}</strong><small>Open related records →</small></Link>)}</div>
+  <section className="gm-admin-attention" aria-labelledby="attention-title"><div><p className="gm-admin-eyebrow">Needs attention</p><h2 id="attention-title">Work that needs a next step.</h2></div><div className="gm-admin-attention-counts"><span><strong>{number(attention.failedWebhooks)}</strong> failed deliveries</span><span><strong>{number(attention.failedPayments)}</strong> failed payments</span><span><strong>{number(attention.pendingSync)}</strong> pending changes</span><Link href="/admin/organizations?status=past_due"><strong>{number(attention.pastDueOrganizations)}</strong> overdue accounts →</Link></div></section>
+  {retry.error && <p className="gm-admin-error" role="alert">{retry.error.message}</p>}
+  <div className="gm-admin-columns">{access.billing === true && <section className="gm-admin-panel"><div className="gm-admin-section-heading"><h2>Failed billing deliveries</h2><Link href="/admin/billing?tab=webhooks">View logs →</Link></div>{deliveries.length ? <ul className="gm-admin-queue">{deliveries.map(item => <li key={text(item.id)}><div><strong>{text(item.event_type)}</strong>{text(item.organization_id) ? <Link href={'/admin/organizations/' + text(item.organization_id) + '?tab=payments'}>{text(item.organization_name,'Organization')}</Link> : <span>Organization not yet resolved</span>}<p>{text(item.error_message,'No diagnostic recorded')}</p><span>{formatDate(item.created_at)}</span></div>{access.billingWrite === true && <button className="gm-admin-secondary" onClick={() => retry.mutate(text(item.id))} disabled={retry.isPending}>{retry.isPending && retry.variables === item.id ? 'Retrying…' : 'Retry delivery'}</button>}</li>)}</ul> : <div className="gm-admin-empty">No failed deliveries.</div>}</section>}
+  <section className="gm-admin-panel"><div className="gm-admin-section-heading"><h2>Synchronization backlog</h2><span>Oldest changes first</span></div>{sync.length ? <ul className="gm-admin-queue">{sync.map(item => <li key={text(item.organization_id)}><div><Link className="gm-admin-record-link" href={'/admin/organizations/' + text(item.organization_id) + '?tab=usage'}>{text(item.organization_name)}</Link><span>{number(item.pending_count)} changes · oldest {formatDate(item.oldest_change)}</span></div><Link className="gm-admin-secondary" href={'/admin/organizations/' + text(item.organization_id) + '?tab=usage'}>Review</Link></li>)}</ul> : <div className="gm-admin-empty">No pending changes.</div>}</section></div>
+  {access.billing === true && <section className="gm-admin-panel"><div className="gm-admin-section-heading"><h2>Failed payments</h2><Link href="/admin/billing?tab=churn">Review affected accounts →</Link></div>{payments.length ? <div className="gm-admin-table-wrap"><table className="gm-admin-table"><thead><tr><th scope="col">Organization</th><th scope="col">Reference</th><th scope="col">Amount</th><th scope="col">Date</th></tr></thead><tbody>{payments.map(item => <tr key={text(item.id)}><td>{text(item.organization_id) ? <Link className="gm-admin-record-link" href={'/admin/organizations/' + text(item.organization_id) + '?tab=payments'}>{text(item.organization_name,'Organization')}</Link> : text(item.email,'Unassigned')}</td><td className="gm-admin-reference">{text(item.reference)}</td><td>{currency(item.amount)}</td><td>{formatDate(item.created_at)}</td></tr>)}</tbody></table></div> : <p className="gm-admin-empty">No failed payment records.</p>}</section>}
+  <div className="gm-admin-columns"><section className="gm-admin-panel"><h2>Organizations by plan</h2><ul className="gm-admin-plan-counts">{records(stats.organizationsByTier).map(plan => <li key={text(plan.tier)}><Link href={'/admin/organizations?tier=' + encodeURIComponent(text(plan.tier))}>{text(plan.tier)}</Link><strong>{number(plan.count)}</strong></li>)}</ul></section><section className="gm-admin-panel"><h2>New accounts in the last 30 days</h2><strong className="gm-admin-large-number">{records(stats.signupsLast30d).reduce((sum,item) => sum + number(item.count),0)}</strong><p className="gm-admin-muted">Recorded user accounts. Counts reflect stored data.</p><Link className="gm-admin-inline-action" href="/admin/users">Open user directory →</Link></section></div><p className="gm-admin-updated">Sample farms are excluded. <Link href="/admin/organizations?sample=sample">Browse sample farms</Link> · Updated {new Date(text(stats.generatedAt)).toLocaleString()}</p></div>;
 }

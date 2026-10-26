@@ -1,131 +1,56 @@
 # Deployment
 
-## Frontend → Vercel
+The Next.js application serves marketing, tenant, and administrator routes. The Python recognition service is deployed separately. Deployment must use the same schema and generated protocol files as this checkout.
 
-### Automatic deploy
+## Required configuration
 
-Push to `main` branch → Vercel auto-builds.
+- `APP_DATABASE_URL`: restricted PostgreSQL application role without SUPERUSER or BYPASSRLS. Used by Next.js and the ML service.
+- `DATABASE_URL` or `MIGRATIONS_DATABASE_URL`: database owner connection for explicit migration commands. Keep this out of the application runtime where possible.
+- `JWT_SECRET`: long random session-signing secret.
+- `NEXT_PUBLIC_APP_URL`: canonical HTTPS application origin.
+- `ML_SERVICE_URL`, `ML_SERVICE_KEY`: recognition service address and shared authentication secret. An absent key denies requests.
+- `PAYSTACK_SECRET_KEY` and a monthly Paystack plan code for each paid tier: required for paid checkout. Set plan codes from the administrator tier editor at `/admin/tiers`. The webhook verifies Paystack HMAC signatures using the secret key.
+- `NEXT_PUBLIC_BILLING_SUPPORT_EMAIL` and `NEXT_PUBLIC_BILLING_SUPPORT_PHONE`: optional public contact details shown with payment options on the marketing and tenant plan pages. Set these before building if customers should see support contacts.
+- `CRON_SECRET`: required for the scheduled reminder endpoint. Vercel sends it as a bearer token.
+- Cloudinary public configuration is needed only when enabling direct image uploads.
 
-### Environment variables
+Set values separately for preview and production. Local environment files are ignored and do not update hosting configuration automatically.
 
-Set in Vercel dashboard (Settings → Environment Variables):
+Paid checkout requests Paystack channels for card, mobile money, bank transfer, and USSD. The methods actually offered are determined by the Paystack merchant account and checkout. Annual checkout remains unavailable until annual prices are configured.
 
-```
-DATABASE_URL
-JWT_SECRET
-MIGRATE_SECRET
-ML_SERVICE_KEY
-ML_SERVICE_URL
-NEXT_PUBLIC_CLOUDINARY_NAME
-NEXT_PUBLIC_CLOUDINARY_PRESET
-ADMIN_EMAIL
-ADMIN_PASSWORD
-```
+## Database preparation
 
-### Post-deploy
+Run with the owner connection available in a trusted maintenance environment:
 
-The `postinstall` hook in `package.json` runs automatically after install on Vercel:
-
-```bash
-"postinstall": "node scripts/migrate.js && node scripts/create-admin.js"
+```sh
+bun run db:migrate
+bun run db:rls
 ```
 
-This creates the `tiers` table (with seed data) and the admin user on every deploy. It's idempotent — `CREATE TABLE IF NOT EXISTS` and `ON CONFLICT (email) DO UPDATE` ensure no duplicate errors.
+Migrations are explicit. Installation and builds do not run migrations or seed administrators. There is no public migration endpoint. Create the initial administrator with `bun run db:seed:admin` and the requested administrator credentials supplied through environment variables.
 
-### Manual migration trigger
+`db:rls` verifies forced RLS on all 29 secured tables, a restricted application role, cross-organization denial, and administrator visibility. Runtime identity settings are transaction-local so they work with transaction-pooling database endpoints.
 
-```bash
-curl -X POST -H "Content-Type: application/json" \
-  -d '{"secret":"<MIGRATE_SECRET>"}' \
-  https://<your-domain>/api/db-migrate
+## Validation
+
+```sh
+bun install --frozen-lockfile
+bun run lint
+bun run test
+bun run typecheck
+bun run build
 ```
 
----
+Production output is `.next-build`; development uses `.next`. Start a local production instance on port 3317 with `bun run start --port 3317`.
 
-## ML Service → Fly.io
+For sample-data integration verification, run `bun run db:seed:sample`, then `bun run verify:e2e`. The seed creates three explicitly marked sample organizations and test accounts. Their credentials are stored in ignored `.verification/sample-credentials.json`; do not publish that file. Sample organizations are excluded from administrator operational metrics by default. Run these mutating verifications only against an intended test environment.
 
-The Python FastAPI ML service runs on Fly.io at `https://goatmaster.fly.dev`.
+## Recognition service
 
-### Configuration
+Generate contracts with `bun run proto:gen:py`. Install `ml_service/requirements.txt` in an isolated Python environment and start `uvicorn main:app --host 0.0.0.0 --port 8080` from `ml_service`.
 
-```yaml
-# ml_service/fly.toml
-[build]
-  dockerfile = "Dockerfile"
+Use HTTPS for external traffic. Keep training and enrollment endpoints behind `ML_SERVICE_KEY`. Verify service readiness, authenticated embedding, organization-scoped scans, and model/checkpoint compatibility before enabling the feature. The fallback detector and similarity scores do not establish identification accuracy; review results against real enrolled animals.
 
-[http_service]
-  internal_port = 8080
-  auto_stop_machines = false   # always-on
-  min_machines_running = 1
+## After deployment
 
-[[vm]]
-  memory = "1gb"
-  cpu_kind = "shared"
-  cpus = 1
-```
-
-**Key points:**
-- Port must be **8080** (Fly.io proxy requirement)
-- Dockerfile has `ENV PORT=8080` and `EXPOSE 8080`
-- 1GB RAM prevents OOM crashes (YOLOv8 + ResNet50 need ~600MB)
-- `auto_stop_machines = false` keeps the service always-on (no cold starts)
-
-### Pre-downloaded model weights
-
-To prevent 503 timeouts on first startup, model weights are downloaded during Docker build:
-
-```dockerfile
-RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
-RUN python -c "from torchvision import models; models.resnet50(weights='DEFAULT')"
-```
-
-### Secrets
-
-```bash
-fly secrets set DATABASE_URL="..." ML_SERVICE_KEY="..."
-```
-
-### Deploy
-
-```bash
-cd ml_service
-fly deploy
-```
-
-Or connect GitHub repo in Fly.io dashboard for auto-deploy:
-- **Working directory:** `ml_service`
-- **Config path:** `ml_service/fly.toml`
-
-### Health check
-
-```bash
-curl https://goatmaster.fly.dev/health
-# {"status":"ok","models_loaded":true,"detection_mode":"coco_fallback"}
-```
-
----
-
-## Infrastructure alternatives
-
-See the following files for alternative ML service deployment options:
-
-- `ml_service/oracle-cloud/` — Oracle Cloud Always Free (ARM, 4 OCPU, 24GB RAM)
-- `ml_service/koyeb.yaml` — Koyeb deployment config
-- `ml_service/deploy_hf.sh` — Hugging Face Spaces deploy script (legacy)
-
----
-
-## Rollback
-
-- **Vercel** — Dashboard → Deployments → Promote a previous deploy
-- **Fly.io** — `fly deploy --image <previous-image-tag>` or Dashboard → Machine → Rebuild
-
----
-
-## Post-deploy checklist
-
-- [ ] `https://<your-domain>/api/health` returns `{ ok: true }`
-- [ ] `https://goatmaster.fly.dev/health` returns models loaded status
-- [ ] `/admin` loads with dashboard stats
-- [ ] Admin can log in with `admin@goatmaster.com`
-- [ ] Sign up a test account, add a goat, scan it
+Verify public pricing, tenant sign-in, cross-tenant access denial, administrator role restrictions, and a provider test-mode payment plus signed webhook. Confirm the scheduled reminder job runs with the configured bearer secret. Monitor application/database errors and failed webhook deliveries. Retain a database backup before schema changes; roll application deployment back only to a schema-compatible release.

@@ -1,16 +1,18 @@
 'use client';
+import SmartImage from '@/components/SmartImage';
 
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FeatureGate, useTier } from '@/lib/context/TierContext';
-import { 
-  Camera, 
-  Image, 
-  Loader2, 
-  CheckCircle, 
-  XCircle, 
+import { useTier } from '@/lib/context/TierContext';
+import {
+  Camera,
+  Image as ImageIcon,
+  Loader2,
+  CheckCircle,
+  XCircle,
   Circle,
   AlertTriangle,
   ArrowUp,
@@ -31,7 +33,9 @@ interface ScanResult {
 }
 
 export default function ScanPage() {
-  const { tier } = useTier();
+  const { tier, canUseFeature, isLoading: tierLoading } = useTier();
+  const queryClient = useQueryClient();
+  const mediaRef = useRef<MediaStream | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -44,20 +48,24 @@ export default function ScanPage() {
 
   const { data: recentScans, isLoading } = useQuery({
     queryKey: ['scan-history'],
-    queryFn: () => fetch('/api/app/scan/history').then(r => r.json()),
+    queryFn: () => fetch('/api/app/scan').then(r => r.json()),
+    enabled: !tierLoading && canUseFeature('smart-scan'),
   });
 
   const scanMutation = useMutation({
     mutationFn: async (imageBase64: string) => {
-      const res = await fetch('/api/app/ml/scan', {
+      const res = await fetch('/api/ml/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64 }),
       });
-      return res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Scan failed');
+      return data;
     },
     onSuccess: (data) => {
       setScanResult(data);
+      void queryClient.invalidateQueries({ queryKey: ['scan-history'] });
       setIsScanning(false);
     },
     onError: (err) => {
@@ -70,6 +78,7 @@ export default function ScanPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) { setError('Please select an image smaller than 5 MB'); return; }
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file');
       return;
@@ -77,7 +86,8 @@ export default function ScanPage() {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const base64 = event.target?.result as string;
+      const base64 = event.target?.result;
+      if (typeof base64 !== 'string') return;
       setImage(base64);
       setError(null);
       setScanResult(null);
@@ -86,24 +96,26 @@ export default function ScanPage() {
   };
 
   const handleCameraCapture = () => {
-    if (!videoRef.current || !image) return;
-    
+    if (!videoRef.current || videoRef.current.readyState < 2) return;
+
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
     ctx?.drawImage(videoRef.current, 0, 0);
     const base64 = canvas.toDataURL('image/jpeg', 0.8);
-    
+
     setImage(base64);
     stopCamera();
   };
 
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
       });
+      mediaRef.current?.getTracks().forEach(track => track.stop());
+      mediaRef.current = mediaStream;
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
@@ -114,7 +126,12 @@ export default function ScanPage() {
     }
   };
 
+  useEffect(() => { if (isCameraOpen && videoRef.current) videoRef.current.srcObject = mediaRef.current; }, [isCameraOpen]);
+  useEffect(() => () => { mediaRef.current?.getTracks().forEach(track => track.stop()); }, []);
+
   const stopCamera = () => {
+    mediaRef.current?.getTracks().forEach(track => track.stop());
+    mediaRef.current = null;
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
@@ -152,29 +169,20 @@ export default function ScanPage() {
           <h1 className="text-2xl font-bold text-slate-900">Smart Scan</h1>
           <p className="text-slate-500 mt-1">AI-powered goat identification</p>
         </div>
-        <FeatureGate feature="smart-scan">
-          <Button variant="outline" onClick={() => setShowGallery(true)}>
+        {canUseFeature('smart-scan') && (
+          <Button variant="outline" onClick={() => document.getElementById('recent-scans')?.scrollIntoView({ behavior: 'smooth' })}>
             <GalleryVertical size={20} className="mr-2" /> Gallery
           </Button>
-        </FeatureGate>
+        )}
       </div>
 
-      {/* Tier Notice */}
-      <FeatureGate feature="smart-scan" fallback={
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="text-yellow-600" size={24} />
-              <div>
-                <p className="font-medium text-yellow-800">Smart Scan Unavailable</p>
-                <p className="text-sm text-yellow-700">
-                  This feature requires Pro or Enterprise tier. You&apos;re on {tier}.
-                </p>
-              </div>
-            </div>
+      {tierLoading ? <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600" role="status">Checking scan access…</p>
+        : !canUseFeature('smart-scan') ? <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3"><div className="rounded-full bg-amber-100 p-2 text-amber-900"><Camera size={20} /></div><div><h2 className="font-semibold text-amber-950">Smart Scan is not included in your plan</h2><p className="mt-1 text-sm text-amber-900">You’re on the {tier} plan. Compare plans to see scan access and current limits.</p></div></div>
+            <Link href="/plans" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-green-800 px-4 py-2 text-sm font-semibold text-white hover:bg-green-900">Compare plans</Link>
           </CardContent>
-        </Card>
-      }>
+        </Card> : <>
         {/* Scanner */}
         <Card>
           <CardHeader>
@@ -186,20 +194,20 @@ export default function ScanPage() {
           <CardContent className="space-y-6">
             {/* Image Preview */}
             <div className="relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden">
-              {isCameraOpen && videoRef.current && (
-                <video 
-                  ref={videoRef} 
-                  className="w-full h-full object-cover" 
-                  autoPlay 
-                  playsInline 
-                  muted 
+              {isCameraOpen && (
+                <video
+                  ref={videoRef}
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  playsInline
+                  muted
                 />
               )}
               {image && !isCameraOpen && (
-                <img 
-                  src={image} 
-                  alt="Scan preview" 
-                  className="w-full h-full object-cover" 
+                <SmartImage
+                  src={image}
+                  alt="Scan preview"
+                  className="w-full h-full object-cover"
                 />
               )}
               {!image && !isCameraOpen && (
@@ -213,26 +221,26 @@ export default function ScanPage() {
               {/* Camera Controls */}
               {isCameraOpen && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="w-12 h-12 bg-white/90" 
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="w-12 h-12 bg-white/90"
                     onClick={stopCamera}
                   >
                     <XCircle size={24} className="text-red-600" />
                   </Button>
-                  <Button 
-                    size="icon" 
-                    className="w-16 h-16 bg-green-600" 
+                  <Button
+                    size="icon"
+                    className="w-16 h-16 bg-green-600"
                     onClick={handleCameraCapture}
                   >
                     <Circle size={32} className="text-white" />
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="w-12 h-12 bg-white/90" 
-                    onClick={() => {}} // Switch camera
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="w-12 h-12 bg-white/90"
+                    onClick={() => { stopCamera(); setError('Select another camera through your browser camera settings.'); }}
                   >
                     <ArrowUp size={24} />
                   </Button>
@@ -249,7 +257,7 @@ export default function ScanPage() {
                         <XCircle size={20} />
                       </Button>
                     </div>
-                    
+
                     {scanResult.detected && scanResult.goat_name ? (
                       <div className="text-center">
                         <CheckCircle className="mx-auto h-16 w-16 text-green-600 mb-3" />
@@ -278,16 +286,16 @@ export default function ScanPage() {
             {/* Input Controls */}
             {!image && !isCameraOpen && (
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  className="flex-1" 
+                <Button
+                  className="flex-1"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isScanning}
                 >
-                  <Image size={20} className="mr-2" /> Upload Photo
+                  <ImageIcon size={20} className="mr-2" /> Upload Photo
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1" 
+                <Button
+                  variant="outline"
+                  className="flex-1"
                   onClick={startCamera}
                   disabled={isScanning}
                 >
@@ -305,9 +313,9 @@ export default function ScanPage() {
             )}
 
             {image && !isCameraOpen && !scanResult && (
-              <Button 
-                className="w-full" 
-                size="lg" 
+              <Button
+                className="w-full"
+                size="lg"
                 onClick={handleScan}
                 disabled={isScanning}
               >
@@ -340,7 +348,7 @@ export default function ScanPage() {
         {/* Recent Scans */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Recent Scans</CardTitle>
+            <CardTitle id="recent-scans" className="text-lg">Recent Scans</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -353,7 +361,7 @@ export default function ScanPage() {
               <p className="text-center text-slate-500 py-8">No scans yet</p>
             ) : (
               <div className="space-y-2">
-                {recentScans.scans.slice(0, 10).map((scan: ScanResult) => (
+                {(recentScans?.scans ?? []).slice(0, 10).map((scan: ScanResult) => (
                   <div key={scan.created_at} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${scan.detected ? 'bg-green-100' : 'bg-red-100'}`}>
@@ -381,7 +389,7 @@ export default function ScanPage() {
             )}
           </CardContent>
         </Card>
-      </FeatureGate>
+      </>}
     </div>
   );
 }

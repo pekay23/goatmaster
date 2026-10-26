@@ -1,4 +1,6 @@
+import Link from 'next/link';
 'use client';
+import SmartImage from '@/components/SmartImage';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { LayoutGrid, Dna, Activity, FileText, Settings, Search, Plus, LogOut, Shield, Package, TrendingUp, BarChart3, Wallet, Droplets, Wheat, CalendarDays, BookOpen, ChevronRight, ScanLine, Sparkles, Beef, Milk, DollarSign, LineChart, HeartPulse, UserCog } from 'lucide-react';
 import HealthPanel from './HealthPanel';
@@ -272,7 +274,7 @@ export default function MainApp() {
   // occurs inside the async fetchData callback, not synchronously in the
   // effect body, so it cannot cause cascading renders.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchData(); }, [activeTab]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const fetchGoats = useCallback(() => { fetchData('profiles'); }, [fetchData]);
 
@@ -368,7 +370,7 @@ export default function MainApp() {
       {/* ── HEADER with sub-tab pills ── */}
       <header className="app-header" style={{ flexDirection: 'column', gap: 0, padding: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', width: '100%', boxSizing: 'border-box' }}>
-          <img src="/icon-192.png" style={{ width: 28, height: 28, borderRadius: 6 }} alt="" />
+          <SmartImage src="/icon-192.png" style={{ width: 28, height: 28, borderRadius: 6 }} alt="" />
           <h1 className="app-title" style={{ flex: 1, fontSize: 17 }}>
             {showForm ? (editingGoat ? 'Edit Goat' : 'New Goat') : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
           </h1>
@@ -540,9 +542,9 @@ export default function MainApp() {
 
                 <h3 style={{ color: 'var(--text-main)', margin: '8px 0 0', fontSize: 16 }}>Account</h3>
                 {user.role === 'admin' && (
-                  <a href="/admin" style={{ padding: 15, background: 'var(--primary-bg)', borderRadius: 14, border: '1px solid var(--primary)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 15, fontFamily: 'inherit', width: '100%', textDecoration: 'none' }}>
+                  <Link href="/admin" style={{ padding: 15, background: 'var(--primary-bg)', borderRadius: 14, border: '1px solid var(--primary)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 15, fontFamily: 'inherit', width: '100%', textDecoration: 'none' }}>
                     <Shield size={20} /> Admin Panel
-                  </a>
+                  </Link>
                 )}
                 <button onClick={() => confirmAction('Log Out?', 'Are you sure you want to sign out?', 'Yes, Log Out', 'Cancel', handleLogout)}
                   style={{ padding: 15, background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border-color)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 600, fontSize: 15, fontFamily: 'inherit', width: '100%' }}>

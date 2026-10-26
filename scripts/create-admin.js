@@ -1,4 +1,4 @@
-import { query } from '../lib/db.js';
+import { queryAsOwner as query, runWithDbContext } from '../lib/db.js';
 import { hashPassword } from '../lib/auth.js';
 
 async function createAdmin() {
@@ -52,7 +52,7 @@ async function createAdmin() {
   process.exit(0);
 }
 
-createAdmin().catch((err) => {
+runWithDbContext({ role: 'service' }, createAdmin).catch((err) => {
   console.error('Failed to create admin user:', err);
   process.exit(1);
 });

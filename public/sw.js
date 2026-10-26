@@ -1,14 +1,14 @@
 const CACHE_NAME = 'goatmaster-v1';
-const STATIC_CACHE = 'goatmaster-static-v1';
-const DYNAMIC_CACHE = 'goatmaster-dynamic-v1';
+const STATIC_CACHE = 'goatmaster-static-v4';
+const DYNAMIC_CACHE = 'goatmaster-dynamic-v4';
 const OFFLINE_URL = '/offline.html';
 
 const STATIC_ASSETS = [
   '/',
   '/offline.html',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
 // Install event - cache static assets
@@ -46,15 +46,12 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Skip chrome-extension and other non-http requests
-  if (!url.protocol.startsWith('http')) {
+  if (!url.protocol.startsWith('http') || url.origin !== self.location.origin) {
     return;
   }
 
-  // Handle API requests - network first, cache fallback
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirstStrategy(request));
-    return;
-  }
+  // API responses can contain private tenant data. Never put them in the shared Cache API.
+  if (url.pathname.startsWith('/api/')) return;
 
   // Handle static assets - cache first
   if (isStaticAsset(url.pathname)) {
@@ -69,7 +66,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Default: network first
-  event.respondWith(networkFirstStrategy(request));
+  event.respondWith(fetch(request));
 });
 
 // Cache first strategy - for static assets
@@ -116,16 +113,9 @@ async function networkFirstStrategy(request) {
 async function navigationStrategy(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, response.clone());
-    }
     return response;
   } catch (error) {
-    const cached = await caches.match(request);
-    if (cached) {
-      return cached;
-    }
+    // Private app pages are never served from a shared cache.
     // Return offline page
     const offlineResponse = await caches.match(OFFLINE_URL);
     if (offlineResponse) {
@@ -176,24 +166,10 @@ async function syncOfflineQueue() {
 
 // Handle messages from clients
 self.addEventListener('message', (event) => {
-  if (event.data.type === 'SYNC_QUEUE') {
-    syncOfflineQueue();
-  } else if (event.data.type === 'GET_SYNC_STATUS') {
-    // Send sync status back to client
-    getSyncStatus().then((status) => {
-      event.ports[0]?.postMessage({ type: 'SYNC_STATUS', ...status });
-    });
+  if (event.data?.type === 'SYNC_QUEUE') {
+    event.waitUntil(syncOfflineQueue());
   }
 });
-
-async function getSyncStatus() {
-  // Check IndexedDB for pending queue count
-  // This is a simplified version - in reality you'd query IndexedDB
-  return {
-    pendingCount: 0,
-    lastSynced: null,
-  };
-}
 
 // Push notification handling
 self.addEventListener('push', (event) => {
@@ -202,8 +178,8 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     vibrate: [200, 100, 200],
     data: data.data,
     actions: data.actions || [],
@@ -223,18 +199,19 @@ self.addEventListener('notificationclick', (event) => {
     // Handle action buttons
     const url = event.notification.data?.actionUrls?.[event.action];
     if (url) {
-      event.waitUntil(clients.openWindow(url));
+      const destination = new URL(url, self.location.origin);
+      if(destination.origin === self.location.origin)event.waitUntil(clients.openWindow(destination.href));
     }
   } else {
     // Default click - open app
     event.waitUntil(
       clients.matchAll({ type: 'window' }).then((clientList) => {
         for (const client of clientList) {
-          if (client.url.includes('/app/') && 'focus' in client) {
+          if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
             return client.focus();
           }
         }
-        return clients.openWindow('/app/dashboard');
+        return clients.openWindow('/dashboard');
       })
     );
   }

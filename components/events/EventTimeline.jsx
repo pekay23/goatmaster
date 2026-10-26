@@ -1,4 +1,5 @@
 'use client';
+import SmartImage from '@/components/SmartImage';
 import React, { useMemo, useState } from 'react';
 import { Search, X, ChevronLeft, ChevronRight, Edit2, Trash2, Package } from 'lucide-react';
 import { CATEGORY_COLORS, PRESET_CATEGORIES, ITEMS_PER_PAGE } from './constants';
@@ -130,7 +131,7 @@ export default function EventTimeline({ farmEvents, goats, isLoading, onEdit, on
                     <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.35 }}>{evt.subject}</h3>
                     <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
                       {evt.image_url && (
-                        <img src={evt.image_url} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border-color)' }} />
+                        <SmartImage src={evt.image_url} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border-color)' }} />
                       )}
                       <div style={{ flex: 1 }}>
                         <p style={{ margin: 0, fontSize: 14, color: 'var(--text-sub)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>

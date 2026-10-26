@@ -1,4 +1,5 @@
 'use client';
+import SmartImage from '@/components/SmartImage';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, Upload, Sparkles, Check, X, Edit3, Loader2, Zap, AlertCircle, Plus, RefreshCw, ChevronRight } from 'lucide-react';
 import { BulkDiscoverySession, estimateSharpness } from '@/lib/bulkDiscovery';
@@ -64,7 +65,7 @@ const NewGoatCard = ({ candidate, onChange, onRemove }) => {
       border: '1px solid var(--border-color)',
       animation: 'slideUpFade 0.3s ease-out',
     }}>
-      <img src={candidate.bestThumb} alt="" style={{
+      <SmartImage src={candidate.bestThumb} alt="" style={{
         width: 72, height: 72, objectFit: 'cover', borderRadius: 12,
         border: '2px solid var(--primary)', flexShrink: 0,
       }} />
@@ -127,7 +128,7 @@ const MatchedGoatCard = ({ match }) => (
     animation: 'slideUpFade 0.3s ease-out',
   }}>
     {match.goat.image_url
-      ? <img src={match.goat.image_url} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, border: '2px solid #22c55e', flexShrink: 0 }} />
+      ? <SmartImage src={match.goat.image_url} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, border: '2px solid #22c55e', flexShrink: 0 }} />
       : <div style={{ width: 72, height: 72, borderRadius: 12, background: 'var(--primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, flexShrink: 0 }}>🐐</div>
     }
     <div style={{ flex: 1, minWidth: 0 }}>

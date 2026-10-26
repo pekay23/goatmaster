@@ -6,59 +6,39 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'GoatMaster — AI-Powered Goat Farm Management',
+    default: 'GoatMaster | Herd records',
     template: '%s | GoatMaster',
   },
-  description: 'From pasture to precision. Offline-first herd management, AI health scanning, lineage tracking. Trusted by farmers across Ghana.',
-  keywords: ['goat farming', 'herd management', 'livestock tracking', 'agriculture technology', 'Ghana farming', 'offline-first app', 'AI scanning'],
-  authors: [{ name: 'GoatMaster Team' }],
-  creator: 'GoatMaster',
-  publisher: 'GoatMaster',
+  description: 'Keep goat profiles, health records, and breeding history together with GoatMaster.',
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    locale: 'en_GH',
     url: siteUrl,
     siteName: 'GoatMaster',
-    title: 'GoatMaster — AI-Powered Goat Farm Management',
-    description: 'From pasture to precision. Offline-first herd management, AI health scanning, lineage tracking.',
+    title: 'GoatMaster | Herd records',
+    description: 'Keep goat profiles, health records, and breeding history together with GoatMaster.',
     images: [
       {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'GoatMaster - AI-Powered Goat Farm Management',
+        url: '/marketing/goat-portrait.jpg',
+        width: 1400,
+        height: 1977,
+        alt: 'A goat looking toward the camera',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GoatMaster — AI-Powered Goat Farm Management',
-    description: 'From pasture to precision. Offline-first herd management, AI health scanning, lineage tracking.',
-    images: ['/og-image.png'],
-    creator: '@goatmasterapp',
-  },
-  verification: {
-    google: 'google-site-verification-code',
+    title: 'GoatMaster | Herd records',
+    description: 'Keep goat profiles, health records, and breeding history together with GoatMaster.',
+    images: ['/marketing/goat-portrait.jpg'],
   },
   icons: {
     icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.svg',
-    apple: '/apple-touch-icon.svg',
+    shortcut: '/favicon-16x16.png',
+    apple: '/apple-touch-icon.png',
   },
 };
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en-GH">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://api.paystack.co" />
-      </head>
-      <body className="marketing-root min-h-screen bg-[#F5F0E1] text-[#1A1F2E] antialiased">
-        {children}
-      </body>
-    </html>
-  );
+  return <div className="marketing-root min-h-screen bg-[#F5F0E1] text-[#1A1F2E] antialiased">{children}</div>;
 }

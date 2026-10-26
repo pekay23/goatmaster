@@ -1,8 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { query } from '@/lib/db';
 
 interface TierFeatures {
   maxGoats: number;
@@ -26,6 +26,8 @@ const FEATURE_MAP: Record<string, { free: boolean; basic: boolean; pro: boolean;
   'smart-scan': { free: false, basic: false, pro: true, enterprise: true },
   'ai-training': { free: false, basic: true, pro: true, enterprise: true },
   'breeding-records': { free: false, basic: true, pro: true, enterprise: true },
+  'health-records': { free: false, basic: true, pro: true, enterprise: true },
+  'inventory-records': { free: false, basic: true, pro: true, enterprise: true },
   'lineage-tracking': { free: false, basic: true, pro: true, enterprise: true },
   'advanced-analytics': { free: false, basic: false, pro: true, enterprise: true },
   'feed-optimization': { free: false, basic: false, pro: true, enterprise: true },
@@ -39,43 +41,28 @@ const FEATURE_MAP: Record<string, { free: boolean; basic: boolean; pro: boolean;
 };
 
 export function TierProvider({ children, orgId }: { children: ReactNode; orgId: string }) {
-  const [tier, setTier] = useState<string>('free');
-
-  // Fetch tier from server
-  useEffect(() => {
-    async function fetchTier() {
-      try {
-        const res = await fetch(`/api/app/org/${orgId}/tier`);
-        if (res.ok) {
-          const data = await res.json();
-          setTier(data.tier || 'free');
-        }
-      } catch (e) {
-        console.error('Failed to fetch tier:', e);
-      }
-    }
-    fetchTier();
-  }, [orgId]);
-
+  const plan = useQuery({
+    queryKey: ['organization-tier', orgId],
+    queryFn: async () => {
+      const response = await fetch('/api/app/org/' + orgId + '/tier');
+      if (!response.ok) throw new Error('Unable to load plan settings');
+      return response.json();
+    },
+  });
+  const tier: string = plan.data?.tier ?? 'free';
   const features: TierFeatures = {
-    maxGoats: tier === 'free' ? 5 : tier === 'basic' ? 25 : -1,
-    maxScansPerDay: tier === 'free' ? 10 : tier === 'basic' ? 100 : -1,
-    aiTrainingEnabled: tier !== 'free',
-    smartScanEnabled: tier === 'pro' || tier === 'enterprise',
+    maxGoats: plan.data?.max_goats ?? 0,
+    maxScansPerDay: plan.data?.max_scans_per_day ?? 0,
+    aiTrainingEnabled: plan.data?.ai_training_enabled === true,
+    smartScanEnabled: plan.data?.smart_scan_enabled === true,
     hasFeature: (feature: string) => {
+      if (feature === 'smart-scan') return plan.data?.smart_scan_enabled === true;
+      if (feature === 'ai-training') return plan.data?.ai_training_enabled === true;
       const map = FEATURE_MAP[feature];
-      return map ? map[tier as keyof typeof map] ?? false : true;
+      return map ? Object.entries(map).some(([name, enabled]) => name === tier && enabled) : false;
     },
   };
-
-  const canUseFeature = (feature: string) => features.hasFeature(feature);
-  const getLimit = (limit: 'goats' | 'scans') => limit === 'goats' ? features.maxGoats : features.maxScansPerDay;
-
-  return (
-    <TierContext.Provider value={{ tier, features, isLoading: false, canUseFeature, getLimit }}>
-      {children}
-    </TierContext.Provider>
-  );
+  return <TierContext.Provider value={{ tier, features, isLoading: plan.isLoading, canUseFeature: features.hasFeature, getLimit: limit => limit === 'goats' ? features.maxGoats : features.maxScansPerDay }}>{children}</TierContext.Provider>;
 }
 
 export function useTier() {
@@ -87,32 +74,12 @@ export function useTier() {
 }
 
 // Feature gate component
-export function FeatureGate({ 
-  feature, 
-  children, 
-  fallback = null 
-}: { 
-  feature: string; 
-  children: ReactNode; 
-  fallback?: ReactNode;
-}) {
-  const { canUseFeature, tier } = useTier();
-  
+export function FeatureGate({ feature, children }: { feature: string; children: ReactNode }) {
+  const { canUseFeature, tier, isLoading } = useTier();
+  if (isLoading) return <p role="status">Loading plan…</p>;
   if (!canUseFeature(feature)) {
-    return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-        <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3">
-          <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <h3 className="font-semibold text-yellow-800 mb-1">Feature Unavailable</h3>
-        <p className="text-yellow-700 text-sm mb-4">
-          This feature requires a higher tier. You&apos;re on <strong>{tier}</strong>.
-        </p>
-        {fallback}
-      </div>
-    );
+    const label = feature === 'breeding-records' ? 'Breeding records' : feature === 'health-records' ? 'Health records' : feature === 'inventory-records' ? 'Inventory tracking' : feature;
+    return <section className="rounded-2xl border border-amber-200 bg-amber-50 p-8" aria-labelledby="feature-lock-title"><p className="text-sm font-semibold uppercase tracking-wide text-amber-800">Included with Basic</p><h2 id="feature-lock-title" className="mt-2 text-2xl font-semibold text-slate-950">{label}</h2><p className="mt-2 max-w-xl text-slate-700">This section stays available in your workspace. Upgrade to Basic to create and view these records.</p><Link className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-green-800 px-5 font-semibold text-white hover:bg-green-900" href="/plans">Compare plans</Link></section>;
   }
   return <>{children}</>;
 }
@@ -132,7 +99,7 @@ export function LimitGate({
   const { getLimit, tier } = useTier();
   const max = getLimit(limit);
   
-  if (max > 0 && current >= max) {
+  if (max >= 0 && current >= max) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">

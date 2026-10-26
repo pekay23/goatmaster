@@ -1,0 +1,2 @@
+import { queryAsOwner as query, runWithDbContext } from '../lib/db.js';
+await runWithDbContext({role:'service'},async()=>{const result=await query("SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position");const tables={};for(const row of result.rows)(tables[row.table_name]??=[]).push(row.column_name+':'+row.data_type);console.log(JSON.stringify(tables,null,2));});process.exit(0);

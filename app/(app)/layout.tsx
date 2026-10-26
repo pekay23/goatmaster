@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   description: 'AI-powered goat herd management that works offline',
   icons: {
     icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.svg',
-    apple: '/apple-touch-icon.svg',
+    shortcut: '/favicon-16x16.png',
+    apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
 };
@@ -27,7 +27,7 @@ export default async function AppLayoutRoot({ children }: { children: React.Reac
   const user = token ? await verifyToken(token) : null;
   
   if (!user) {
-    redirect('/login?redirect=/app');
+    redirect('/login?redirect=/dashboard');
   }
 
   const orgId = user.orgId as string;
@@ -36,5 +36,5 @@ export default async function AppLayoutRoot({ children }: { children: React.Reac
     redirect('/no-organization');
   }
 
-  return <AppLayout orgId={orgId}>{children}</AppLayout>;
+  return <AppLayout key={String(user.sub) + orgId} orgId={orgId} userId={String(user.sub)}>{children}</AppLayout>;
 }

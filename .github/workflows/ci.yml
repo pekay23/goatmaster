@@ -43,6 +43,17 @@ jobs:
         run: bun install --frozen-lockfile
         timeout-minutes: 15
 
+      - name: Run regression tests
+        run: bun run test
+        timeout-minutes: 5
+
+      - name: Check types
+        run: bun run typecheck
+        timeout-minutes: 10
+        env:
+          APP_DATABASE_URL: postgresql://test_app:test@127.0.0.1:1/test
+          JWT_SECRET: goatmaster-ci-test-only-not-for-production-12345
+
       - name: Run ESLint
         run: bun run lint
         timeout-minutes: 15
@@ -53,10 +64,11 @@ jobs:
         env:
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_SECRET: goatmaster-ci-test-only-not-for-production-12345
           PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
           PAYSTACK_WEBHOOK_SECRET: ${{ secrets.PAYSTACK_WEBHOOK_SECRET }}
           NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY }}
+          APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           ML_SERVICE_KEY: ${{ secrets.ML_SERVICE_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}

@@ -10,9 +10,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { tier, interval, orgId } = body;
+    const { tier, interval } = body;
+    const orgId = user.orgId;
     
-    if (!tier || !interval) {
+    if (!user.orgId) return NextResponse.json({ error: 'Organization required' }, { status: 403 });
+    if (!tier || !['monthly', 'annually'].includes(interval)) {
       return NextResponse.json({ error: 'Missing tier or interval' }, { status: 400 });
     }
 
@@ -39,7 +41,9 @@ export async function POST(request: Request) {
     const planCode = interval === 'annually' 
       ? tierData.paystack_plan_code_annual 
       : tierData.paystack_plan_code_monthly;
-    const amount = tierData.price_cents;
+    let amount = tierData.price_cents;
+    if (interval === 'annually') return NextResponse.json({ error: 'Annual checkout is unavailable until annual prices are configured' }, { status: 400 });
+    if (!Number.isInteger(amount) || amount <= 0) return NextResponse.json({ error: 'This plan does not require payment' }, { status: 400 });
 
     if (!planCode) {
       return NextResponse.json({ error: 'Plan not configured for this tier' }, { status: 400 });
@@ -51,7 +55,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User email not found' }, { status: 400 });
     }
 
-    const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?success=true`;
+    const callbackUrl = new URL('/settings?tab=billing', process.env.NEXT_PUBLIC_APP_URL || request.url).href;
     
     // Direct Paystack API call to bypass TypeScript module issue
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
@@ -60,6 +64,7 @@ export async function POST(request: Request) {
     }
 
     const res = await fetch('https://api.paystack.co/transaction/initialize', {
+      signal: AbortSignal.timeout(15000),
       method: 'POST',
       headers: {
         Authorization: `Bearer ${secretKey}`,
@@ -86,9 +91,10 @@ export async function POST(request: Request) {
       throw new Error(json?.message || `Paystack request failed: ${res.status}`);
     }
 
+    await query("INSERT INTO payments (reference, email, amount, status, tier, organization_id) VALUES ($1,$2,$3,'pending',$4,$5)", [json.data.reference, userEmail, amount, tier, orgId]);
     return NextResponse.json(json.data);
   } catch (err: any) {
     console.error('Initialize error:', err);
-    return NextResponse.json({ error: err?.message || 'Failed to initialize' }, { status: 500 });
+    return NextResponse.json({ error: 'Unable to start checkout. Please try again later.' }, { status: 502 });
   }
 }

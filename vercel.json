@@ -5,8 +5,15 @@
   "installCommand": "bun install",
   "buildCommand": "bun run build",
   "devCommand": "bun run dev",
-  "regions": ["iad1"],
-  "crons": [],
+  "regions": [
+    "iad1"
+  ],
+  "crons": [
+    {
+      "path": "/api/jobs/reminders",
+      "schedule": "0 6 * * *"
+    }
+  ],
   "github": {
     "enabled": true,
     "autoAlias": true,

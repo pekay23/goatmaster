@@ -33,7 +33,7 @@ docker:
       value: "1"
 
   # Secrets (set these in Koyeb dashboard → Settings → Environment variables)
-  # - DATABASE_URL
+  # - APP_DATABASE_URL (must use the non-BYPASSRLS GoatMaster app database role)
   # - ML_SERVICE_KEY
   # - ROBOFLOW_API_KEY (optional)
   # - ROBOFLOW_MODEL_ID (optional)

@@ -10,7 +10,7 @@ export async function GET(request) {
     const payload = await verifyToken(token);
     if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-    const { rows } = await query('SELECT id, email, username, role, tier FROM users WHERE id = $1', [payload.sub]);
+    const { rows } = await query('SELECT u.id, u.email, u.username, u.role, o.tier, o.name AS org_name, u.organization_id FROM users u LEFT JOIN organizations o ON o.id = u.organization_id WHERE u.id = $1', [payload.sub]);
     if (rows.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     return NextResponse.json({ data: rows[0] });

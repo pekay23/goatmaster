@@ -52,3 +52,9 @@ pnpm-debug.log*
 !.env.project
 !.env.vaultdocs/
 /docs/
+
+# Local validation outputs and isolated production build
+.verification/
+.next-build/
+/out_scan.txt
+*.tsbuildinfo

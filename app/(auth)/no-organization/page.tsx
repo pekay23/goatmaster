@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function NoOrganizationPage() { return <main className="mx-auto max-w-lg px-6 py-24"><h1 className="text-3xl font-semibold">No farm organization</h1><p className="mt-3 text-slate-600">This account is not connected to an organization. Create a farm account or contact your organization administrator.</p><div className="mt-6 flex gap-4"><Link className="underline" href="/signup">Create an account</Link><Link className="underline" href="/login">Sign in with another account</Link></div></main>; }

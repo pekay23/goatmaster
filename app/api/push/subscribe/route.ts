@@ -10,9 +10,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { endpoint, p256dh_key, auth_key } = body;
+    const endpoint = body.endpoint;
+    const p256dh_key = body.p256dh_key ?? body.keys?.p256dh;
+    const auth_key = body.auth_key ?? body.keys?.auth;
 
-    if (!endpoint || !p256dh_key || !auth_key) {
+    if (typeof endpoint !== 'string' || !endpoint.startsWith('https://') || !p256dh_key || !auth_key) {
       return NextResponse.json({ error: 'Missing subscription data' }, { status: 400 });
     }
 
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
        ON CONFLICT (endpoint) DO UPDATE SET
          p256dh_key = EXCLUDED.p256dh_key,
          auth_key = EXCLUDED.auth_key,
-         updated_at = NOW()`,
+         updated_at = NOW() WHERE push_subscriptions.user_id = EXCLUDED.user_id`,
       [user.sub, endpoint, p256dh_key, auth_key]
     );
 

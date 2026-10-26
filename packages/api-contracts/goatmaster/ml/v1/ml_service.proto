@@ -12,7 +12,7 @@ option objc_class_prefix = "GM";
 // Mirrors POST /scan : decode image, detect goat, embed, vector-search match.
 
 message Goat {
-  int64 id = 1;
+  string id = 1;
   string name = 2;
   string breed = 3;
   string sex = 4;
@@ -22,7 +22,8 @@ message Goat {
 message ScanRequest {
   // Base64-encoded JPEG/PNG image (data URI prefix is stripped server-side).
   string image_b64 = 1;
-  int64 user_id = 2;
+  string user_id = 2;
+  string organization_id = 3;
 }
 
 message ScanResponse {

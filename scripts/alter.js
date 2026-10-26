@@ -1,4 +1,4 @@
-import { query } from '../lib/db.js';
+import { queryAsOwner as query, runWithDbContext } from '../lib/db.js';
 
 async function alterTables() {
   console.log('Altering tables...');
@@ -21,4 +21,4 @@ async function alterTables() {
   process.exit(0);
 }
 
-alterTables().catch(console.error);
+runWithDbContext({ role: 'service' }, alterTables).catch(console.error);

@@ -61,7 +61,7 @@ nano /home/ubuntu/.env
 
 Add your secrets:
 ```
-DATABASE_URL=postgresql://...
+APP_DATABASE_URL=postgresql://... # restricted app role; must not have BYPASSRLS
 ML_SERVICE_KEY=your_key_here
 ROBOFLOW_API_KEY=your_key_here (optional)
 ROBOFLOW_MODEL_ID=your_model_id (optional)

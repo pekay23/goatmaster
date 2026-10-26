@@ -1,41 +1,16 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-
-export async function GET() {
-  try {
-    const [userResult, goatResult, tierResult, signupResult] = await Promise.all([
-      query('SELECT COUNT(*) as count FROM users'),
-      query('SELECT COUNT(*) as count FROM goats'),
-      query('SELECT COALESCE(tier, \'free\') as tier, COUNT(*) as count FROM users GROUP BY tier ORDER BY count DESC'),
-      query(`
-        SELECT DATE(created_at) as date, COUNT(*) as count
-        FROM users
-        WHERE created_at >= NOW() - INTERVAL '30 days'
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `),
-    ]);
-    
-    // Try embedding count separately (table may not exist)
-    let totalEmbeddings = 0;
-    try {
-      const embedResult = await query('SELECT COUNT(*) as count FROM goat_embeddings');
-      totalEmbeddings = parseInt(embedResult.rows[0]?.count || 0);
-    } catch {
-      // goat_embeddings table doesn't exist yet — that's fine
-      totalEmbeddings = 0;
-    }
-
-    return NextResponse.json({
-      totalUsers: parseInt(userResult.rows[0]?.count || 0),
-      totalGoats: parseInt(goatResult.rows[0]?.count || 0),
-      totalScans: 0,
-      totalEmbeddings,
-      usersByTier: tierResult.rows.map(r => ({ tier: r.tier, count: parseInt(r.count) })),
-      signupsLast30d: signupResult.rows.map(r => ({ date: r.date, count: parseInt(r.count) })),
-    });
-  } catch (err) {
-    console.error('Admin stats error:', err);
-    return NextResponse.json({ error: 'Failed to load stats' }, { status: 500 });
-  }
+import { getAdminActor,hasAdminPermission } from '@/lib/admin-auth';
+export async function GET(request) {
+ const actor=await getAdminActor(request,'overview:read');if(!actor)return NextResponse.json({error:'Admin access required'},{status:403});
+ const includeDemo=new URL(request.url).searchParams.get('include_demo')==='true';
+ try{const [totals,tiers,signups,failedWebhooks,failedPayments,syncBacklog]=await Promise.all([
+ query("SELECT (SELECT COUNT(*)::int FROM users u WHERE $1 OR NOT u.is_demo) AS users,(SELECT COUNT(*)::int FROM organizations WHERE $1 OR NOT is_demo) AS organizations,(SELECT COUNT(*)::int FROM goats g JOIN organizations o ON o.id=g.organization_id WHERE g.deleted_at IS NULL AND ($1 OR NOT o.is_demo)) AS goats,(SELECT COUNT(*)::int FROM scan_history s JOIN organizations o ON o.id=s.organization_id WHERE $1 OR NOT o.is_demo) AS scans,(SELECT COUNT(*)::int FROM goat_embeddings e JOIN organizations o ON o.id=e.organization_id WHERE $1 OR NOT o.is_demo) AS embeddings,(SELECT COUNT(*)::int FROM billing_events e WHERE e.status='failed' AND ($1 OR NOT EXISTS(SELECT 1 FROM organizations o WHERE o.id=e.organization_id AND o.is_demo))) AS failed_webhooks,(SELECT COUNT(*)::int FROM payments p WHERE p.status='failed' AND ($1 OR NOT EXISTS(SELECT 1 FROM organizations o WHERE o.id=p.organization_id AND o.is_demo))) AS failed_payments,(SELECT COUNT(*)::int FROM sync_queue q JOIN organizations o ON o.id=q.organization_id WHERE q.status IN ('pending','failed') AND ($1 OR NOT o.is_demo)) AS sync_backlog,(SELECT COUNT(*)::int FROM organizations WHERE subscription_status='past_due' AND ($1 OR NOT is_demo)) AS past_due",[includeDemo]),
+ query("SELECT COALESCE(tier,'free') AS tier,COUNT(*)::int AS count FROM organizations WHERE $1 OR NOT is_demo GROUP BY tier ORDER BY count DESC",[includeDemo]),
+ query("SELECT DATE(u.created_at)::text AS date,COUNT(*)::int AS count FROM users u WHERE u.created_at>=NOW()-INTERVAL '30 days' AND ($1 OR NOT u.is_demo) GROUP BY DATE(u.created_at) ORDER BY date",[includeDemo]),
+ query("SELECT e.id,e.event_type,e.error_message,e.created_at,e.organization_id,o.name AS organization_name FROM billing_events e LEFT JOIN organizations o ON o.id=e.organization_id WHERE e.status='failed' AND ($1 OR NOT COALESCE(o.is_demo,false)) ORDER BY e.created_at ASC LIMIT 8",[includeDemo]),
+ query("SELECT p.id,p.reference,p.email,p.amount,p.created_at,p.organization_id,o.name AS organization_name FROM payments p LEFT JOIN organizations o ON o.id=p.organization_id WHERE p.status='failed' AND ($1 OR NOT COALESCE(o.is_demo,false)) ORDER BY p.created_at DESC LIMIT 8",[includeDemo]),
+ query("SELECT q.organization_id,o.name AS organization_name,COUNT(*)::int AS pending_count,MIN(q.created_at) AS oldest_change FROM sync_queue q JOIN organizations o ON o.id=q.organization_id WHERE q.status IN ('pending','failed') AND ($1 OR NOT o.is_demo) GROUP BY q.organization_id,o.name ORDER BY MIN(q.created_at) LIMIT 8",[includeDemo]),
+ ]);const row=totals.rows[0];return NextResponse.json({totalUsers:row.users,totalOrganizations:row.organizations,totalGoats:row.goats,totalScans:row.scans,totalEmbeddings:row.embeddings,attention:{failedWebhooks:row.failed_webhooks,failedPayments:row.failed_payments,pendingSync:row.sync_backlog,pastDueOrganizations:row.past_due},organizationsByTier:tiers.rows,signupsLast30d:signups.rows,queues:{failedWebhooks:hasAdminPermission(actor,'billing:read')?failedWebhooks.rows:[],failedPayments:hasAdminPermission(actor,'billing:read')?failedPayments.rows:[],syncBacklog:syncBacklog.rows},permissions:{billing:hasAdminPermission(actor,'billing:read'),billingWrite:hasAdminPermission(actor,'billing:write')},includeDemo,generatedAt:new Date().toISOString()});
+ }catch(error){console.error('Admin dashboard failed:',error);return NextResponse.json({error:'Unable to load operational dashboard'},{status:500});}
 }

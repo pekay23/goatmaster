@@ -1,19 +1,13 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
+import { getAdminActor } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
-type AuthUser = { role?: string; sub?: string } | null;
-
-function isAdmin(user: AuthUser): user is { role: string; sub?: string } {
-  return !!user && (user.role === 'admin' || user.role === 'super_admin');
-}
-
 export async function GET(request: Request) {
-  const user = await getAuthUser(request);
-  if (!isAdmin(user)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const user = await getAdminActor(request, 'audit:read');
+  if (!user) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -26,6 +20,7 @@ export async function GET(request: Request) {
   const page = Math.max(Number(searchParams.get('page') || '1'), 1);
   const limit = Math.min(Math.max(Number(searchParams.get('limit') || '50'), 1), 500);
   const exportCsv = searchParams.get('export') === 'csv';
+  if (!Number.isSafeInteger(page) || !Number.isSafeInteger(limit) || (orgId && !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(orgId)) || [dateFrom,dateTo].some(value=>value && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value))))) return NextResponse.json({error:'Invalid audit filters'},{status:400});
   const offset = (page - 1) * limit;
 
   const conditions: string[] = [];
@@ -65,7 +60,7 @@ export async function GET(request: Request) {
     const result = await query(
       `SELECT actor_email, actor_role, action, resource, resource_id, organization_id, before_state, after_state, ip_address, created_at
        FROM audit_logs ${where}
-       ORDER BY created_at DESC`,
+       ORDER BY created_at DESC LIMIT 10000`,
       params
     );
 
@@ -128,7 +123,8 @@ function escapeRow(row: unknown[]) {
 }
 
 function escapeCsvValue(value: unknown): string {
-  const s = value == null ? '' : String(value);
+  const raw = value == null ? '' : String(value);
+  const s = /^[\s]*[=+@-]/.test(raw) ? "'" + raw : raw;
   if (/[",\r\n]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;
   }

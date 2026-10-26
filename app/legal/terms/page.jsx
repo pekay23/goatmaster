@@ -1,26 +1,27 @@
+import Link from 'next/link';
 import LegalPage from '@/components/LegalPage';
 
 export const metadata = {
-  title: 'Terms of Service — Goat Master',
-  description: 'Terms governing your use of Goat Master — the AI-powered goat herd management app.',
+  title: 'Terms of Service — GoatMaster',
+  description: 'Terms governing your use of GoatMaster — the AI-powered goat herd management app.',
   openGraph: {
-    title: 'Terms of Service — Goat Master',
-    description: 'Terms governing your use of Goat Master — the AI-powered goat herd management app.',
+    title: 'Terms of Service — GoatMaster',
+    description: 'Terms governing your use of GoatMaster — the AI-powered goat herd management app.',
     url: 'https://goatmaster-tau.vercel.app/legal/terms',
-    siteName: 'Goat Master',
+    siteName: 'GoatMaster',
     locale: 'en_US',
     type: 'website',
     images: [{
       url: 'https://goatmaster-tau.vercel.app/icon-512.png',
       width: 512,
       height: 512,
-      alt: 'Goat Master',
+      alt: 'GoatMaster',
     }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Terms of Service — Goat Master',
-    description: 'Terms governing your use of Goat Master — the AI-powered goat herd management app.',
+    title: 'Terms of Service — GoatMaster',
+    description: 'Terms governing your use of GoatMaster — the AI-powered goat herd management app.',
     images: ['https://goatmaster-tau.vercel.app/icon-512.png'],
   },
 };
@@ -52,15 +53,15 @@ export default function TermsOfService() {
 
       <h2 id="acceptance">1. Acceptance of Terms</h2>
       <p>
-        Welcome to Goat Master. These Terms of Service ("Terms") form a legally binding agreement between you ("you", "your")
-        and Goat Master ("we", "us", "our"). By creating an account, accessing, or using the Goat Master application
-        (the "Service"), you agree to be bound by these Terms and our <a href="/legal/privacy">Privacy Policy</a>.
+        Welcome to GoatMaster. These Terms of Service ("Terms") form a legally binding agreement between you ("you", "your")
+        and GoatMaster ("we", "us", "our"). By creating an account, accessing, or using the GoatMaster application
+        (the "Service"), you agree to be bound by these Terms and our <Link href="/legal/privacy">Privacy Policy</Link>.
       </p>
       <p><strong>If you do not agree, do not use the Service.</strong></p>
 
       <h2 id="service">2. The Service</h2>
       <p>
-        Goat Master is a digital herd-management application for goat farmers, hobbyists, and breeders. The Service includes:
+        GoatMaster is a digital herd-management application for goat farmers, hobbyists, and breeders. The Service includes:
       </p>
       <ul>
         <li>Goat profile management with photos, breed, sex, date of birth, ear tag, and notes</li>
@@ -179,17 +180,16 @@ export default function TermsOfService() {
 
       <h2 id="payment">8. Payment & Subscriptions</h2>
       <p>
-        Goat Master is currently <strong>free to use</strong>. We may introduce paid tiers in the future. If we do:
+        GoatMaster offers free and paid plans. Current prices and limits appear in the plan catalogue and are confirmed before checkout.
       </p>
       <ul>
-        <li>Existing free users will be given at least 30 days' notice before any feature becomes paid</li>
         <li>Pricing, billing terms, refund policies, and trial details will be presented before purchase</li>
-        <li>App Store and Play Store purchases will be governed additionally by Apple's and Google's payment terms</li>
+        <li>Your organization’s selected plan determines its available features and limits</li>
       </ul>
 
       <h2 id="disclaimers">9. Disclaimers</h2>
       <p>
-        <strong>Goat Master is a record-keeping and herd-management tool, not a substitute for professional veterinary, agricultural, or business advice.</strong>
+        <strong>GoatMaster is a record-keeping and herd-management tool, not a substitute for professional veterinary, agricultural, or business advice.</strong>
       </p>
       <p>
         Decisions about animal health, breeding, treatment, sale, or culling should be made in consultation with a
@@ -283,11 +283,11 @@ export default function TermsOfService() {
       <ul>
         <li><strong>Email:</strong> <a href="mailto:samuel.hughes.23@outlook.com">samuel.hughes.23@outlook.com</a></li>
         <li><strong>Phone:</strong> +233 55 441 6937</li>
-        <li><strong>Address:</strong> Goat Master, Accra, Ghana</li>
+        <li><strong>Address:</strong> GoatMaster, Accra, Ghana</li>
       </ul>
 
       <p style={{ marginTop: 40, fontSize: 13, color: 'var(--text-sub)', textAlign: 'center' }}>
-        © {new Date().getFullYear()} Goat Master. All rights reserved.
+        © {new Date().getFullYear()} GoatMaster. All rights reserved.
       </p>
     </LegalPage>
   );

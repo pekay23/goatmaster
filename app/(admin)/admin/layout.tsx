@@ -1,174 +1,22 @@
 'use client';
-
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect,useRef,useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import {
-  BarChart3,
-  Users,
-  Layers,
-  Activity,
-  ArrowLeft,
-  Shield,
-  Menu,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  CreditCard,
-  FileText,
-} from 'lucide-react';
+import { usePathname,useRouter } from 'next/navigation';
+import { BarChart3,Users,Layers,Shield,Menu,X,ChevronLeft,ChevronRight,CreditCard,FileText,LogOut } from 'lucide-react';
 import { PortalHeader } from '@/components/admin/PortalHeader';
-import { PageHeader } from '@/components/admin/PageHeader';
-import { MobileBottomNav } from '@/components/admin/MobileBottomNav';
-import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import { AdminQueryWrapper } from '@/components/app/AdminQueryWrapper';
+import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import './admin.css';
-
-const NAV_ITEMS = [
-  { href: '/admin', label: 'Dashboard', icon: BarChart3 },
-  { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/organizations', label: 'Organizations', icon: Shield },
-  { href: '/admin/tiers', label: 'Tiers', icon: Layers },
-  { href: '/admin/billing', label: 'Billing', icon: CreditCard },
-  { href: '/admin/audit-logs', label: 'Audit Logs', icon: FileText },
-];
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-  const sidebarRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (sidebarRef.current) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) {
-              setSidebarCollapsed(true);
-            } else {
-              setSidebarCollapsed(false);
-            }
-          });
-        },
-        { threshold: 0 }
-      );
-      observer.observe(sidebarRef.current);
-      return () => observer.disconnect();
-    }
-  }, []);
-
-  const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin';
-    return pathname.startsWith(href);
-  };
-
-  return (
-    <AdminQueryWrapper>
-      <div className="app-layout min-h-screen-dvh flex bg-bg-app text-text-main">
-        {/* Mobile Sidebar Overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Sidebar */}
-        <aside
-          ref={sidebarRef}
-          className={`fixed inset-y-0 left-0 z-50 transition-all duration-300 ease-out border-r border-border ${
-            sidebarCollapsed
-              ? 'w-16 lg:w-16'
-              : 'w-[17rem] lg:w-[17rem]'
-          } bg-bg-nav`}
-        >
-          <div className="flex flex-col h-full">
-            {/* Logo / Brand */}
-            <div className={`flex items-center justify-between h-16 px-4 border-b border-border ${sidebarCollapsed ? 'justify-center' : ''}`}>
-              {!sidebarCollapsed && (
-                <Link href="/admin" className="font-serif text-xl font-bold text-text-main">
-                  GoatMaster
-                </Link>
-              )}
-              <button
-                className="p-2 rounded-lg text-text-sub hover:bg-bg-hover transition-colors lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-                aria-label="Close sidebar"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" role="navigation" aria-label="Admin navigation">
-              {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive(href)
-                      ? 'bg-primary-bg text-primary'
-                      : 'text-text-sub hover:bg-bg-hover hover:text-text-main'
-                  } ${sidebarCollapsed ? 'justify-center' : ''}`}
-                  aria-current={isActive(href) ? 'page' : undefined}
-                >
-                  <Icon size={20} className="shrink-0" />
-                  {!sidebarCollapsed && <span>{label}</span>}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Toggle Button */}
-            <div className="p-4 border-t border-border">
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-text-sub hover:bg-bg-hover transition-all duration-200 ${
-                  sidebarCollapsed ? 'justify-center' : ''
-                }`}
-                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                <ChevronLeft size={18} />
-                {!sidebarCollapsed && <span>Collapse</span>}
-              </button>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <div className={`flex flex-1 min-w-0 flex-col h-screen-dvh transition-[margin-left] duration-200 ease-out ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-[17rem]'}`}>
-          {/* Portal Header (sticky top) */}
-          <PortalHeader
-            onMenuClick={() => setSidebarOpen(true)}
-            userName="Admin"
-          />
-
-          {/* Main Content */}
-          <main id="main-content" className="flex-1 overflow-y-auto overflow-x-clip no-scrollbar p-4 sm:p-5 lg:p-6 lg:pb-8">
-            <ImpersonationBanner />
-            {children}
-          </main>
-
-          {/* Mobile Bottom Nav */}
-          <MobileBottomNav 
-            items={NAV_ITEMS} 
-            pathname={pathname} 
-            onNavigate={() => {}} 
-          />
-        </div>
-      </div>
-    </AdminQueryWrapper>
-  );
+import '@/components/admin/workspace.css';
+const navigation=[{href:'/admin',label:'Overview',icon:BarChart3,permission:'overview:read'},{href:'/admin/organizations',label:'Organizations',icon:Shield,permission:'organizations:read'},{href:'/admin/users',label:'Users',icon:Users,permission:'users:read'},{href:'/admin/tiers',label:'Plan catalogue',icon:Layers,permission:'tiers:read'},{href:'/admin/billing',label:'Billing',icon:CreditCard,permission:'billing:read'},{href:'/admin/audit-logs',label:'Activity record',icon:FileText,permission:'audit:read'}];
+export default function AdminLayout({children}:{children:React.ReactNode}) {
+  const pathname=usePathname();const router=useRouter();const [open,setOpen]=useState(false);const [collapsed,setCollapsed]=useState(false);const [session,setSession]=useState<{username:string;permissions:string[]}|null>(null);const [error,setError]=useState('');const asideRef=useRef<HTMLElement>(null);const openerRef=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{let active=true;void fetch('/api/admin/auth/me').then(async response=>{if(!response.ok)throw new Error('Unable to load your administrator session');const data:unknown=await response.json();if(typeof data!=='object'||data===null||!('permissions'in data)||!Array.isArray(data.permissions))throw new Error('Invalid administrator session');const permissions=data.permissions.filter((value):value is string=>typeof value==='string');const username='username'in data&&typeof data.username==='string'?data.username:'Account';if(active)setSession({username,permissions});}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'Unable to load session');});return()=>{active=false;};},[]);
+  useEffect(()=>{if(!open)return;const element=asideRef.current;const first=element?.querySelector<HTMLElement>('a,button');first?.focus();function onKey(event:KeyboardEvent){if(event.key==='Escape'){setOpen(false);openerRef.current?.focus();}if(event.key==='Tab'&&element){const items=Array.from(element.querySelectorAll<HTMLElement>('a[href],button:not([disabled])')).filter(item=>item.offsetParent!==null);const first=items[0];const last=items[items.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}}document.addEventListener('keydown',onKey);return()=>document.removeEventListener('keydown',onKey);},[open]);
+  const visible=navigation.filter(item=>session?.permissions.includes(item.permission));
+  const isActive=(href:string)=>href==='/admin'?pathname===href:pathname===href||pathname.startsWith(href+'/');
+  async function logout(){try{const response=await fetch('/api/admin/auth/logout',{method:'POST'});if(!response.ok)throw new Error('Unable to sign out');localStorage.removeItem('goatmaster-session-scope');router.replace('/login?app=admin');router.refresh();}catch(cause){setError(cause instanceof Error?cause.message:'Unable to sign out');}}
+  return <AdminQueryWrapper><div className="app-layout min-h-screen-dvh flex bg-bg-app text-text-main"><a href="#admin-main" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:px-4 focus:py-2">Skip to main content</a>{open&&<button aria-label="Close navigation" className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={()=>setOpen(false)}/>}
+  <aside ref={asideRef} aria-label="Administrator sidebar" className={(open?'flex':'hidden lg:flex')+' fixed inset-y-0 left-0 z-50 flex-col border-r border-border bg-bg-nav '+(collapsed?'lg:w-20 w-64':'w-64')}><div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4"><Link href="/admin" aria-label="GoatMaster operations" className="font-serif text-xl font-bold">{collapsed?<Shield size={24}/>:'GoatMaster'}</Link><button type="button" className="p-2 lg:hidden" aria-label="Close navigation" onClick={()=>setOpen(false)}><X size={20}/></button></div><nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Admin navigation">{!session&&!error&&<p className="p-3 text-sm" role="status">Loading navigation…</p>}{visible.map(({href,label,icon:Icon})=><Link key={href} href={href} onClick={()=>setOpen(false)} aria-label={label} aria-current={isActive(href)?'page':undefined} className={'flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium '+(isActive(href)?'bg-primary-bg text-primary':'text-text-sub hover:bg-bg-hover')+(collapsed?' lg:justify-center':'')}><Icon size={20} className="shrink-0"/>{collapsed?<span className="lg:sr-only">{label}</span>:<span>{label}</span>}</Link>)}</nav><div className="space-y-2 border-t border-border p-3"><button type="button" className="hidden min-h-11 w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm lg:flex" onClick={()=>setCollapsed(value=>!value)} aria-label={collapsed?'Expand sidebar':'Collapse sidebar'}>{collapsed?<ChevronRight size={18}/>:<><ChevronLeft size={18}/>Collapse</>}</button><button className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm" onClick={()=>void logout()} aria-label="Sign out"><LogOut size={18}/>{!collapsed&&'Sign out'}</button></div></aside>
+  <div className={'flex min-w-0 flex-1 flex-col h-screen-dvh '+(collapsed?'lg:ml-20':'lg:ml-64')}><div className="flex items-center border-b border-border bg-bg-nav"><button ref={openerRef} className="p-3 lg:hidden" aria-label="Open navigation" aria-expanded={open} onClick={()=>setOpen(true)}><Menu size={24}/></button><div className="min-w-0 flex-1"><PortalHeader onMenuClick={()=>setOpen(true)} userName={session?.username}/></div></div><main id="admin-main" className="flex-1 overflow-y-auto overflow-x-clip p-4 sm:p-6" inert={open||undefined}>{error&&<p className="gm-admin-error" role="alert">{error} <Link href="/login?app=admin">Sign in again</Link></p>}{session?.permissions.includes('support:impersonate')&&<ImpersonationBanner/>}{children}</main></div></div></AdminQueryWrapper>;
 }

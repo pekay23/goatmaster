@@ -1,4 +1,5 @@
 'use client';
+import SmartImage from '@/components/SmartImage';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Camera, Upload, X, CheckCircle, AlertCircle, RefreshCw, Zap, Eye, Video } from 'lucide-react';
 import { getLocalMatch } from '@/lib/localDb';
@@ -446,7 +447,7 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {capturedThumb && (
             <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', width: '100%', aspectRatio: '4/3' }}>
-              <img src={capturedThumb} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <SmartImage src={capturedThumb} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               {result.goat && (
                 <div style={{ position: 'absolute', top: '20%', left: '25%', right: '25%', bottom: '20%', border: `3px solid ${result.lowConfidence ? '#f59e0b' : '#22c55e'}`, borderRadius: 12, pointerEvents: 'none' }}>
                   <div style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', background: result.lowConfidence ? '#f59e0b' : '#22c55e', color: 'white', padding: '4px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
@@ -462,7 +463,7 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
                   {result.goat.image_url
-                    ? <img src={result.goat.image_url} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} alt="" />
+                    ? <SmartImage src={result.goat.image_url} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} alt="" />
                     : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🐐</div>
                   }
                   <div style={{ flex: 1 }}>
@@ -554,7 +555,7 @@ export default function GoatScanner({ goats = [], onScanComplete }) {
                 <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
                   {enrollFrames.map((f, i) => (
                     <div key={i} style={{ position: 'relative', width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-                      <img src={f} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                      <SmartImage src={f} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                       <button onClick={() => setEnrollFrames(prev => prev.filter((_, idx) => idx !== i))} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.5)', border: 'none', color: 'white', borderRadius: '50%', padding: 2, display: 'flex' }}><X size={10} /></button>
                     </div>
                   ))}

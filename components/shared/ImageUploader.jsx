@@ -1,4 +1,5 @@
 'use client';
+import SmartImage from '@/components/SmartImage';
 import { Camera, X } from 'lucide-react';
 
 export default function ImageUploader({ imageUrl, onImageChange, label = 'Photo', showToast }) {
@@ -32,7 +33,7 @@ export default function ImageUploader({ imageUrl, onImageChange, label = 'Photo'
           <input type="file" hidden onChange={handleFile} accept="image/*" />
           {imageUrl ? (
             <div style={{ position: 'relative' }}>
-              <img src={imageUrl} style={{ height: 140, width: '100%', borderRadius: 8, objectFit: 'cover' }} alt="" />
+              <SmartImage src={imageUrl} style={{ height: 140, width: '100%', borderRadius: 8, objectFit: 'cover' }} alt="" />
               <button type="button" aria-label="Remove image" onClick={(e) => { e.preventDefault(); onImageChange(''); }}
                 style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={14} />

@@ -16,6 +16,9 @@ export default defineConfig([
   globalIgnores([
     // Next.js build output
     '.next/**',
+    '.next-build/**',
+    'gen/**',
+    '.verification/**',
     'next-env.d.ts',
     'out/**',
     // Vercel deployment helpers

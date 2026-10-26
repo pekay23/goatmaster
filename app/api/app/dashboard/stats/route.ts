@@ -1,48 +1,29 @@
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
 import { query } from '@/lib/db';
+import { apiError } from '../../_records';
 
-export async function GET() {
-  const user = await getAuthUser();
-  if (!user || !user.orgId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function GET(request: Request) {
+  const user = await getAuthUser(request);
+  if (!user?.orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    const orgId = user.orgId;
-
-    const [
-      totalGoats,
-      activeAlerts,
-      upcomingEvents,
-      lowStockItems,
-      recentBirths,
-      recentDeaths,
-      avgWeightGain,
-      milkYield,
-    ] = await Promise.all([
-      query('SELECT COUNT(*) as count FROM goats WHERE organization_id = $1 AND status = $2', [orgId, 'active']),
-      query('SELECT COUNT(*) as count FROM alerts WHERE organization_id = $1 AND is_read = false', [orgId]),
-      query('SELECT COUNT(*) as count FROM farm_events WHERE organization_id = $1 AND event_date >= NOW()', [orgId]),
-      query('SELECT COUNT(*) as count FROM inventory WHERE organization_id = $1 AND quantity <= min_quantity', [orgId]),
-      query('SELECT COUNT(*) as count FROM farm_events WHERE organization_id = $1 AND category = $2 AND event_date >= NOW() - INTERVAL $3', [orgId, 'birth', '30 days']),
-      query('SELECT COUNT(*) as count FROM goats WHERE organization_id = $1 AND status = $2 AND updated_at >= NOW() - INTERVAL $3', [orgId, 'deceased', '30 days']),
-      query('SELECT AVG(weight_kg) as avg FROM weight_records WHERE organization_id = $1 AND record_date >= NOW() - INTERVAL $2', [orgId, '30 days']),
-      query('SELECT SUM(morning_yield + evening_yield) as total FROM milk_records WHERE organization_id = $1 AND record_date >= NOW() - INTERVAL $2', [orgId, '7 days']),
-    ]);
-
-    return NextResponse.json({
-      totalGoats: parseInt(totalGoats.rows[0]?.count || '0'),
-      activeAlerts: parseInt(activeAlerts.rows[0]?.count || '0'),
-      upcomingEvents: parseInt(upcomingEvents.rows[0]?.count || '0'),
-      lowStockItems: parseInt(lowStockItems.rows[0]?.count || '0'),
-      recentBirths: parseInt(recentBirths.rows[0]?.count || '0'),
-      recentDeaths: parseInt(recentDeaths.rows[0]?.count || '0'),
-      avgWeightGain: parseFloat(avgWeightGain.rows[0]?.avg || '0'),
-      milkYield: parseFloat(milkYield.rows[0]?.total || '0'),
-    });
-  } catch (err) {
-    console.error('Dashboard stats error:', err);
-    return NextResponse.json({ error: 'Failed to load stats' }, { status: 500 });
-  }
+    const result = await query(`SELECT
+      (SELECT COUNT(*)::int FROM goats WHERE organization_id = $1 AND deleted_at IS NULL) AS "totalGoats",
+      (SELECT COUNT(*)::int FROM goats WHERE organization_id = $1 AND deleted_at IS NULL AND status = 'active') AS "activeGoats",
+      (SELECT COUNT(*)::int FROM alerts WHERE organization_id = $1 AND is_read = false) AS "activeAlerts",
+      (SELECT COUNT(*)::int FROM farm_events WHERE organization_id = $1 AND deleted_at IS NULL AND completed_at IS NULL AND event_date >= CURRENT_DATE AND event_date < CURRENT_DATE + INTERVAL '8 days') AS "upcomingEvents",
+      (SELECT COUNT(*)::int FROM inventory WHERE organization_id = $1 AND deleted_at IS NULL AND quantity <= low_stock_threshold) AS "lowStockItems",
+      (SELECT COALESCE(SUM(kids_count), 0)::int FROM breeding_records WHERE organization_id = $1 AND deleted_at IS NULL AND status = 'kidded' AND actual_kidding_date >= CURRENT_DATE - INTERVAL '30 days') AS "recentBirths",
+      (SELECT COUNT(*)::int FROM goats WHERE organization_id = $1 AND deleted_at IS NULL AND status = 'deceased' AND updated_at >= CURRENT_DATE - INTERVAL '30 days') AS "recentDeaths",
+      (SELECT AVG(latest_weight - first_weight) FROM (
+         SELECT DISTINCT goat_id,
+           FIRST_VALUE(weight_kg) OVER (PARTITION BY goat_id ORDER BY record_date, id) AS first_weight,
+           FIRST_VALUE(weight_kg) OVER (PARTITION BY goat_id ORDER BY record_date DESC, id DESC) AS latest_weight,
+           COUNT(*) OVER (PARTITION BY goat_id) AS measurements
+         FROM weight_records WHERE organization_id = $1 AND deleted_at IS NULL AND record_date >= CURRENT_DATE - INTERVAL '30 days'
+       ) weights WHERE measurements >= 2) AS "avgWeightGain",
+      (SELECT SUM(COALESCE(morning_yield, 0) + COALESCE(evening_yield, 0)) FROM milk_records WHERE organization_id = $1 AND deleted_at IS NULL AND record_date >= CURRENT_DATE - INTERVAL '7 days') AS "milkYield"`, [user.orgId]);
+    const stats = result.rows[0];
+    return NextResponse.json({ ...stats, avgWeightGain: stats.avgWeightGain === null ? null : Number(stats.avgWeightGain), milkYield: stats.milkYield === null ? null : Number(stats.milkYield) });
+  } catch (error) { return apiError(error, 'Unable to load farm totals'); }
 }

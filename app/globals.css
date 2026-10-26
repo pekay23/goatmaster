@@ -1,21 +1,49 @@
 ﻿@import "tailwindcss";
 
-@import "tailwindcss";
-
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:wght@400;600;700;900&display=swap');
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/dm-sans.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces-italic.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
 
 @theme {
   /* Fonts */
   --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: 'Fraunces', Georgia, serif;
 
-  /* â”€â”€ Breakpoints (Tailwind v4) â”€â”€ */
+  /* Border radius scale */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  /* — Breakpoints (Tailwind v4) — */
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
 
-  /* â”€â”€ Colors â”€â”€ */
+  /* — Colors — */
   --color-pasture-50:  hsl(var(--pasture-50));
   --color-pasture-100: hsl(var(--pasture-100));
   --color-pasture-200: hsl(var(--pasture-200));
@@ -26,6 +54,22 @@
   --color-pasture-700: hsl(var(--pasture-700));
   --color-pasture-800: hsl(var(--pasture-800));
   --color-pasture-900: hsl(var(--pasture-900));
+
+  /* Green alias to pasture for marketing compatibility */
+  --color-green-50:  hsl(var(--pasture-50));
+  --color-green-100: hsl(var(--pasture-100));
+  --color-green-200: hsl(var(--pasture-200));
+  --color-green-300: hsl(var(--pasture-300));
+  --color-green-400: hsl(var(--pasture-400));
+  --color-green-500: hsl(var(--pasture-500));
+  --color-green-600: hsl(var(--pasture-600));
+  --color-green-700: hsl(var(--pasture-700));
+  --color-green-800: hsl(var(--pasture-800));
+  --color-green-900: hsl(var(--pasture-900));
+
+  /* Cream alias */
+  --color-cream-50: #F5F0E1;
+  --color-cream: #F5F0E1;
 
   --color-sun-50:  hsl(var(--sun-50));
   --color-sun-100: hsl(var(--sun-100));
@@ -56,14 +100,18 @@
   --color-slate-900: hsl(var(--slate-900));
   --color-slate-950: hsl(var(--slate-950));
 
-  /* â”€â”€ Semantic tokens â”€â”€ */
+  /* Additional aliases */
+  --color-terracotta: #C65D3B;
+  --color-terracotta-light: #D4724A;
+
+  /* — Semantic tokens — */
   --color-bg-app:        hsl(var(--slate-100));
   --color-bg-card:       hsl(var(--slate-0));
   --color-bg-nav:        hsl(var(--slate-0));
   --color-bg-elevated:   hsl(var(--slate-50));
   --color-text-main:     hsl(var(--slate-900));
-  --color-text-sub:      hsl(var(--slate-600));
-  --color-text-muted:    hsl(var(--slate-500));
+  --color-text-sub:      hsl(var(--slate-700));
+  --color-text-muted:    hsl(var(--slate-600));
   --color-text-invert:   hsl(var(--slate-0));
   --color-border:        hsl(var(--slate-200));
   --color-border-strong: hsl(var(--slate-300));
@@ -77,21 +125,21 @@
   --color-info:          hsl(var(--sky-500));
   --color-info-bg:       hsl(199 89% 96%);
 
-  /* â”€â”€ Shadows â”€â”€ */
+  /* — Shadows — */
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow:    0 4px 20px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 8px 30px rgba(15, 23, 42, 0.10);
   --shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.14);
 
-  /* â”€â”€ Layout tokens â”€â”€ */
+  /* — Layout tokens — */
   --nav-height: 70px;
   --sidebar-width: 240px;
   --content-max: 1200px;
 }
 
 /* ============================================================
-   GOAT MASTER â€” APP.CSS v2.0
-   Responsive: Mobile â†’ Tablet (640px) â†’ Desktop (1024px)
+   GOAT MASTER — APP.CSS v2.0
+   Responsive: Mobile → Tablet (640px) → Desktop (1024px)
 
    COLOR SYSTEM
    - Two-layer palette: brand ("Pasture") + UI neutrals ("Slate")
@@ -100,7 +148,7 @@
    ============================================================ */
 
 :root {
-  /* ===== PASTURE Â· Brand green scale ===== */
+  /* ===== PASTURE · Brand green scale ===== */
   --pasture-50:  140 60% 96%;
   --pasture-100: 140 55% 90%;
   --pasture-200: 140 50% 80%;
@@ -112,7 +160,7 @@
   --pasture-800: 140 60% 16%;
   --pasture-900: 140 55% 10%;
 
-  /* ===== SUN Â· Warm accent (gold) ===== */
+  /* ===== SUN · Warm accent (gold) ===== */
   --sun-50:  42 100% 96%;
   --sun-100: 42 100% 88%;
   --sun-300: 42 95% 70%;
@@ -120,18 +168,18 @@
   --sun-600: 32 90% 42%;
   --sun-700: 28 85% 32%;
 
-  /* ===== BARN Â· Danger red ===== */
+  /* ===== BARN · Danger red ===== */
   --barn-50:  0 85% 96%;
   --barn-100: 0 80% 90%;
   --barn-500: 0 72% 51%;
   --barn-600: 0 70% 42%;
   --barn-700: 0 65% 32%;
 
-  /* ===== SKY Â· Cool info blue ===== */
+  /* ===== SKY · Cool info blue ===== */
   --sky-500: 199 89% 48%;
   --sky-600: 200 80% 40%;
 
-  /* ===== SLATE Â· Neutral UI grey scale ===== */
+  /* ===== SLATE · Neutral UI grey scale ===== */
   --slate-0:   210 20% 100%;
   --slate-50:  210 20% 98%;
   --slate-100: 210 16% 95%;
@@ -145,7 +193,7 @@
   --slate-900: 210 22% 8%;
   --slate-950: 210 28% 5%;
 
-  /* ===== Semantic tokens â€” LIGHT MODE (default) ===== */
+  /* ===== Semantic tokens — LIGHT MODE (default) ===== */
   --bg-app:        hsl(var(--slate-100));
   --bg-card:       hsl(var(--slate-0));
   --bg-nav:        hsl(var(--slate-0));
@@ -197,7 +245,7 @@
   --tier-pro-fg:    hsl(var(--sun-700));
 }
 
-/* ===== Semantic tokens â€” DARK MODE ===== */
+/* ===== Semantic tokens — DARK MODE ===== */
 [data-theme="dark"] {
   --bg-app:        hsl(var(--slate-950));
   --bg-card:       hsl(var(--slate-900));
@@ -290,10 +338,10 @@ html, body {
 
 .app-layout {
   width: 100%;
-  max-width: 600px;
-  min-height: 100vh;
+  max-width: 100%;
+  min-height: 100dvh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   position: relative;
 }
 
@@ -376,9 +424,9 @@ html, body {
 .nav-item.active { color: var(--primary); font-weight: 600; }
 .nav-item span { font-size: 10px; }
 
-/* === Tablet (640px â€“ 1023px) === */
+/* === Tablet (640px — 1023px) === */
 @media (min-width: 640px) {
-  .app-layout { max-width: 768px; }
+  .app-layout { max-width: 100%; }
   .nav-bar { max-width: 768px; border-radius: 28px 28px 0 0; padding: 12px 20px; padding-bottom: env(safe-area-inset-bottom, 12px); }
   .nav-item { font-size: 11px; }
   .nav-item span { font-size: 11px; }
@@ -389,7 +437,7 @@ html, body {
 /* === Desktop (1024px+) === */
 @media (min-width: 1024px) {
   #root { justify-content: flex-start; align-items: stretch; }
-  .app-layout { max-width: 100%; width: 100%; min-height: 100vh; flex-direction: column; padding-left: var(--sidebar-width); }
+  .app-layout { max-width: 100%; width: 100%; min-height: 100dvh; flex-direction: row; padding-left: 0; }
   .app-header { margin: 16px 20px 24px; top: 12px; padding: 16px 24px; }
   .app-title { font-size: 20px; }
   .main-content { padding: 20px 24px 40px; max-width: var(--content-max); width: 100%; }

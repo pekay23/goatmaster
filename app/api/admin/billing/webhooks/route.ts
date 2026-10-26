@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
-import { PaystackProvider } from '@/lib/paystack';
+import { getAdminActor } from '@/lib/admin-auth';
+
 
 export async function GET(request: Request) {
-  const user = await getAuthUser(request);
-  if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
+  const user = await getAdminActor(request, 'billing:read');
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const { searchParams } = new URL(request.url);
-    const page = Math.max(parseInt(searchParams.get('page') || '1'), 1);
-    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '25'), 1), 100);
+    const page = Math.min(100000, Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1));
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '25', 10) || 25, 1), 100);
     const eventType = searchParams.get('eventType') || '';
     const status = searchParams.get('status') || '';
     const orgId = searchParams.get('orgId') || '';
@@ -21,9 +21,9 @@ export async function GET(request: Request) {
     const offset = (page - 1) * limit;
 
     let whereClause = '';
-    const params: any[] = [];
+    const params: unknown[] = [searchParams.get('include_demo') === 'true'];
 
-    const conditions: string[] = [];
+    const conditions: string[] = ['($1 OR NOT EXISTS(SELECT 1 FROM organizations o WHERE o.id = billing_events.organization_id AND o.is_demo))'];
     if (eventType) {
       conditions.push(`event_type ILIKE $${params.length + 1}`);
       params.push(`%${eventType}%`);

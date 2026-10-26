@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { getAuthUser, signToken } from '@/lib/auth';
+import { signToken, hashToken } from '@/lib/auth';
+import { getAdminUser } from '@/lib/admin-auth';
 import { logAudit } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ function clientIp(request: Request): string | undefined {
 }
 
 export async function GET(request: Request) {
-  const user = await getAuthUser(request);
+  const user = await getAdminUser(request);
   if (!isAdmin(user)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -39,13 +40,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const user = await getAuthUser(request);
+  const user = await getAdminUser(request);
   if (!isAdmin(user)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { organizationId } = await request.json();
-  if (!organizationId) {
+  if (typeof organizationId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(organizationId)) {
     return NextResponse.json({ error: 'Organization ID required' }, { status: 400 });
   }
 
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
   await query(
     `INSERT INTO impersonation_sessions (id, admin_id, organization_id, token_hash, expires_at)
      VALUES (uuid_generate_v4(), $1, $2, $3, NOW() + INTERVAL '1 hour')`,
-    [user.sub, organizationId, token]
+    [user.sub, organizationId, hashToken(token)]
   );
 
   await logAudit({
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const user = await getAuthUser(request);
+  const user = await getAdminUser(request);
   if (!isAdmin(user)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

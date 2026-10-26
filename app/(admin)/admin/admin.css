@@ -101,7 +101,7 @@
   transition: box-shadow 0.2s;
 }
 
-/* â”€â”€ Responsive utilities using Tailwind v4 breakpoints â”€â”€ */
+/* — Responsive utilities using Tailwind v4 breakpoints — */
 /* sm: 640px, md: 768px, lg: 1024px, xl: 1280px */
 
 @utility statGrid {

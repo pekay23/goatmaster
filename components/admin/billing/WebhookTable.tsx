@@ -1,0 +1,9 @@
+'use client';
+import Link from 'next/link';
+import { useMutation,useQueryClient } from '@tanstack/react-query';
+import { adminRequest,formatDate,text } from '../contracts';
+export default function WebhookTable({rows,canWrite}:{rows:Record<string,unknown>[];canWrite:boolean}) {
+  const queryClient=useQueryClient();
+  const retry=useMutation({mutationFn:(id:string)=>adminRequest('/api/admin/billing/webhooks/'+id+'/retry',{method:'POST'}),onSuccess:()=>queryClient.invalidateQueries({queryKey:['admin-billing-webhooks']})});
+  return <>{retry.error && <p className="gm-admin-error" role="alert">{retry.error.message}</p>}{rows.length?<div className="gm-admin-table-wrap"><table className="gm-admin-table"><thead><tr><th scope="col">Delivery</th><th scope="col">Organization</th><th scope="col">Status</th><th scope="col">Created</th><th scope="col">Details</th></tr></thead><tbody>{rows.map(row=><tr key={text(row.id)}><td className="gm-admin-reference">{text(row.event_type)}</td><td>{text(row.organization_id)?<Link href={'/admin/organizations/'+text(row.organization_id)+'?tab=payments'}>Open organization →</Link>:'Not resolved'}</td><td>{text(row.status)}</td><td>{formatDate(row.created_at)}</td><td>{text(row.error_message)&&<p className="gm-admin-muted">{text(row.error_message)}</p>}<details><summary className="gm-admin-inline-action">View event payload</summary><pre className="gm-admin-payload">{JSON.stringify(row.payload,null,2)}</pre></details>{row.status==='failed'&&canWrite&&<button className="gm-admin-secondary" onClick={()=>retry.mutate(text(row.id))} disabled={retry.isPending}>{retry.isPending&&retry.variables===row.id?'Retrying…':'Retry failed delivery'}</button>}</td></tr>)}</tbody></table></div>:<p className="gm-admin-empty">No billing deliveries match these filters.</p>}</>;
+}

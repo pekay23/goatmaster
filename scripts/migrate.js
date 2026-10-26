@@ -1,4 +1,5 @@
-import { query } from '../lib/db.js';
+import { readFile } from 'node:fs/promises';
+import { queryAsOwner as query, runWithDbContext } from '../lib/db.js';
 
 async function migrate() {
   console.log('Running migrations...');
@@ -46,6 +47,25 @@ async function migrate() {
       items_data JSONB DEFAULT '[]'::jsonb,
       sync_status VARCHAR(50) DEFAULT 'synced',
       sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS organizations (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      name VARCHAR(255) NOT NULL,
+      slug VARCHAR(255) UNIQUE NOT NULL,
+      tier VARCHAR(50) DEFAULT 'free',
+      paystack_customer_code VARCHAR(100),
+      paystack_subscription_code VARCHAR(100),
+      subscription_status VARCHAR(50) DEFAULT 'inactive',
+      current_period_end TIMESTAMP,
+      cancel_at_period_end BOOLEAN DEFAULT false,
+      manual_override BOOLEAN DEFAULT false,
+      override_reason TEXT,
+      custom_domain VARCHAR(255),
+      custom_domain_verified BOOLEAN DEFAULT false,
+      settings JSONB DEFAULT '{}',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -312,24 +332,7 @@ async function migrate() {
 
   // Create organizations and organization_members tables
   await query(`
-    CREATE TABLE IF NOT EXISTS organizations (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-      name VARCHAR(255) NOT NULL,
-      slug VARCHAR(255) UNIQUE NOT NULL,
-      tier VARCHAR(50) DEFAULT 'free',
-      paystack_customer_code VARCHAR(100),
-      paystack_subscription_code VARCHAR(100),
-      subscription_status VARCHAR(50) DEFAULT 'inactive',
-      current_period_end TIMESTAMP,
-      cancel_at_period_end BOOLEAN DEFAULT false,
-      manual_override BOOLEAN DEFAULT false,
-      override_reason TEXT,
-      custom_domain VARCHAR(255),
-      custom_domain_verified BOOLEAN DEFAULT false,
-      settings JSONB DEFAULT '{}',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+
 
     CREATE TABLE IF NOT EXISTS organization_members (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -379,6 +382,37 @@ async function migrate() {
     FROM organizations o
     WHERE o.slug = LOWER(REPLACE(COALESCE(u.username, split_part(u.email, '@', 1)), ' ', '-'))
       AND u.organization_id IS NULL;
+  `);
+
+  // Attach legacy owner-scoped records to the organizations created above.
+  // Rows whose owner_id cannot be mapped are left inaccessible under RLS.
+  await query(`
+    UPDATE goats t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE inventory t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE sales t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE health_records t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE breeding_records t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE alerts t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE corrections t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE usage_logs t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE expenditures t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE milk_records t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE weight_records t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE farm_events t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
+    UPDATE farm_event_goats t SET organization_id = u.organization_id
+    FROM users u WHERE t.organization_id IS NULL AND t.owner_id = u.id::text AND u.organization_id IS NOT NULL;
   `);
 
   // Create organization_members for existing users
@@ -496,8 +530,19 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_scan_history_created ON scan_history(created_at);
   `);
 
+  await query(`
+    UPDATE goat_embeddings e SET organization_id = g.organization_id
+    FROM goats g WHERE e.organization_id IS NULL AND g.id = e.goat_id AND g.organization_id IS NOT NULL;
+    UPDATE scan_history s SET organization_id = g.organization_id
+    FROM goats g WHERE s.organization_id IS NULL AND g.id = s.goat_id AND g.organization_id IS NOT NULL;
+  `);
+
+  await query(await readFile(new URL('./sql/audit-hardening.sql', import.meta.url), 'utf8'));
   console.log('Migrations complete.');
   process.exit(0);
 }
 
-migrate().catch(console.error);
+runWithDbContext({ role: 'service' }, migrate).catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

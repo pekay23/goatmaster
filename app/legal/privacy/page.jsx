@@ -1,26 +1,26 @@
 import LegalPage from '@/components/LegalPage';
 
 export const metadata = {
-  title: 'Privacy Policy — Goat Master',
-  description: 'How Goat Master collects, uses, and protects your data.',
+  title: 'Privacy Policy — GoatMaster',
+  description: 'How GoatMaster collects, uses, and protects your data.',
   openGraph: {
-    title: 'Privacy Policy — Goat Master',
-    description: 'How Goat Master collects, uses, and protects your data.',
+    title: 'Privacy Policy — GoatMaster',
+    description: 'How GoatMaster collects, uses, and protects your data.',
     url: 'https://goatmaster-tau.vercel.app/legal/privacy',
-    siteName: 'Goat Master',
+    siteName: 'GoatMaster',
     locale: 'en_US',
     type: 'website',
     images: [{
       url: 'https://goatmaster-tau.vercel.app/icon-512.png',
       width: 512,
       height: 512,
-      alt: 'Goat Master',
+      alt: 'GoatMaster',
     }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Privacy Policy — Goat Master',
-    description: 'How Goat Master collects, uses, and protects your data.',
+    title: 'Privacy Policy — GoatMaster',
+    description: 'How GoatMaster collects, uses, and protects your data.',
     images: ['https://goatmaster-tau.vercel.app/icon-512.png'],
   },
 };
@@ -50,7 +50,7 @@ export default function PrivacyPolicy() {
 
       <h2 id="summary">1. Privacy at a Glance</h2>
       <p>
-        Goat Master is a farm management app that helps you track your goat herd. We take your privacy
+        GoatMaster is a farm management app that helps you track your goat herd. We take your privacy
         seriously and follow Apple App Store, Google Play Store, and GDPR guidelines. Here's the short version:
       </p>
       <ul>
@@ -63,7 +63,7 @@ export default function PrivacyPolicy() {
 
       <h2 id="scope">2. Who This Policy Applies To</h2>
       <p>
-        This Privacy Policy describes how Goat Master ("we", "us", "our") collects, uses, and protects
+        This Privacy Policy describes how GoatMaster ("we", "us", "our") collects, uses, and protects
         information about you ("you", "your") when you use our application, available as a web application
         and (in the future) as a mobile app on the Apple App Store and Google Play Store. By creating an
         account or using the Service, you agree to this Policy.
@@ -148,14 +148,14 @@ export default function PrivacyPolicy() {
 
       <h2 id="camera-photos">6. Camera, Photos & On-Device AI</h2>
       <p>
-        Goat Master uses your device camera (with your permission) to scan goats for identification and breed detection.
+        GoatMaster uses your device camera (with your permission) to scan goats for identification and breed detection.
         Here's exactly what happens to a photo when you scan a goat:
       </p>
       <ol>
         <li>The camera frame is captured locally on your device.</li>
-        <li>A pre-trained AI model (MobileNetV2) runs <strong>entirely on your device</strong> to extract a numerical "fingerprint" (1024 numbers) from the image. The model is downloaded once and cached.</li>
-        <li>The fingerprint is compared against fingerprints stored in our database for your existing goats.</li>
-        <li>The frame itself is sent to our server only when you save it as a profile photo or training photo. Otherwise, it stays on your device and is discarded.</li>
+        <li>When you submit a scan, the captured image is sent to the configured recognition service for processing.</li>
+        <li>The service compares an image fingerprint with stored fingerprints for animals in your organization. Recognition can be incorrect and requires your review.</li>
+        <li>Scan results and usage may be stored with your organization’s records. Camera access ends when you close the scanner.</li>
         <li>If you save a photo, it's uploaded to Cloudinary (encrypted in transit via HTTPS) and the URL is stored in your goat record.</li>
       </ol>
       <p>
@@ -200,7 +200,7 @@ export default function PrivacyPolicy() {
 
       <h2 id="children">10. Children's Privacy</h2>
       <p>
-        Goat Master is not intended for children under <strong>13 years of age</strong> (or 16 in the European Economic Area, where local law sets a higher threshold). We do not knowingly collect data from children under these ages.
+        GoatMaster is not intended for children under <strong>13 years of age</strong> (or 16 in the European Economic Area, where local law sets a higher threshold). We do not knowingly collect data from children under these ages.
       </p>
       <p>
         If you believe a child has created an account, please contact us at the address below and we will delete the account promptly.

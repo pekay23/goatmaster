@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function UnauthorizedPage() { return <main className="mx-auto max-w-lg px-6 py-24"><h1 className="text-3xl font-semibold">Access denied</h1><p className="mt-3 text-slate-600">Your account does not have permission to view this page.</p><div className="mt-6 flex gap-5"><Link className="underline" href="/admin-login">Administrator sign in</Link><Link className="underline" href="/">Return to GoatMaster</Link></div></main>; }

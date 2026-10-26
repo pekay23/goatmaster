@@ -2,7 +2,7 @@
   "name": "GoatMaster",
   "short_name": "GoatMaster",
   "description": "AI-powered goat herd management that works offline",
-  "start_url": "/app/dashboard",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#F5F0E1",
   "theme_color": "#2D7D46",
@@ -63,21 +63,21 @@
       "name": "Add Goat",
       "short_name": "Add Goat",
       "description": "Add a new goat to your herd",
-      "url": "/app/herd/new",
+      "url": "/herd/new",
       "icons": [{ "src": "/icons/icon-192x192.svg", "sizes": "192x192" }]
     },
     {
       "name": "Smart Scan",
       "short_name": "Scan",
       "description": "Scan a goat with AI",
-      "url": "/app/scan",
+      "url": "/scan",
       "icons": [{ "src": "/icons/icon-192x192.svg", "sizes": "192x192" }]
     },
     {
       "name": "Health Log",
       "short_name": "Health",
       "description": "Log a health event",
-      "url": "/app/health/new",
+      "url": "/health/new",
       "icons": [{ "src": "/icons/icon-192x192.svg", "sizes": "192x192" }]
     }
   ],
