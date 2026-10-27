@@ -11,4 +11,4 @@ python-dotenv
 ultralytics
 
 grpcio>=1.73.1,<2
-protobuf>=6.31.1,<7
+protobuf>=7.36.2,<8
