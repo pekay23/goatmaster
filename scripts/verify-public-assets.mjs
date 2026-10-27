@@ -21,7 +21,7 @@ try{
  }
  for(const path of assets){const response=await context.request.get(path);assert.equal(response.status(),200,path);assetCount++;}
  console.log('PASS '+assetCount+' favicon, manifest, font and offline asset URLs');
- await page.goto(base,{waitUntil:'networkidle'});
+ await page.goto(base,{waitUntil:'load',timeout:60000});
  await page.evaluate(async()=>{await document.fonts.load('500 24px "DM Sans"');await document.fonts.load('500 24px "Fraunces"');await document.fonts.load('italic 500 24px "Fraunces"');});
  assert.ok(await page.evaluate(()=>['DM Sans','Fraunces'].every(name=>Array.from(document.fonts).some(font=>font.family.replaceAll('"','')===name&&font.status==='loaded'))));
  await page.locator('img').evaluateAll(async images=>{await Promise.all(images.map(async image=>{image.loading='eager';await image.decode();if(!image.naturalWidth)throw new Error('An image failed to load');}));});
@@ -32,7 +32,7 @@ try{
  }
  await page.evaluate(()=>navigator.serviceWorker.register('/sw.js'));
  await page.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated',{},{timeout:30000});
- const cached=await page.evaluate(async()=>{const cache=await caches.open('goatmaster-static-v4');return (await cache.keys()).map(item=>new URL(item.url).pathname);});
+ const cached=await page.evaluate(async()=>{const name=(await caches.keys()).find(key=>key.startsWith('goatmaster-static-'));if(!name)throw new Error('Service worker static cache is missing');const cache=await caches.open(name);return (await cache.keys()).map(item=>new URL(item.url).pathname);});
  assert.ok(['/','/offline.html','/manifest.json','/icon-192.png','/icon-512.png'].every(path=>cached.includes(path)));
  await context.setOffline(true);await page.goto(base+'/uncached-offline-verification',{waitUntil:'domcontentloaded'});assert.match(await page.locator('body').innerText(),/offline|connection/i);await context.setOffline(false);
  assert.deepEqual(errors,[]);

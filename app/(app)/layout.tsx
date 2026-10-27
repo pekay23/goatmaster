@@ -13,11 +13,6 @@ export const metadata: Metadata = {
     template: '%s | GoatMaster',
   },
   description: 'AI-powered goat herd management that works offline',
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
-  },
   manifest: '/site.webmanifest',
 };
 

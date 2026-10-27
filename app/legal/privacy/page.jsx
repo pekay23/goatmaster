@@ -14,8 +14,21 @@ export const metadata = {
 };
 
 export default function PrivacyPolicy() {
+  const sections = [
+    { id: 'data-we-collect', label: 'Information processed' },
+    { id: 'use', label: 'How information is used' },
+    { id: 'sharing', label: 'Service providers' },
+    { id: 'photos-and-scans', label: 'Photos and Smart Scan' },
+    { id: 'security', label: 'Security' },
+    { id: 'retention', label: 'Retention and deletion' },
+    { id: 'your-choices', label: 'Your choices and requests' },
+    { id: 'children', label: 'Children' },
+    { id: 'transfers', label: 'International processing' },
+    { id: 'changes', label: 'Changes to this policy' },
+    { id: 'contact', label: 'Contact' },
+  ];
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 26, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="October 26, 2026" sections={sections}>
       <p>
         This policy explains what information GoatMaster processes when you use the GoatMaster web application,
         why it is used, and how to contact us about it. The application is operated from Ghana. For privacy

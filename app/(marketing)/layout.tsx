@@ -32,11 +32,6 @@ export const metadata: Metadata = {
     description: 'Keep goat profiles, health records, and breeding history together with GoatMaster.',
     images: ['/marketing/goat-portrait.jpg'],
   },
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
-  },
 };
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {

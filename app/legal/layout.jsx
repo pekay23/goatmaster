@@ -1,11 +1,11 @@
-import './../globals.css';
+import './legal.css';
 
 export const metadata = {
-  title: 'GoatMaster — Legal',
-  description: 'Privacy Policy, Terms of Service, and legal information for GoatMaster — the AI-powered goat herd management app.',
+  title: 'GoatMaster — Legal information',
+  description: 'Privacy and service information for GoatMaster.',
   openGraph: {
-    title: 'GoatMaster — Legal',
-    description: 'Privacy Policy, Terms of Service, and legal information for GoatMaster.',
+    title: 'GoatMaster — Legal information',
+    description: 'Privacy and service information for GoatMaster.',
     url: 'https://goatmaster-tau.vercel.app/legal',
     siteName: 'GoatMaster',
     locale: 'en_US',
@@ -19,8 +19,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GoatMaster — Legal',
-    description: 'Privacy Policy, Terms of Service, and legal information for GoatMaster.',
+    title: 'GoatMaster — Legal information',
+    description: 'Privacy and service information for GoatMaster.',
     images: ['https://goatmaster-tau.vercel.app/icon-512.png'],
   },
   robots: {

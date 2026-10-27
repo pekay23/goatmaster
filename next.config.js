@@ -13,6 +13,10 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  experimental: {
+    // Next 16.4 can restore stale HMR state and loop on restart (vercel/next.js#100267).
+    turbopackFileSystemCacheForDev: false,
+  },
   allowedDevOrigins: ['192.168.8.202'],
   async headers() {
     return [

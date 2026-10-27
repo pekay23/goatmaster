@@ -15,8 +15,23 @@ export const metadata = {
 };
 
 export default function TermsOfService() {
+  const sections = [
+    { id: 'service', label: 'The service' },
+    { id: 'accounts', label: 'Accounts and eligibility' },
+    { id: 'content', label: 'Your content' },
+    { id: 'acceptable-use', label: 'Acceptable use' },
+    { id: 'providers', label: 'Third-party services' },
+    { id: 'payments', label: 'Plans and payments' },
+    { id: 'availability', label: 'Availability and changes' },
+    { id: 'termination', label: 'Account closure' },
+    { id: 'disclaimer', label: 'Disclaimers' },
+    { id: 'liability', label: 'Limitation of liability' },
+    { id: 'law', label: 'Governing law and disputes' },
+    { id: 'changes', label: 'Changes to these Terms' },
+    { id: 'contact', label: 'Contact' },
+  ];
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 26, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 26, 2026" sections={sections}>
       <p>These Terms govern your use of GoatMaster, a web-based farm and herd-management service operated from Ghana. By creating an account or using the service, you agree to these Terms and the <Link href="/legal/privacy">Privacy Policy</Link>. If you do not agree, do not use the service.</p>
 
       <h2 id="service">The service</h2>

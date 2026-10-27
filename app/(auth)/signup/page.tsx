@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AuthPageFrame from '@/components/auth/AuthPageFrame';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -31,5 +32,26 @@ export default function SignupPage() {
     }
   }
 
-  return <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12"><Link className="mb-8 text-sm text-slate-600 hover:underline" href="/">← GoatMaster</Link><h1 className="text-3xl font-semibold">Create your account</h1><p className="mt-2 text-slate-600">A private organization will be created for your farm.</p><form onSubmit={submit} className="mt-8 space-y-5"><label className="block text-sm font-medium">Farm or account name<input className="mt-1 block w-full rounded-lg border p-3" name="username" autoComplete="organization" required /></label><label className="block text-sm font-medium">Email<input className="mt-1 block w-full rounded-lg border p-3" type="email" name="email" autoComplete="email" required /></label><label className="block text-sm font-medium">Password<input className="mt-1 block w-full rounded-lg border p-3" type="password" name="password" autoComplete="new-password" minLength={10} required /><span className="mt-1 block text-xs text-slate-500">Use at least 10 characters.</span></label>{error && <p role="alert" className="text-sm text-red-700">{error}</p>}<button className="w-full rounded-lg bg-green-800 p-3 font-semibold text-white disabled:opacity-60" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button></form><p className="mt-6 text-sm text-slate-600">Already registered? <Link className="underline" href="/login">Sign in</Link></p></main>;
+  return <AuthPageFrame>
+    <div>
+      <p className="text-sm font-semibold text-[#47734f]">Set up your farm</p>
+      <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-[#1c2e25]">Create an account</h1>
+      <p className="mt-3 text-base leading-7 text-[#657168]">Your farm workspace is created when you sign up.</p>
+      <form onSubmit={submit} className="mt-7 space-y-4">
+        <label className="block text-sm font-semibold text-[#32463a]">Farm or account name
+          <input className="mt-2 min-h-12 w-full rounded-xl border border-[#d9ddd2] bg-white px-4 text-base text-[#1c2e25] outline-none transition-colors placeholder:text-[#89958b] focus:border-[#477b55] focus:ring-4 focus:ring-[#477b55]/10" name="username" autoComplete="organization" required />
+        </label>
+        <label className="block text-sm font-semibold text-[#32463a]">Email
+          <input className="mt-2 min-h-12 w-full rounded-xl border border-[#d9ddd2] bg-white px-4 text-base text-[#1c2e25] outline-none transition-colors placeholder:text-[#89958b] focus:border-[#477b55] focus:ring-4 focus:ring-[#477b55]/10" type="email" name="email" autoComplete="email" required />
+        </label>
+        <label className="block text-sm font-semibold text-[#32463a]">Password
+          <input className="mt-2 min-h-12 w-full rounded-xl border border-[#d9ddd2] bg-white px-4 text-base text-[#1c2e25] outline-none transition-colors placeholder:text-[#89958b] focus:border-[#477b55] focus:ring-4 focus:ring-[#477b55]/10" type="password" name="password" autoComplete="new-password" minLength={10} required aria-describedby="password-hint" />
+          <span id="password-hint" className="mt-1.5 block text-xs font-normal text-[#6b786d]">Use at least 10 characters.</span>
+        </label>
+        {error && <p role="alert" className="rounded-xl border border-[#e7b7aa] bg-[#fff2ee] px-4 py-3 text-sm text-[#8f3425]">{error}</p>}
+        <button className="min-h-12 w-full rounded-xl bg-[#27563b] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#1e452f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#477b55]/30 disabled:cursor-wait disabled:opacity-60" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>
+      </form>
+      <p className="mt-6 text-sm text-[#657168]">Already registered? <Link className="font-semibold text-[#27563b] underline decoration-[#aac0a6] underline-offset-4 hover:text-[#17382b]" href="/login">Sign in</Link></p>
+    </div>
+  </AuthPageFrame>;
 }

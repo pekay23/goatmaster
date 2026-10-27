@@ -1,5 +1,5 @@
 const CACHE_NAME = 'goatmaster-v1';
-const STATIC_CACHE = 'goatmaster-static-v4';
+const STATIC_CACHE = 'goatmaster-static-v5';
 const DYNAMIC_CACHE = 'goatmaster-dynamic-v4';
 const OFFLINE_URL = '/offline.html';
 
